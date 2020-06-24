@@ -29,9 +29,9 @@ jobs:
         run: |
           make all
 
-#       - name: Compile output
-#        run: |
-#          make publish
+       - name: Compile output
+        run: |
+          make publish
 
       - uses: actions/upload-artifact@master
         with:
