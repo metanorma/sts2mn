@@ -29,7 +29,7 @@ jobs:
         run: |
           make all
 
-       - name: Compile output
+      - name: Compile output
         run: |
           make publish
 
