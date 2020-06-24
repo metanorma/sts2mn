@@ -18,22 +18,27 @@ You will need the `maven` build tool and `make`.
 java -jar target/sts2mn-1.0.jar <XML-FileName>
 ----
 
+[source,sh]
 ----
 java -jar target/sts2mn-1.0.jar --format adoc <XML-FileName>
 ----
 
+[source,sh]
 ----
 java -jar target/sts2mn-1.0.jar --format adoc <XML-FileName> --output <ADOC-FileName>
 ----
 
+[source,sh]
 ----
 java -jar target/sts2mn-1.0.jar --format xml <XML-FileName>
 ----
 
+[source,sh]
 ----
 java -jar target/sts2mn-1.0.jar --format xml <XML-FileName> --output <XML-FileName>
 ----
 
+[source,sh]
 ----
 java -jar target/sts2mn-1.0.jar --split-bibdata <XML-FileName>
 ----
