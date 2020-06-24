@@ -21,17 +21,17 @@ jobs:
           java-version: 1.8
 
 
-#      - name: Run tests
-#        run: |
-#          make test
+      - name: Run tests
+        run: |
+          make test
 
       - name: Build
         run: |
           make all
 
-       - name: Compile output
-        run: |
-          make publish
+#       - name: Compile output
+#        run: |
+#          make publish
 
       - uses: actions/upload-artifact@master
         with:

@@ -31,6 +31,6 @@ jobs:
         run: |
           make all SHELL=cmd
 
-      - name: Compile output
-        run: |
-          make publish SHELL=cmd
+#      - name: Compile output
+#        run: |
+#          make publish SHELL=cmd
