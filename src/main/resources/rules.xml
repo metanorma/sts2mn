@@ -1,0 +1,18 @@
+
+	<xsl:template match="disp-formula">
+		<formula id="{mml:math/@id}">
+			<stem type="MathML">
+				<xsl:apply-templates />
+			</stem>
+		</formula>
+	</xsl:template>
+	
+	<xsl:template match="mml:math">
+		<math xmlns="http://www.w3.org/1998/Math/MathML">
+			<xsl:apply-templates select="@*"/>
+			<xsl:apply-templates />
+		</math>
+	</xsl:template>
+	
+
+	
