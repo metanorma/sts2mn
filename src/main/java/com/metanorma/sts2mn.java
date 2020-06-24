@@ -3,14 +3,20 @@ package com.metanorma;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
 
 import java.util.List;
 import java.util.Scanner;
+import java.util.UUID;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -94,6 +100,10 @@ public class sts2mn {
     
     boolean splitBibdata = false;
     
+    static final String TMPDIR = System.getProperty("java.io.tmpdir");
+    
+    static final Path tmpfilepath  = Paths.get(TMPDIR, UUID.randomUUID().toString());
+    
     /**
      * Main method.
      *
@@ -130,7 +140,21 @@ public class sts2mn {
                     throw new ParseException("");
                 }
                 
-                final String argXMLin = arglist.get(0);
+                String argXMLin = arglist.get(0);
+                
+                boolean remoteFile = false;
+                if (argXMLin.toLowerCase().startsWith("http")) {
+                    remoteFile = true;
+                    //download to temp folder
+                    URL url = new URL(argXMLin);
+                    String urlFilename = new File(url.getFile()).getName();
+                    InputStream in = url.openStream();                    
+                    Path localPath = Paths.get(tmpfilepath.toString(), urlFilename);
+                    Files.createDirectories(tmpfilepath);
+                    Files.copy(in, localPath, StandardCopyOption.REPLACE_EXISTING);
+                    argXMLin = localPath.toString();
+                }
+                
                 
                 File fXMLin = new File(argXMLin);
                 if (!fXMLin.exists()) {
@@ -139,6 +163,11 @@ public class sts2mn {
                 }
 
                 String outFileName = fXMLin.getAbsolutePath();
+                
+                if (remoteFile) {
+                    outFileName = Paths.get(System.getProperty("user.dir"), new File(outFileName).getName()).toString();
+                }
+                
                 outFileName = outFileName.substring(0, outFileName.lastIndexOf('.') + 1);
                 
                 String format = "adoc";
@@ -181,7 +210,21 @@ public class sts2mn {
                 }
                 cmdFail = false;
             } catch (ParseException exp) {
-                cmdFail = true;
+                cmdFail = true;            
+            } catch (IOException ex) {
+                System.err.println(ex.toString());
+            }
+        }
+        
+        // flush temporary folder
+        if (!DEBUG && Files.exists(tmpfilepath)) {            
+            try {
+                Files.walk(tmpfilepath)
+                    .sorted(Comparator.reverseOrder())
+                        .map(Path::toFile)
+                            .forEach(File::delete);
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
         
