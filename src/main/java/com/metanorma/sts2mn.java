@@ -2,6 +2,7 @@ package com.metanorma;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -21,6 +22,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
@@ -31,7 +33,12 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  * This class for the conversion of an NISO/ISO XML file to Metanorma XML or AsciiDoc
@@ -242,10 +249,28 @@ public class sts2mn {
             
             String outputFolder = fileOut.getParent();
             String bibdataFileName = fileOut.getName();
+           
+            // skip validating 
+            //found here: https://moleshole.wordpress.com/2009/10/08/ignore-a-dtd-when-using-a-transformer/
+            XMLReader rdr = XMLReaderFactory.createXMLReader();
+            rdr.setEntityResolver(new EntityResolver() {
+		@Override
+		public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
+                    if (systemId.endsWith(".dtd")) {
+                            StringReader stringInput = new StringReader(" ");
+                            return new InputSource(stringInput);
+                    }
+                    else {
+                            return null; // use default behavior
+                    }
+		}
+            });
+            
             
             TransformerFactory factory = TransformerFactory.newInstance();
             Transformer transformer = factory.newTransformer();
-            Source src = new StreamSource(fXMLin);
+            //Source src = new StreamSource(fXMLin);
+            Source src = new SAXSource(rdr, new InputSource(new FileInputStream(fXMLin)));
             
             System.out.println("Transforming...");
             
@@ -260,6 +285,7 @@ public class sts2mn {
                 StreamResult sr = new StreamResult(resultWriter);
             
                 transformer.transform(src, sr);
+                
                 String xmlSTS = resultWriter.toString();
                 
                 File xmlFileOut = fileOut;
@@ -273,11 +299,14 @@ public class sts2mn {
                 }
             }
             
+            src = new SAXSource(rdr, new InputSource(new FileInputStream(fXMLin)));
             
             if (outputFormat.equals("adoc") || splitBibdata) {
+                
                 // linearize XML
                 Source srcXSLidentity = new StreamSource(Util.getStreamFromResources(getClass().getClassLoader(), "linearize.xsl"));
-                transformer = factory.newTransformer(srcXSLidentity);                
+                transformer = factory.newTransformer(srcXSLidentity);
+                
                 StringWriter resultWriteridentity = new StringWriter();
                 StreamResult sridentity = new StreamResult(resultWriteridentity);
                 transformer.transform(src, sridentity);

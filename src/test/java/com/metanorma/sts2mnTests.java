@@ -14,6 +14,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.contrib.java.lang.system.SystemOutRule;
+import org.junit.rules.TestName;
 
 public class sts2mnTests {
 
@@ -29,6 +30,8 @@ public class sts2mnTests {
     @Rule
     public final EnvironmentVariables envVarRule = new EnvironmentVariables();
 
+    @Rule public TestName name = new TestName();
+    
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         XMLFILE_MN = System.getProperty("inputXML");        
@@ -36,6 +39,7 @@ public class sts2mnTests {
     
     @Test
     public void notEnoughArguments() throws ParseException {
+        System.out.println(name.getMethodName());
         exitRule.expectSystemExitWithStatus(-1);
         String[] args = new String[]{""};
         sts2mn.main(args);
@@ -46,6 +50,7 @@ public class sts2mnTests {
     
     @Test
     public void xmlNotExists() throws ParseException {
+        System.out.println(name.getMethodName());
         exitRule.expectSystemExitWithStatus(-1);
 
         String[] args = new String[]{"nonexist.xml"};
@@ -57,6 +62,7 @@ public class sts2mnTests {
 
     @Test
     public void unknownOutputFormat() throws ParseException {
+        System.out.println(name.getMethodName());
         exitRule.expectSystemExitWithStatus(-1);
 
         String[] args = new String[]{"--format", "abc", XMLFILE_MN};
@@ -70,7 +76,7 @@ public class sts2mnTests {
 
     @Test
     public void successConvertToAdocDefault() throws ParseException {
-        
+        System.out.println(name.getMethodName());
         String outFileName = new File(XMLFILE_MN).getAbsolutePath();
         outFileName = outFileName.substring(0, outFileName.lastIndexOf('.') + 1);
         Path fileout = Paths.get(outFileName + "adoc");
@@ -84,7 +90,7 @@ public class sts2mnTests {
     
     @Test
     public void successConvertToAdoc() throws ParseException {
-        
+        System.out.println(name.getMethodName());
         String outFileName = new File(XMLFILE_MN).getAbsolutePath();
         outFileName = outFileName.substring(0, outFileName.lastIndexOf('.') + 1);
         Path fileout = Paths.get(outFileName + "adoc");
@@ -98,7 +104,7 @@ public class sts2mnTests {
     
     @Test
     public void successConvertToAdocOutputSpecified() throws ParseException {
-        
+        System.out.println(name.getMethodName());
         Path fileout = Paths.get(System.getProperty("buildDirectory"), "custom.adoc");
         fileout.toFile().delete();
         
@@ -110,7 +116,7 @@ public class sts2mnTests {
     
     @Test
     public void successConvertToXML() throws ParseException {
-        
+        System.out.println(name.getMethodName());
         String outFileName = new File(XMLFILE_MN).getAbsolutePath();
         outFileName = outFileName.substring(0, outFileName.lastIndexOf('.') + 1);
         Path fileout = Paths.get(outFileName + "mn.xml");
@@ -124,7 +130,7 @@ public class sts2mnTests {
     
     @Test
     public void successSplitBibData() throws ParseException {
-        
+        System.out.println(name.getMethodName());
         String outFileName = new File(XMLFILE_MN).getAbsolutePath();
         outFileName = outFileName.substring(0, outFileName.lastIndexOf('.') + 1);
         Path fileoutAdoc = Paths.get(outFileName + "adoc");
