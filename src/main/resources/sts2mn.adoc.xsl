@@ -18,31 +18,42 @@
 	
 	<xsl:param name="pathSeparator" select="'/'"/>
 	
-	<xsl:template match="/*">
+	<xsl:variable name="language" select="//standard/front/iso-meta/doc-ident/language"/>
+	
+	<xsl:variable name="path_" select="concat('body', $pathSeparator, 'body-#lang.adoc[]')"/>
+			
+	<xsl:variable name="path" select="java:replaceAll(java:java.lang.String.new($path_),'#lang',$language)"/>
+	
+	<xsl:template match="standard">
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<!-- <xsl:template match="/*"> -->
+	<xsl:template match="//standard/front">
 		<!-- = ISO 8601-1 -->
-		<xsl:apply-templates select="/standard/front/iso-meta/std-ident"/>
+		<xsl:apply-templates select="iso-meta/std-ident"/>
 		<!-- :docnumber: 8601 -->
-		<xsl:apply-templates select="/standard/front/iso-meta/std-ident/doc-number"/>		
+		<xsl:apply-templates select="iso-meta/std-ident/doc-number"/>		
 		<!-- :partnumber: 1 -->
-		<xsl:apply-templates select="/standard/front/iso-meta/std-ident/part-number"/>		
+		<xsl:apply-templates select="iso-meta/std-ident/part-number"/>		
 		<!-- :edition: 1 -->
-		<xsl:apply-templates select="/standard/front/iso-meta/std-ident/edition"/>		
+		<xsl:apply-templates select="iso-meta/std-ident/edition"/>		
 		<!-- :copyright-year: 2019 -->
-		<xsl:apply-templates select="/standard/front/iso-meta/permissions/copyright-year"/>
+		<xsl:apply-templates select="iso-meta/permissions/copyright-year"/>
 		<!-- :language: en -->
-		<xsl:apply-templates select="/standard/front/iso-meta/doc-ident/language"/>
+		<xsl:apply-templates select="iso-meta/doc-ident/language"/>
 		<!-- :title-intro-en: Date and time
 		:title-main-en: Representations for information interchange
 		:title-part-en: Basic rules
 		:title-intro-fr: Date et l'heure
 		:title-main-fr: Représentations pour l'échange d'information
 		:title-part-fr: Règles de base -->
-		<xsl:apply-templates select="/standard/front/iso-meta/title-wrap"/>		
+		<xsl:apply-templates select="iso-meta/title-wrap"/>		
 		<!-- :doctype: international-standard -->
-		<xsl:apply-templates select="/standard/front/iso-meta/std-ident/doc-type"/>		
+		<xsl:apply-templates select="iso-meta/std-ident/doc-type"/>		
 		<!-- :docstage: 60
 		:docsubstage: 60 -->		
-		<xsl:apply-templates select="/standard/front/iso-meta/doc-ident/release-version"/>
+		<xsl:apply-templates select="iso-meta/doc-ident/release-version"/>
 		
 		<!-- 
 		:technical-committee-type: TC
@@ -51,10 +62,10 @@
 		:workgroup-type: WG
 		:workgroup-number: 5
 		:workgroup: Representation of dates and times -->		
-		<xsl:apply-templates select="/standard/front/iso-meta/comm-ref"/>
+		<xsl:apply-templates select="iso-meta/comm-ref"/>
 		
 		<!-- :secretariat: SAC -->
-		<xsl:apply-templates select="/standard/front/iso-meta/secretariat"/>
+		<xsl:apply-templates select="iso-meta/secretariat"/>
 		
 		<xsl:text>:local-cache-only:</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
@@ -71,25 +82,25 @@
 		<xsl:text>&#xa;</xsl:text>
 
 		<xsl:if test="$split-bibdata != 'true'">
-
-			<xsl:variable name="language" select="/standard/front/iso-meta/doc-ident/language"/>
 			
-			<xsl:variable name="path_" select="concat('body', $pathSeparator, 'body-#lang.adoc[]')"/>
-			
-			<xsl:variable name="path" select="java:replaceAll(java:java.lang.String.new($path_),'#lang',$language)"/>
 			<xsl:text>include::</xsl:text><xsl:value-of select="$path"/>
 			<xsl:text>&#xa;</xsl:text>
 			
 			<xsl:text>///SPLIT </xsl:text><xsl:value-of select="$path"/>
 			<xsl:text>&#xa;</xsl:text>
-			<xsl:apply-templates select="/standard/front/*[local-name() != 'iso-meta']"/>
-			<xsl:apply-templates select="/standard/body"/>
-			
-			<xsl:apply-templates select="/standard/back"/>
+			<xsl:apply-templates select="*[local-name() != 'iso-meta']"/>
+			<!-- <xsl:apply-templates select="/standard/body"/>			
+			<xsl:apply-templates select="/standard/back"/> -->
 		</xsl:if>
 	</xsl:template>
 	
-	<xsl:template match="/standard/front/iso-meta/std-ident">
+	<xsl:template match="//standard/body | //standard/back">
+		<xsl:if test="$split-bibdata != 'true'">
+			<xsl:apply-templates />
+		</xsl:if>
+	</xsl:template>
+	
+	<xsl:template match="front/iso-meta/std-ident">
 		<xsl:text>= </xsl:text>
 		<xsl:value-of select="originator"/>
 		<xsl:text> </xsl:text>
@@ -99,58 +110,58 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="/standard/front/iso-meta/std-ident/doc-number">
+	<xsl:template match="front/iso-meta/std-ident/doc-number">
 		<xsl:text>:docnumber: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="/standard/front/iso-meta/std-ident/part-number">
+	<xsl:template match="front/iso-meta/std-ident/part-number">
 		<xsl:text>:partnumber: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="/standard/front/iso-meta/std-ident/edition">
+	<xsl:template match="front/iso-meta/std-ident/edition">
 		<xsl:text>:edition: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="/standard/front/iso-meta/permissions/copyright-year">
+	<xsl:template match="front/iso-meta/permissions/copyright-year">
 		<xsl:text>:copyright-year: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="/standard/front/iso-meta/doc-ident/language">
+	<xsl:template match="front/iso-meta/doc-ident/language">
 		<xsl:text>:language: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="/standard/front/iso-meta/title-wrap/text()"/>
-	<xsl:template match="/standard/front/iso-meta/title-wrap">
+	<xsl:template match="front/iso-meta/title-wrap/text()"/>
+	<xsl:template match="front/iso-meta/title-wrap">
 		<xsl:apply-templates>
 			<xsl:with-param name="lang" select="@xml:lang"/>
 		</xsl:apply-templates>
 	</xsl:template>
 	
-	<xsl:template match="/standard/front/iso-meta/title-wrap/intro">
+	<xsl:template match="front/iso-meta/title-wrap/intro">
 		<xsl:param name="lang"/>
 		<xsl:text>:title-intro-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
-	<xsl:template match="/standard/front/iso-meta/title-wrap/main">
+	<xsl:template match="front/iso-meta/title-wrap/main">
 		<xsl:param name="lang"/>
 		<xsl:text>:title-main-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
-	<xsl:template match="/standard/front/iso-meta/title-wrap/compl">
+	<xsl:template match="front/iso-meta/title-wrap/compl">
 		<xsl:param name="lang"/>
 		<xsl:text>:title-part-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
-	<xsl:template match="/standard/front/iso-meta/title-wrap/full">
+	<xsl:template match="front/iso-meta/title-wrap/full">
 		<xsl:text></xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="/standard/front/iso-meta/std-ident/doc-type">
+	<xsl:template match="front/iso-meta/std-ident/doc-type">
 		<xsl:variable name="value" select="java:toLowerCase(java:java.lang.String.new(.))"/>
 		<xsl:text>:doctype: </xsl:text>
 		<!-- https://www.niso-sts.org/TagLibrary/niso-sts-TL-1-0-html/element/doc-type.html -->
@@ -165,7 +176,7 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="/standard/front/iso-meta/doc-ident/release-version">
+	<xsl:template match="front/iso-meta/doc-ident/release-version">
 		<!-- https://www.niso-sts.org/TagLibrary/niso-sts-TL-1-0-html/element/release-version.html -->
 		<!-- Possible values: WD, CD, DIS, FDIS, IS -->
 		<xsl:variable name="value" select="java:toUpperCase(java:java.lang.String.new(.))"/>
@@ -204,7 +215,7 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="/standard/front/iso-meta/comm-ref">
+	<xsl:template match="front/iso-meta/comm-ref">
 		<xsl:variable name="comm-ref">
 			<xsl:call-template name="split">
 				<xsl:with-param name="pText" select="."/>
@@ -240,12 +251,12 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="/standard/front/iso-meta/secretariat">
+	<xsl:template match="front/iso-meta/secretariat">
 		<xsl:text>:secretariat: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	<!-- =========== -->
-	<!-- end bibdata -->
+	<!-- end bibdata (standard/front) -->
 	
 	
 	
