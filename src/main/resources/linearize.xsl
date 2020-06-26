@@ -18,9 +18,19 @@
 		</xsl:copy>
 	</xsl:template>
 	<xsl:template match="text()[not(parent::code) and not(parent::mml:*)]">
-		<xsl:variable name="text_" select="translate(., '&#xa;', '')"/>		
-		<xsl:variable name="text" select="java:replaceAll(java:java.lang.String.new($text_),' +',' ')"/>
-		<xsl:value-of select="$text"/>
+		<xsl:choose>
+			<xsl:when test="contains(., '&#xa;')">
+				<xsl:variable name="text_" select="translate(., '&#xa;', ' ')"/>
+				<xsl:variable name="text" select="java:replaceAll(java:java.lang.String.new($text_),' +',' ')"/>
+				<xsl:if test="normalize-space($text) != ''">
+					<xsl:value-of select="$text"/>
+				</xsl:if>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="."/>
+			</xsl:otherwise>
+		</xsl:choose>		
 	</xsl:template>
+	
 	
 </xsl:stylesheet>
