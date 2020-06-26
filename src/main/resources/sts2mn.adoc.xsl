@@ -24,36 +24,43 @@
 			
 	<xsl:variable name="path" select="java:replaceAll(java:java.lang.String.new($path_),'#lang',$language)"/>
 	
+	<xsl:template match="adoption">
+		<xsl:apply-templates />
+	</xsl:template>
+	
 	<xsl:template match="standard">
 		<xsl:apply-templates />
 	</xsl:template>
 	
+	
+	<!-- <xsl:template match="adoption/text() | adoption-front/text()"/> -->
+	
 	<!-- <xsl:template match="/*"> -->
-	<xsl:template match="//standard/front">
+	<xsl:template match="//standard/front | //adoption/adoption-front">
 		<!-- = ISO 8601-1 -->
-		<xsl:apply-templates select="iso-meta/std-ident"/>
+		<xsl:apply-templates select="*/std-ident"/> <!-- * -> iso-meta -->
 		<!-- :docnumber: 8601 -->
-		<xsl:apply-templates select="iso-meta/std-ident/doc-number"/>		
+		<xsl:apply-templates select="*/std-ident/doc-number"/>		
 		<!-- :partnumber: 1 -->
-		<xsl:apply-templates select="iso-meta/std-ident/part-number"/>		
+		<xsl:apply-templates select="*/std-ident/part-number"/>		
 		<!-- :edition: 1 -->
-		<xsl:apply-templates select="iso-meta/std-ident/edition"/>		
+		<xsl:apply-templates select="*/std-ident/edition"/>		
 		<!-- :copyright-year: 2019 -->
-		<xsl:apply-templates select="iso-meta/permissions/copyright-year"/>
+		<xsl:apply-templates select="*/permissions/copyright-year"/>
 		<!-- :language: en -->
-		<xsl:apply-templates select="iso-meta/doc-ident/language"/>
+		<xsl:apply-templates select="*/doc-ident/language"/>
 		<!-- :title-intro-en: Date and time
 		:title-main-en: Representations for information interchange
 		:title-part-en: Basic rules
 		:title-intro-fr: Date et l'heure
 		:title-main-fr: Représentations pour l'échange d'information
 		:title-part-fr: Règles de base -->
-		<xsl:apply-templates select="iso-meta/title-wrap"/>		
+		<xsl:apply-templates select="*/title-wrap"/>		
 		<!-- :doctype: international-standard -->
-		<xsl:apply-templates select="iso-meta/std-ident/doc-type"/>		
+		<xsl:apply-templates select="*/std-ident/doc-type"/>		
 		<!-- :docstage: 60
 		:docsubstage: 60 -->		
-		<xsl:apply-templates select="iso-meta/doc-ident/release-version"/>
+		<xsl:apply-templates select="*/doc-ident/release-version"/>
 		
 		<!-- 
 		:technical-committee-type: TC
@@ -62,10 +69,10 @@
 		:workgroup-type: WG
 		:workgroup-number: 5
 		:workgroup: Representation of dates and times -->		
-		<xsl:apply-templates select="iso-meta/comm-ref"/>
+		<xsl:apply-templates select="*/comm-ref"/>
 		
 		<!-- :secretariat: SAC -->
-		<xsl:apply-templates select="iso-meta/secretariat"/>
+		<xsl:apply-templates select="*/secretariat"/>
 		
 		<xsl:text>:local-cache-only:</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
@@ -83,12 +90,15 @@
 
 		<xsl:if test="$split-bibdata != 'true'">
 			
-			<xsl:text>include::</xsl:text><xsl:value-of select="$path"/>
-			<xsl:text>&#xa;</xsl:text>
+			<xsl:if test="not(//adoption)"> <!-- for adoption create a one adoc -->
+				<xsl:text>include::</xsl:text><xsl:value-of select="$path"/>
+				<xsl:text>&#xa;</xsl:text>
+				
+				<xsl:text>///SPLIT </xsl:text><xsl:value-of select="$path"/>
+				<xsl:text>&#xa;</xsl:text>
+			</xsl:if>
 			
-			<xsl:text>///SPLIT </xsl:text><xsl:value-of select="$path"/>
-			<xsl:text>&#xa;</xsl:text>
-			<xsl:apply-templates select="*[local-name() != 'iso-meta']"/>
+			<xsl:apply-templates select="*[local-name() != 'iso-meta' and local-name() != 'std-meta']"/>
 			<!-- <xsl:apply-templates select="/standard/body"/>			
 			<xsl:apply-templates select="/standard/back"/> -->
 		</xsl:if>
@@ -100,7 +110,8 @@
 		</xsl:if>
 	</xsl:template>
 	
-	<xsl:template match="front/iso-meta/std-ident">
+	<xsl:template match="std-ident2[ancestor::front or ancestor::adoption-front]/text()"/>
+	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]">
 		<xsl:text>= </xsl:text>
 		<xsl:value-of select="originator"/>
 		<xsl:text> </xsl:text>
@@ -110,58 +121,58 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="front/iso-meta/std-ident/doc-number">
+	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/doc-number">
 		<xsl:text>:docnumber: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="front/iso-meta/std-ident/part-number">
+	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/part-number">
 		<xsl:text>:partnumber: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="front/iso-meta/std-ident/edition">
+	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/edition">
 		<xsl:text>:edition: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="front/iso-meta/permissions/copyright-year">
+	<xsl:template match="permissions[ancestor::front or ancestor::adoption-front]/copyright-year">
 		<xsl:text>:copyright-year: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="front/iso-meta/doc-ident/language">
+	<xsl:template match="doc-ident[ancestor::front or ancestor::adoption-front]/language">
 		<xsl:text>:language: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="front/iso-meta/title-wrap/text()"/>
-	<xsl:template match="front/iso-meta/title-wrap">
+	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/text()"/>
+	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]">
 		<xsl:apply-templates>
 			<xsl:with-param name="lang" select="@xml:lang"/>
 		</xsl:apply-templates>
 	</xsl:template>
 	
-	<xsl:template match="front/iso-meta/title-wrap/intro">
+	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/intro">
 		<xsl:param name="lang"/>
 		<xsl:text>:title-intro-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
-	<xsl:template match="front/iso-meta/title-wrap/main">
+	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/main">
 		<xsl:param name="lang"/>
 		<xsl:text>:title-main-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
-	<xsl:template match="front/iso-meta/title-wrap/compl">
+	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/compl">
 		<xsl:param name="lang"/>
 		<xsl:text>:title-part-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
-	<xsl:template match="front/iso-meta/title-wrap/full">
+	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/full">
 		<xsl:text></xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="front/iso-meta/std-ident/doc-type">
+	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/doc-type">
 		<xsl:variable name="value" select="java:toLowerCase(java:java.lang.String.new(.))"/>
 		<xsl:text>:doctype: </xsl:text>
 		<!-- https://www.niso-sts.org/TagLibrary/niso-sts-TL-1-0-html/element/doc-type.html -->
@@ -176,7 +187,7 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="front/iso-meta/doc-ident/release-version">
+	<xsl:template match="doc-ident[ancestor::front or ancestor::adoption-front]/release-version">
 		<!-- https://www.niso-sts.org/TagLibrary/niso-sts-TL-1-0-html/element/release-version.html -->
 		<!-- Possible values: WD, CD, DIS, FDIS, IS -->
 		<xsl:variable name="value" select="java:toUpperCase(java:java.lang.String.new(.))"/>
@@ -215,7 +226,7 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="front/iso-meta/comm-ref">
+	<xsl:template match="comm-ref[ancestor::front or ancestor::adoption-front]">
 		<xsl:variable name="comm-ref">
 			<xsl:call-template name="split">
 				<xsl:with-param name="pText" select="."/>
@@ -251,7 +262,7 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="front/iso-meta/secretariat">
+	<xsl:template match="secretariat[ancestor::front or ancestor::adoption-front]">
 		<xsl:text>:secretariat: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
@@ -278,7 +289,14 @@
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:text>[[</xsl:text>
-				<xsl:value-of select="@id"/>
+					<xsl:choose>
+						<xsl:when test="@id">
+							<xsl:value-of select="@id"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:value-of select="@sec-type"/>
+						</xsl:otherwise>
+					</xsl:choose>
 				<xsl:text>]]</xsl:text>
 			</xsl:otherwise>
 		</xsl:choose>
@@ -393,6 +411,16 @@
 	</xsl:template>
 	
 	<xsl:template match="std">
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="std-id">
+		<xsl:text>[[</xsl:text>
+			<xsl:apply-templates />
+		<xsl:text>]]</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="std-ref">
 		<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
 	</xsl:template>
 	
@@ -477,13 +505,22 @@
 	
 	<xsl:template match="ext-link">
 		<xsl:apply-templates />
+		<xsl:apply-templates select="@xlink:href"/>
+	</xsl:template>
+	
+	<xsl:template match="ext-link/@xlink:href">
 		<xsl:text>[</xsl:text>
-		<xsl:value-of select="@xlink:href"/>
+		<xsl:value-of select="."/>
 		<xsl:text>]</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="xref">
 		<xsl:choose>
+			<xsl:when test="@ref-type = 'fn' and ancestor::td">
+				<xsl:text> footnote:</xsl:text>
+				<xsl:value-of select="@rid"/>
+				<xsl:text>[]</xsl:text>
+			</xsl:when>
 			<xsl:when test="@ref-type = 'fn'"/>
 			<xsl:when test="@ref-type = 'other'">
 				<xsl:text>&lt;</xsl:text><xsl:value-of select="."/><xsl:text>&gt;</xsl:text>
@@ -512,8 +549,7 @@
 		<xsl:text>]</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="mixed-citation">
-		<xsl:text>, </xsl:text>
+	<xsl:template match="mixed-citation">		
 		<xsl:apply-templates/>
 	</xsl:template>
 	
@@ -552,13 +588,24 @@
 			<xsl:when test="string-length($td_1) != 0">
 				<xsl:apply-templates select="td[1]" mode="dl"/>
 				<xsl:text>::</xsl:text>		
+				<xsl:text>&#xa;</xsl:text>
 			</xsl:when>
-			<xsl:otherwise>+</xsl:otherwise>
+			<xsl:otherwise>
+				<xsl:text>+</xsl:text>
+				<xsl:text>&#xa; </xsl:text>
+			</xsl:otherwise>
 		</xsl:choose>
-		<xsl:text>&#xa;</xsl:text>
+		
 		<xsl:apply-templates select="td[2]" mode="dl"/>
 		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
+		
+		<xsl:if test="count(following-sibling::tr[1]/td[1]//node()) &gt; 0 or position() = last()">
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
+		<!-- count=<xsl:value-of select="count(following-sibling::tr/td[1]//node())"/> -->
+		<!-- <xsl:if test="following-sibling::tr/td[1]/* != 0">
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if> -->
 	</xsl:template>
 	
 	<xsl:template match="td" mode="dl">
@@ -582,21 +629,28 @@
 	<xsl:template match="table">
 		<xsl:text>[</xsl:text>
 		<xsl:text>cols="</xsl:text>
+		<xsl:variable name="simple-table">
+			<xsl:call-template  name="getSimpleTable"/>
+		</xsl:variable>
+		<xsl:variable name="cols-count">
+			<xsl:choose>
+				<xsl:when test="col">
+					<xsl:value-of select="count(col)"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="count(xalan:nodeset($simple-table)//tr[1]/td)"/>				
+				</xsl:otherwise>				
+			</xsl:choose>
+		</xsl:variable>
 		<xsl:choose>
-			<xsl:when test="col">
-				
+			<xsl:when test="col">				
 				<xsl:for-each select="col">
-					<xsl:variable name="width" select="translate(@width, '%', '')"/>
+					<xsl:variable name="width" select="translate(@width, '%cm', '')"/>
 					<xsl:value-of select="round($width)"/>
 					<xsl:if test="position() != last()">,</xsl:if>
-				</xsl:for-each>					
-				
+				</xsl:for-each>
 			</xsl:when>
 			<xsl:otherwise>
-				<xsl:variable name="simple-table">
-					<xsl:call-template  name="getSimpleTable"/>
-				</xsl:variable>
-				<xsl:variable name="cols-count" select="count(xalan:nodeset($simple-table)//tr[1]/td)"/>				
 				<xsl:variable name="cols">
 					<xsl:call-template name="repeat">
 						<xsl:with-param name="char" select="'1,'"/>
@@ -610,15 +664,34 @@
 		<xsl:if test="thead">
 			<xsl:text>,</xsl:text>
 		</xsl:if>
-		<xsl:if test="thead">
-			<xsl:text>options="header"</xsl:text>
+		<xsl:variable name="options">
+			<xsl:if test="thead">
+				<option>header</option>
+			</xsl:if>
+			<xsl:if test="ancestor::table-wrap/table-wrap-foot">
+				<option>footer</option>
+			</xsl:if>
+		</xsl:variable>
+		<xsl:if test="count(xalan:nodeset($options)/option) != 0">
+			<xsl:text>options="</xsl:text>
+				<xsl:for-each select="xalan:nodeset($options)/option">
+					<xsl:value-of select="."/>
+					<xsl:if test="position() != last()">,</xsl:if>
+				</xsl:for-each>
+			<xsl:text>"</xsl:text>
 		</xsl:if>
+		<!-- <xsl:if test="thead">
+			<xsl:text>options="header"</xsl:text>
+		</xsl:if> -->
 		<xsl:text>]</xsl:text>
 		<xsl:text>&#xa;</xsl:text>		
 		<xsl:text>|===</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
+		<xsl:apply-templates select="../table-wrap-foot" mode="footer">
+			<xsl:with-param name="cols-count" select="$cols-count"/>
+		</xsl:apply-templates>
 		<xsl:text>|===</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
@@ -636,12 +709,14 @@
 	</xsl:template>
 	
 	<xsl:template match="th">
+		<xsl:call-template name="spanProcessing"/>
 		<xsl:text>|</xsl:text>
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="td">
+		<xsl:call-template name="spanProcessing"/>		
 		<xsl:text>|</xsl:text>
 		<xsl:apply-templates />
 		<xsl:choose>
@@ -655,11 +730,56 @@
 		
 	</xsl:template>
 	
+	<xsl:template name="spanProcessing">
+		<xsl:if test="@colspan &gt; 1 or @rowspan &gt; 1">
+			<xsl:choose>
+				<xsl:when test="@colspan &gt; 1 and @rowspan &gt; 1">
+					<xsl:value-of select="@colspan"/><xsl:text>.</xsl:text><xsl:value-of select="@rowspan"/>
+				</xsl:when>
+				<xsl:when test="@colspan &gt; 1">
+					<xsl:value-of select="@colspan"/>
+				</xsl:when>
+				<xsl:when test="@rowspan &gt; 1">
+					<xsl:text>.</xsl:text><xsl:value-of select="@rowspan"/>
+				</xsl:when>
+			</xsl:choose>			
+			<xsl:text>+</xsl:text>
+		</xsl:if>
+	</xsl:template>
+	
 	<xsl:template match="td/p">
 		<xsl:text> +</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates/>
 		<xsl:text>&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="table-wrap-foot"/>
+	<xsl:template match="table-wrap-foot" mode="footer">		
+		<xsl:param name="cols-count"/>
+		<xsl:value-of select="$cols-count"/><xsl:text>+</xsl:text>
+		<xsl:apply-templates/>
+		<xsl:text>&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="fn-group">
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="fn-group/fn">
+		<xsl:apply-templates />
+		<xsl:if test="position() != last()">
+			<xsl:text> +</xsl:text>
+		</xsl:if>
+		<xsl:text>&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="fn-group/fn/label">
+		<xsl:value-of select="."/><xsl:text>| </xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="fn-group/fn/p">
+		<xsl:apply-templates />
 	</xsl:template>
 	
 	<xsl:template match="app">
@@ -689,10 +809,13 @@
 	</xsl:template>
 	
 	<xsl:template match="ref">
-		<xsl:text>* [[[</xsl:text>
-		<xsl:value-of select="@id"/>
-		<xsl:apply-templates select="std/std-ref" mode="std"/>
-		<xsl:text>]]]</xsl:text>
+		<xsl:text>* </xsl:text>
+		<xsl:if test="@id or std/std-ref">
+			<xsl:text>[[[</xsl:text>
+			<xsl:value-of select="@id"/>
+			<xsl:apply-templates select="std/std-ref" mode="std"/>
+			<xsl:text>]]]</xsl:text>
+		</xsl:if>
 		<xsl:apply-templates/>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
@@ -745,6 +868,9 @@
 	
 	<xsl:template match="graphic">
 		<xsl:text>image::</xsl:text>
+		<xsl:if test="not(processing-instruction('isoimg-id'))">
+			<xsl:value-of select="@xlink:href"/>
+		</xsl:if>
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
@@ -753,6 +879,17 @@
 	<xsl:template match="graphic/processing-instruction('isoimg-id')">
 		<xsl:value-of select="."/>
 	</xsl:template>	
+
+	<xsl:template match="object-id">
+		<xsl:choose>
+			<xsl:when test="@pub-id-type = 'publisher-id'">
+				<xsl:text>[</xsl:text>
+					<xsl:apply-templates />
+				<xsl:text>]</xsl:text>
+			</xsl:when>
+			<xsl:otherwise></xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
 	
 	<xsl:template match="disp-quote">
 		<xsl:text>[quote, </xsl:text><xsl:value-of select="related-object"/><xsl:text>]</xsl:text>
@@ -798,6 +935,14 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
+	<xsl:template match="inline-formula">
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>stem:[</xsl:text>				
+		<xsl:apply-templates />		
+		<xsl:text>]</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+	</xsl:template>
+	
 	<xsl:template match="disp-formula">
 		<xsl:text>stem:[</xsl:text>				
 		<xsl:apply-templates />		
@@ -828,6 +973,27 @@
 	</xsl:template>
 	
 	
+	<xsl:template match="def-list">
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="def-item">
+		<xsl:apply-templates />		
+	</xsl:template>
+	
+	<xsl:template match="def-item/term">
+		<xsl:apply-templates/>
+		<xsl:text>::</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="def-item/def">
+		<xsl:apply-templates/>
+	</xsl:template>
+	
+	<xsl:template match="named-content">
+		<xsl:apply-templates/><xsl:text> </xsl:text>
+	</xsl:template>
+	
 	<xsl:template name="split">
 		<xsl:param name="pText" select="."/>
 		<xsl:param name="sep" select="'/'"/>
@@ -846,7 +1012,14 @@
 		<xsl:variable name="level_total" select="count(ancestor::*)"/>
 		
 		<xsl:variable name="level">
-			<xsl:value-of select="$level_total - 2"/>
+			<xsl:choose>
+				<xsl:when test="ancestor::back">
+					<xsl:value-of select="$level_total - 3"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="$level_total - 2"/>
+				</xsl:otherwise>
+			</xsl:choose>
 		</xsl:variable>
 			
 		<xsl:call-template name="repeat">
