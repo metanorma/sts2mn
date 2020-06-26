@@ -436,16 +436,34 @@
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 		<xsl:text>&#xa;</xsl:text>
+		<xsl:apply-templates select="@list-type"/>
+		
 		<xsl:apply-templates/>
 		<xsl:if test="not(parent::list-item)">
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 	</xsl:template>
 	
+	<xsl:template match="list/@list-type">
+		<xsl:variable name="listtype">
+			<xsl:choose>
+				<xsl:when test=". = 'alpha-lower'">loweralpha</xsl:when>
+				<xsl:otherwise></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:if test="$listtype != ''">		
+			<xsl:text>[</xsl:text>
+			<xsl:value-of select="$listtype"/>
+			<xsl:text>]</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
+	</xsl:template>
 	
 	<xsl:template match="list/list-item">
 		<xsl:choose>
-			<xsl:when test="ancestor::list/@list-type = 'bullet'">				
+			<xsl:when test="ancestor::list/@list-type = 'bullet' or 
+							ancestor::list/@list-type = 'dash' or
+							ancestor::list/@list-type = 'simple'">				
 				<xsl:call-template name="getLevelListItem">
 					<xsl:with-param name="list-label">*</xsl:with-param>
 				</xsl:call-template>
@@ -516,7 +534,7 @@
 	
 	<xsl:template match="xref">
 		<xsl:choose>
-			<xsl:when test="@ref-type = 'fn' and ancestor::td">
+			<xsl:when test="@ref-type = 'fn' and (ancestor::td or ancestor::def-item)">
 				<xsl:text> footnote:</xsl:text>
 				<xsl:value-of select="@rid"/>
 				<xsl:text>[]</xsl:text>
@@ -623,7 +641,7 @@
 	<xsl:template match="table-wrap/caption/title">
 		<xsl:text>.</xsl:text>
 		<xsl:apply-templates />
-		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>&#xa;</xsl:text>		
 	</xsl:template>
 	
 	<xsl:template match="table">
@@ -679,6 +697,10 @@
 					<xsl:if test="position() != last()">,</xsl:if>
 				</xsl:for-each>
 			<xsl:text>"</xsl:text>
+			<xsl:if test="count(thead/tr) &gt; 1">
+				<xsl:text>,headerrows=</xsl:text>
+				<xsl:value-of select="count(thead/tr)"/>
+			</xsl:if>
 		</xsl:if>
 		<!-- <xsl:if test="thead">
 			<xsl:text>options="header"</xsl:text>
@@ -731,6 +753,7 @@
 	</xsl:template>
 	
 	<xsl:template name="spanProcessing">
+		<xsl:if test="list">a</xsl:if>
 		<xsl:if test="@colspan &gt; 1 or @rowspan &gt; 1">
 			<xsl:choose>
 				<xsl:when test="@colspan &gt; 1 and @rowspan &gt; 1">
@@ -935,12 +958,10 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
-	<xsl:template match="inline-formula">
-		<xsl:text>&#xa;</xsl:text>
+	<xsl:template match="inline-formula">		
 		<xsl:text>stem:[</xsl:text>				
 		<xsl:apply-templates />		
-		<xsl:text>]</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>]</xsl:text>		
 	</xsl:template>
 	
 	<xsl:template match="disp-formula">
@@ -953,7 +974,8 @@
 	<!-- MathML -->
 	<!-- https://www.metanorma.com/blog/2019-05-29-latex-math-stem/ -->
 	<xsl:template match="mml:*">
-		<xsl:text>&lt;</xsl:text>
+		<xsl:text>a+b</xsl:text>
+		<!-- <xsl:text>&lt;</xsl:text>
 		<xsl:value-of select="local-name()"/>
 		<xsl:if test="local-name() = 'math'">
 			<xsl:text> xmlns="http://www.w3.org/1998/Math/MathML"</xsl:text>
@@ -969,12 +991,20 @@
 		<xsl:apply-templates />		
 		<xsl:text>&lt;/</xsl:text>
 		<xsl:value-of select="local-name()"/>
-		<xsl:text>&gt;</xsl:text>
+		<xsl:text>&gt;</xsl:text> -->
 	</xsl:template>
 	
 	
 	<xsl:template match="def-list">
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="def-list/title">
+		<xsl:text>*</xsl:text><xsl:apply-templates /><xsl:text>*</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="def-item">
@@ -983,12 +1013,15 @@
 	
 	<xsl:template match="def-item/term">
 		<xsl:apply-templates/>
+		<xsl:if test="count(node()) = 0"><xsl:text> </xsl:text></xsl:if>
 		<xsl:text>::</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="def-item/def">
 		<xsl:apply-templates/>
 	</xsl:template>
+	
 	
 	<xsl:template match="named-content">
 		<xsl:apply-templates/><xsl:text> </xsl:text>
@@ -1011,13 +1044,15 @@
 	<xsl:template name="getLevel">
 		<xsl:variable name="level_total" select="count(ancestor::*)"/>
 		
+		<xsl:variable name="level_standard" select="count(ancestor::standard/ancestor::*)"/>
+		
 		<xsl:variable name="level">
 			<xsl:choose>
 				<xsl:when test="ancestor::back">
-					<xsl:value-of select="$level_total - 3"/>
+					<xsl:value-of select="$level_total - $level_standard - 3"/>
 				</xsl:when>
 				<xsl:otherwise>
-					<xsl:value-of select="$level_total - 2"/>
+					<xsl:value-of select="$level_total - $level_standard - 2"/>
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
@@ -1030,8 +1065,7 @@
 	
 	<xsl:template name="getLevelListItem">
 		<xsl:param name="list-label" select="'*'"/>
-		<xsl:variable name="level" select="count(ancestor-or-self::list)"/>
-			
+		<xsl:variable name="level" select="count(ancestor-or-self::list)"/>		
 		<xsl:call-template name="repeat">
 			<xsl:with-param name="char" select="$list-label"/>
 			<xsl:with-param name="count" select="$level"/>
