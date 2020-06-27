@@ -28,7 +28,7 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
-	<xsl:template match="standard">
+	<xsl:template match="standard">		
 		<xsl:apply-templates />
 	</xsl:template>
 	
@@ -104,13 +104,20 @@
 		</xsl:if>
 	</xsl:template>
 	
-	<xsl:template match="//standard/body | //standard/back">
+	<xsl:template match="//standard/body">
 		<xsl:if test="$split-bibdata != 'true'">
+			<xsl:apply-templates select="../back/fn-group" mode="footnotes"/>
 			<xsl:apply-templates />
 		</xsl:if>
 	</xsl:template>
 	
-	<xsl:template match="std-ident2[ancestor::front or ancestor::adoption-front]/text()"/>
+	<xsl:template match="//standard/back">
+		<xsl:if test="$split-bibdata != 'true'">			
+			<xsl:apply-templates />
+		</xsl:if>
+	</xsl:template>
+	
+	
 	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]">
 		<xsl:text>= </xsl:text>
 		<xsl:value-of select="originator"/>
@@ -411,17 +418,19 @@
 	</xsl:template>
 	
 	<xsl:template match="std">
-		<xsl:apply-templates />
+		<xsl:if test="local-name(preceding-sibling::node()) != ''">
+			<xsl:text> </xsl:text>
+		</xsl:if>		
+		<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
+		<xsl:if test="local-name(preceding-sibling::node()) != ''">
+			<xsl:text> </xsl:text>
+		</xsl:if>		
 	</xsl:template>
 	
-	<xsl:template match="std-id">
-		<xsl:text>[[</xsl:text>
-			<xsl:apply-templates />
-		<xsl:text>]]</xsl:text>
-	</xsl:template>
+	<xsl:template match="std-id-group"/>
 	
 	<xsl:template match="std-ref">
-		<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
+		<xsl:apply-templates />
 	</xsl:template>
 	
 	<xsl:template match="tbx:source">
@@ -514,11 +523,10 @@
 		<xsl:text>`</xsl:text><xsl:apply-templates /><xsl:text>`</xsl:text>
 	</xsl:template>
 	
-	<!-- AsciiDoc not support -->
 	<xsl:template match="sc">
-		<!-- <smallcap> -->
-			<xsl:apply-templates />
-		<!-- </smallcap> -->
+		<xsl:text>[smallcap]#</xsl:text>
+		<xsl:apply-templates />
+		<xsl:text>#</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="ext-link">
@@ -533,17 +541,49 @@
 	</xsl:template>
 	
 	<xsl:template match="xref">
+		
 		<xsl:choose>
-			<xsl:when test="@ref-type = 'fn' and (ancestor::td or ancestor::def-item)">
+			<xsl:when test="@ref-type = 'fn'">
+				<xsl:variable name="rid" select="@rid"/>
+				<!-- find <fn id="$rid" -->
+				<xsl:choose>
+					<!-- in fn in fn-group -->
+					<xsl:when test="//fn[@id = current()/@rid]/ancestor::fn-group">
+						<xsl:text>{</xsl:text>
+						<xsl:value-of select="@rid"/>
+						<xsl:text>}</xsl:text>
+					</xsl:when>
+					<xsl:otherwise>
+						<!-- fn will be processed after xref -->
+						<!-- no need to process right now -->
+						<!-- <xsl:apply-templates select="//fn[@id = current()/@rid]"/> -->
+					</xsl:otherwise>
+				</xsl:choose>				
+			</xsl:when>
+			<!-- <xsl:when test="@ref-type = 'fn' and ancestor::td">
+				<xsl:choose>
+					<xsl:when test="//fn[@id = current()/@rid]/ancestor::fn-group">
+						<xsl:text>{</xsl:text>
+						<xsl:value-of select="@rid"/>
+						<xsl:text>}</xsl:text>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:text> footnote:</xsl:text>
+						<xsl:value-of select="@rid"/>
+						<xsl:text>[]</xsl:text>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:when>
+			<xsl:when test="@ref-type = 'fn' and ancestor::def-item">
 				<xsl:text> footnote:</xsl:text>
 				<xsl:value-of select="@rid"/>
 				<xsl:text>[]</xsl:text>
 			</xsl:when>
-			<xsl:when test="@ref-type = 'fn'"/>
+			<xsl:when test="@ref-type = 'fn'"/> -->
 			<xsl:when test="@ref-type = 'other'">
 				<xsl:text>&lt;</xsl:text><xsl:value-of select="."/><xsl:text>&gt;</xsl:text>
 			</xsl:when>
-			<xsl:otherwise>
+			<xsl:otherwise> <!-- example: ref-type="sec" "table" "app" -->
 				<xsl:text>&lt;&lt;</xsl:text><xsl:value-of select="@rid"/><xsl:text>&gt;&gt;</xsl:text>
 			</xsl:otherwise>
 		</xsl:choose>
@@ -570,11 +610,7 @@
 	<xsl:template match="mixed-citation">		
 		<xsl:apply-templates/>
 	</xsl:template>
-	
-	<!-- <xsl:template match="sc">
-		<xsl:text>`</xsl:text><xsl:apply-templates /><xsl:text>`</xsl:text>
-	</xsl:template> -->
-	
+		
 	<xsl:template match="array">
 		<xsl:choose>
 			<xsl:when test="count(table/col) = 2">				
@@ -635,6 +671,7 @@
 		<xsl:value-of select="@id"/>
 		<xsl:text>]]</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
+		<xsl:apply-templates select="table-wrap-foot/fn-group" mode="footnotes"/>
 		<xsl:apply-templates />
 	</xsl:template>
 	
@@ -686,7 +723,7 @@
 			<xsl:if test="thead">
 				<option>header</option>
 			</xsl:if>
-			<xsl:if test="ancestor::table-wrap/table-wrap-foot">
+			<xsl:if test="ancestor::table-wrap/table-wrap-foot[count(*[local-name() != 'fn-group']) != 0]">
 				<option>footer</option>
 			</xsl:if>
 		</xsl:variable>
@@ -727,6 +764,9 @@
 	</xsl:template>
 	
 	<xsl:template match="tr">
+		<xsl:if test="position() != 1">
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
 		<xsl:apply-templates />
 	</xsl:template>
 	
@@ -752,8 +792,7 @@
 		
 	</xsl:template>
 	
-	<xsl:template name="spanProcessing">
-		<xsl:if test="list">a</xsl:if>
+	<xsl:template name="spanProcessing">		
 		<xsl:if test="@colspan &gt; 1 or @rowspan &gt; 1">
 			<xsl:choose>
 				<xsl:when test="@colspan &gt; 1 and @rowspan &gt; 1">
@@ -768,6 +807,7 @@
 			</xsl:choose>			
 			<xsl:text>+</xsl:text>
 		</xsl:if>
+		<xsl:if test="list or def-list">a</xsl:if>
 	</xsl:template>
 	
 	<xsl:template match="td/p">
@@ -780,12 +820,42 @@
 	<xsl:template match="table-wrap-foot"/>
 	<xsl:template match="table-wrap-foot" mode="footer">		
 		<xsl:param name="cols-count"/>
-		<xsl:value-of select="$cols-count"/><xsl:text>+</xsl:text>
-		<xsl:apply-templates/>
-		<xsl:text>&#xa;</xsl:text>
+		<xsl:if test="*[local-name() != 'fn-group']">
+			<xsl:value-of select="$cols-count"/><xsl:text>+</xsl:text>		
+			<xsl:apply-templates/>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
+	</xsl:template>
+	
+	<xsl:template match="table-wrap-foot/fn-group"/>
+	<xsl:template match="back/fn-group"/>
+	
+	<xsl:template match="fn-group" mode="footnotes">
+		<xsl:apply-templates/>	
+		<xsl:text>&#xa;</xsl:text>		
 	</xsl:template>
 	
 	<xsl:template match="fn-group">
+		<xsl:apply-templates/>	
+		<xsl:text>&#xa;</xsl:text>		
+	</xsl:template>
+	
+	<xsl:template match="fn-group/fn">
+		<xsl:text>:</xsl:text>
+		<xsl:value-of select="@id"/>
+		<xsl:text>: footnote:[</xsl:text>
+		<xsl:apply-templates/>
+		<xsl:text>]</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="fn-group/fn/label"/>
+	
+	<xsl:template match="fn-group/fn/p">
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<!-- <xsl:template match="fn-group">
 		<xsl:apply-templates />
 	</xsl:template>
 	
@@ -799,11 +869,8 @@
 	
 	<xsl:template match="fn-group/fn/label">
 		<xsl:value-of select="."/><xsl:text>| </xsl:text>
-	</xsl:template>
-	
-	<xsl:template match="fn-group/fn/p">
-		<xsl:apply-templates />
-	</xsl:template>
+	</xsl:template>	
+	 -->
 	
 	<xsl:template match="app">
 		<xsl:text>[[</xsl:text>
@@ -837,6 +904,7 @@
 			<xsl:text>[[[</xsl:text>
 			<xsl:value-of select="@id"/>
 			<xsl:apply-templates select="std/std-ref" mode="std"/>
+			<xsl:apply-templates select="mixed-citation/std" mode="std"/>
 			<xsl:text>]]]</xsl:text>
 		</xsl:if>
 		<xsl:apply-templates/>
@@ -850,6 +918,11 @@
 	
 	<xsl:template match="ref/std/std-ref"/>
 	<xsl:template match="ref/std/std-ref" mode="std">
+		<xsl:text>,</xsl:text>
+		<xsl:apply-templates/>
+	</xsl:template>
+	
+	<xsl:template match="ref/mixed-citation/std" mode="std">
 		<xsl:text>,</xsl:text>
 		<xsl:apply-templates/>
 	</xsl:template>
