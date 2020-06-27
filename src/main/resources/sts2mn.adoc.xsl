@@ -1047,8 +1047,8 @@
 	<!-- MathML -->
 	<!-- https://www.metanorma.com/blog/2019-05-29-latex-math-stem/ -->
 	<xsl:template match="mml:*">
-		<xsl:text>a+b</xsl:text>
-		<!-- <xsl:text>&lt;</xsl:text>
+		<!-- <xsl:text>a+b</xsl:text> -->
+		<xsl:text>&lt;</xsl:text>
 		<xsl:value-of select="local-name()"/>
 		<xsl:if test="local-name() = 'math'">
 			<xsl:text> xmlns="http://www.w3.org/1998/Math/MathML"</xsl:text>
@@ -1064,7 +1064,7 @@
 		<xsl:apply-templates />		
 		<xsl:text>&lt;/</xsl:text>
 		<xsl:value-of select="local-name()"/>
-		<xsl:text>&gt;</xsl:text> -->
+		<xsl:text>&gt;</xsl:text>
 	</xsl:template>
 	
 	
