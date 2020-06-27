@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -88,4 +89,19 @@ public class Util {
         }
         
     }
+    
+    public static boolean isUrlExists(String urlname){
+    try {
+        HttpURLConnection.setFollowRedirects(false);        
+        HttpURLConnection con = (HttpURLConnection) new URL(urlname).openConnection();
+        con.setRequestMethod("HEAD");
+        return (con.getResponseCode() == HttpURLConnection.HTTP_OK ||
+                con.getResponseCode() == HttpURLConnection.HTTP_MOVED_TEMP);
+    }
+    catch (Exception e) {
+       e.printStackTrace();
+       return false;
+    }
+  }
+    
 }

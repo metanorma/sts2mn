@@ -150,9 +150,14 @@ public class sts2mn {
                 String argXMLin = arglist.get(0);
                 
                 boolean remoteFile = false;
-                if (argXMLin.toLowerCase().startsWith("http")) {
+                if (argXMLin.toLowerCase().startsWith("http") || argXMLin.toLowerCase().startsWith("www.")) {
                     remoteFile = true;
                     //download to temp folder
+                    System.out.println("Downloading " + argXMLin + "...");
+                    if (!Util.isUrlExists(argXMLin)) {
+                        System.out.println(String.format(INPUT_NOT_FOUND, XML_INPUT, argXMLin));
+                        System.exit(ERROR_EXIT_CODE);
+                    }
                     URL url = new URL(argXMLin);
                     String urlFilename = new File(url.getFile()).getName();
                     InputStream in = url.openStream();                    
@@ -160,6 +165,7 @@ public class sts2mn {
                     Files.createDirectories(tmpfilepath);
                     Files.copy(in, localPath, StandardCopyOption.REPLACE_EXISTING);
                     argXMLin = localPath.toString();
+                    System.out.println("Done!");
                 }
                 
                 
@@ -224,15 +230,8 @@ public class sts2mn {
         }
         
         // flush temporary folder
-        if (!DEBUG && Files.exists(tmpfilepath)) {            
-            try {
-                Files.walk(tmpfilepath)
-                    .sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                            .forEach(File::delete);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+        if (!DEBUG) {
+            Util.FlushTempFolder(tmpfilepath);
         }
         
         if (cmdFail) {
