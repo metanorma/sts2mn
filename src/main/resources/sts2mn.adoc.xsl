@@ -1016,12 +1016,20 @@
 		<xsl:value-of select="@id"/>
 		<xsl:text>]]</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
+		<xsl:apply-templates select="caption/title" mode="fig-group-title"/>
 		<xsl:text>====</xsl:text>
-		<xsl:apply-templates/>
 		<xsl:text>&#xa;</xsl:text>
+		<xsl:apply-templates/>		
 		<xsl:text>====</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>&#xa;</xsl:text>		
+	</xsl:template>
+	
+	<xsl:template match="fig-group/caption/title"/>
+	<xsl:template match="fig-group/caption/title" mode="fig-group-title">
+		<xsl:text>.</xsl:text>
+		<xsl:apply-templates />
+		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="fig">
@@ -1032,6 +1040,9 @@
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 		<xsl:apply-templates/>
+		<xsl:if test="(parent::fig-group and position() != last()) or not(parent::fig-group)">
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
 	</xsl:template>
 	
 	<xsl:template match="fig/caption/title">
@@ -1047,7 +1058,9 @@
 		</xsl:if>
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
+		<xsl:if test="following-sibling::node()">
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
 	</xsl:template>
 	
 	<xsl:template match="graphic/processing-instruction('isoimg-id')">
