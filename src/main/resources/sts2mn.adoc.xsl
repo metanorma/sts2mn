@@ -808,6 +808,7 @@
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
+		<xsl:apply-templates select="tfoot" mode="footer"/>
 		<xsl:apply-templates select="../table-wrap-foot" mode="footer">
 			<xsl:with-param name="cols-count" select="$cols-count"/>
 		</xsl:apply-templates>
@@ -819,6 +820,17 @@
 	<xsl:template match="col"/>
 	
 	<xsl:template match="thead">
+		<xsl:apply-templates />
+		<!-- <xsl:text>&#xa;</xsl:text> -->
+	</xsl:template>
+	
+	<xsl:template match="tfoot"/>
+	<xsl:template match="tfoot" mode="footer">		
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="tbody">
+		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
@@ -842,8 +854,11 @@
 		<xsl:text>|</xsl:text>
 		<xsl:apply-templates />
 		<xsl:choose>
-			<xsl:when test="position() = last()">
+			<xsl:when test="position() = last() and ../following-sibling::tr">
 				<xsl:text>&#xa;</xsl:text>
+			</xsl:when>
+			<xsl:when test="position() = last()">
+				<xsl:text></xsl:text>
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:text> </xsl:text>
