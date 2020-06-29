@@ -90,13 +90,14 @@
 
 		<xsl:if test="$split-bibdata != 'true'">
 			
-			<xsl:if test="not(//adoption)"> <!-- for adoption create a one adoc -->
+			<!-- for adoption create a one adoc -->
+			<!-- <xsl:if test="not(//adoption)">
 				<xsl:text>include::</xsl:text><xsl:value-of select="$path"/>
 				<xsl:text>&#xa;</xsl:text>
 				
 				<xsl:text>///SPLIT </xsl:text><xsl:value-of select="$path"/>
 				<xsl:text>&#xa;</xsl:text>
-			</xsl:if>
+			</xsl:if> -->
 			
 			<xsl:apply-templates select="*[local-name() != 'iso-meta' and local-name() != 'std-meta']"/>
 			<!-- <xsl:apply-templates select="/standard/body"/>			
@@ -248,6 +249,7 @@
 					<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
 					<xsl:text>&#xa;</xsl:text>
 					<xsl:text>:technical-committee: </xsl:text>
+					<xsl:text>&#xa;</xsl:text>
 				</xsl:when>
 				<xsl:when test="starts-with(., 'SC ')">
 					<xsl:text>:subcommittee-type: SC</xsl:text>
@@ -256,17 +258,19 @@
 					<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
 					<xsl:text>&#xa;</xsl:text>
 					<xsl:text>:subcommittee: </xsl:text>				
+					<xsl:text>&#xa;</xsl:text>
 				</xsl:when>
 				<xsl:when test="starts-with(., 'WG ')">					
 					<xsl:text>:workgroup-type: WG</xsl:text>
+					<xsl:text>&#xa;</xsl:text>
 					<xsl:text>:workgroup-number: </xsl:text>
 					<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
 					<xsl:text>&#xa;</xsl:text>
 					<xsl:text>:workgroup: </xsl:text>
+					<xsl:text>&#xa;</xsl:text>
 				</xsl:when>
 			</xsl:choose>
 		</xsl:for-each>
-		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="secretariat[ancestor::front or ancestor::adoption-front]">
@@ -285,11 +289,11 @@
 			<xsl:when test="@sec-type = 'intro'">
 				<xsl:text>[[introduction]]</xsl:text>
 				<xsl:text>&#xa;</xsl:text>
-				<xsl:text>&#xa;</xsl:text>
-				<xsl:text>:sectnums!:</xsl:text>
+				<!-- <xsl:text>&#xa;</xsl:text>
+				<xsl:text>:sectnums!:</xsl:text> -->
 			</xsl:when>
 			<xsl:when test="@sec-type = 'scope'">
-				<xsl:text>:sectnums:</xsl:text>			
+				<!-- <xsl:text>:sectnums:</xsl:text> -->
 			</xsl:when>
 			<xsl:when test="@sec-type = 'norm-refs'">
 				<xsl:text>[bibliography]</xsl:text>			
@@ -310,6 +314,11 @@
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates />
 	</xsl:template>
+	
+	<xsl:template match="sec/text() | list-item/text() | list/text()">
+		<xsl:value-of select="normalize-space(.)"/>
+	</xsl:template>
+	
 	
 	<xsl:template match="term-sec">
 		<xsl:text>[[</xsl:text>
@@ -334,14 +343,13 @@
 		<xsl:choose>
 			<xsl:when test="parent::sec/@sec-type = 'foreword'">
 				<xsl:text>.</xsl:text>
-				<xsl:text> </xsl:text><xsl:apply-templates />
+				<xsl:apply-templates />
 				<xsl:text>&#xa;</xsl:text>
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:variable name="level">
 					<xsl:call-template name="getLevel"/>
-				</xsl:variable>
-				
+				</xsl:variable>				
 				<xsl:value-of select="$level"/>
 				<xsl:text> </xsl:text><xsl:apply-templates />
 				<xsl:text>&#xa;</xsl:text>
@@ -429,14 +437,65 @@
 	
 	<xsl:template match="std-id-group"/>
 	
+	<xsl:template match="std[not(ancestor::ref)]/text()">
+		<xsl:variable name="text" select="normalize-space(translate(.,'&#xA0;', ' '))"/>
+		<xsl:choose>
+			<xsl:when test="starts-with($text, ',')">
+				<xsl:call-template name="getUpdatedRef">
+					<xsl:with-param name="text" select="$text"/>
+				</xsl:call-template>				
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="."/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+	
 	<xsl:template match="std-ref">
-		<xsl:apply-templates />
+		<xsl:choose>
+			<xsl:when test="ancestor::ref"> <!-- sec[@sec-type = 'norm-refs'] -->
+				<xsl:apply-templates />
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:variable name="std-ref" select="java:replaceAll(java:java.lang.String.new(.),'--','—')"/>
+				<xsl:variable name="ref1" select="//ref[std/std-ref = $std-ref]/@id"/>
+				<xsl:variable name="ref2" select="//ref[starts-with(std/std-ref, concat($std-ref, ' '))]/@id"/>
+				<xsl:choose>
+					<xsl:when test="$ref1 != ''">
+						<xsl:value-of select="$ref1"/>
+					</xsl:when>
+					<xsl:when test="$ref2 != ''">
+						<xsl:value-of select="$ref2"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:apply-templates />
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:otherwise>
+		</xsl:choose>
+		
 	</xsl:template>
 	
 	<xsl:template match="tbx:source">
 		<xsl:text>[.source]</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
+		<xsl:variable name="modified_text" select="', modified — '"/>
+		<xsl:choose>
+			<xsl:when test="contains(., $modified_text)">
+				<xsl:text>&lt;&lt;</xsl:text>
+					<!-- <xsl:value-of select="substring-before(., $modified_text)"/> -->
+					<xsl:call-template name="getUpdatedRef">
+						<xsl:with-param name="text" select="substring-before(., $modified_text)"/>
+					</xsl:call-template>
+				<xsl:text>&gt;&gt;</xsl:text>
+				<xsl:text>, </xsl:text>
+				<xsl:value-of select="substring-after(., $modified_text)"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
+			</xsl:otherwise>
+		</xsl:choose>
+		
 		<xsl:text>&#xa;&#xa;</xsl:text>
 	</xsl:template>
 	
@@ -612,6 +671,7 @@
 	</xsl:template>
 		
 	<xsl:template match="array">
+		<xsl:text>&#xa;</xsl:text>
 		<xsl:choose>
 			<xsl:when test="count(table/col) = 2">				
 				<xsl:apply-templates mode="dl"/>				
@@ -748,6 +808,7 @@
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
+		<xsl:apply-templates select="tfoot" mode="footer"/>
 		<xsl:apply-templates select="../table-wrap-foot" mode="footer">
 			<xsl:with-param name="cols-count" select="$cols-count"/>
 		</xsl:apply-templates>
@@ -759,6 +820,17 @@
 	<xsl:template match="col"/>
 	
 	<xsl:template match="thead">
+		<xsl:apply-templates />
+		<!-- <xsl:text>&#xa;</xsl:text> -->
+	</xsl:template>
+	
+	<xsl:template match="tfoot"/>
+	<xsl:template match="tfoot" mode="footer">		
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="tbody">
+		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
@@ -782,8 +854,11 @@
 		<xsl:text>|</xsl:text>
 		<xsl:apply-templates />
 		<xsl:choose>
-			<xsl:when test="position() = last()">
+			<xsl:when test="position() = last() and ../following-sibling::tr">
 				<xsl:text>&#xa;</xsl:text>
+			</xsl:when>
+			<xsl:when test="position() = last()">
+				<xsl:text></xsl:text>
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:text> </xsl:text>
@@ -919,7 +994,10 @@
 	<xsl:template match="ref/std/std-ref"/>
 	<xsl:template match="ref/std/std-ref" mode="std">
 		<xsl:text>,</xsl:text>
-		<xsl:apply-templates/>
+		<xsl:apply-templates mode="std"/>
+	</xsl:template>
+	<xsl:template match="ref/std/std-ref/text()" mode="std">
+		<xsl:value-of select="translate(.,'[]','')"/>
 	</xsl:template>
 	
 	<xsl:template match="ref/mixed-citation/std" mode="std">
@@ -938,12 +1016,20 @@
 		<xsl:value-of select="@id"/>
 		<xsl:text>]]</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
+		<xsl:apply-templates select="caption/title" mode="fig-group-title"/>
 		<xsl:text>====</xsl:text>
-		<xsl:apply-templates/>
 		<xsl:text>&#xa;</xsl:text>
+		<xsl:apply-templates/>		
 		<xsl:text>====</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>&#xa;</xsl:text>		
+	</xsl:template>
+	
+	<xsl:template match="fig-group/caption/title"/>
+	<xsl:template match="fig-group/caption/title" mode="fig-group-title">
+		<xsl:text>.</xsl:text>
+		<xsl:apply-templates />
+		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="fig">
@@ -954,6 +1040,9 @@
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 		<xsl:apply-templates/>
+		<xsl:if test="(parent::fig-group and position() != last()) or not(parent::fig-group)">
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
 	</xsl:template>
 	
 	<xsl:template match="fig/caption/title">
@@ -969,7 +1058,9 @@
 		</xsl:if>
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
+		<xsl:if test="following-sibling::node()">
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
 	</xsl:template>
 	
 	<xsl:template match="graphic/processing-instruction('isoimg-id')">
@@ -1041,7 +1132,7 @@
 		<xsl:text>stem:[</xsl:text>				
 		<xsl:apply-templates />		
 		<xsl:text>]</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
+		<!-- <xsl:text>&#xa;</xsl:text> -->
 	</xsl:template>
 	
 	<!-- MathML -->
@@ -1103,7 +1194,7 @@
 	<xsl:template name="split">
 		<xsl:param name="pText" select="."/>
 		<xsl:param name="sep" select="'/'"/>
-		<xsl:if test="string-length($pText) >0">
+		<xsl:if test="string-length($pText) &gt; 0">
 			<item>
 				<xsl:value-of select="normalize-space(substring-before(concat($pText, $sep), $sep))"/>
 			</item>
@@ -1119,19 +1210,36 @@
 		
 		<xsl:variable name="level_standard" select="count(ancestor::standard/ancestor::*)"/>
 		
-		<xsl:variable name="level">
+		<xsl:variable name="level_">
 			<xsl:choose>
-				<xsl:when test="ancestor::back">
-					<xsl:value-of select="$level_total - $level_standard - 3"/>
+				<xsl:when test="ancestor::app-group">
+					<xsl:value-of select="$level_total - $level_standard - 2"/>
 				</xsl:when>
 				<xsl:otherwise>
-					<xsl:value-of select="$level_total - $level_standard - 2"/>
+					<xsl:value-of select="$level_total - $level_standard - 1"/>
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
-			
+		
+		<xsl:variable name="level_max" select="5"/>
+		<xsl:variable name="level">
+			<xsl:choose>
+				<xsl:when test="$level_ &lt;= $level_max">
+					<xsl:value-of select="$level_"/>
+				</xsl:when>
+				<xsl:otherwise><xsl:value-of select="$level_max"/></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:if test="$level_ &gt; $level_max">
+			<xsl:text>```adoc</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:text>[level=</xsl:text>
+			<xsl:value-of select="$level_"/>
+			<xsl:text>]</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
 		<xsl:call-template name="repeat">
-			<xsl:with-param name="count" select="$level + 1"/>
+			<xsl:with-param name="count" select="$level"/>
 		</xsl:call-template>
 		
 	</xsl:template>
@@ -1317,5 +1425,33 @@
 	<!-- End mode simple-table-rowspan  -->
 	<!-- ===================== -->	
 	<!-- ===================== -->	
+	
+	
+	<xsl:template name="getUpdatedRef">
+		<xsl:param name="text"/>
+		<xsl:variable name="text_items">
+			<xsl:call-template name="split">
+				<xsl:with-param name="pText" select="$text"/>
+				<xsl:with-param name="sep" select="' '"/>
+			</xsl:call-template>
+		</xsl:variable>
+		<xsl:variable name="updated_ref">
+			<xsl:for-each select="xalan:nodeset($text_items)//item">
+				<xsl:variable name="item" select="java:toLowerCase(java:java.lang.String.new(.))"/>
+				<xsl:choose>
+					<xsl:when test=". = ','">
+						<xsl:value-of select="."/>
+					</xsl:when>
+					<xsl:when test="$item = 'clause' or $item = 'table' or $item = 'annex'">
+						<xsl:value-of select="$item"/><xsl:text>=</xsl:text>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:text> </xsl:text><xsl:value-of select="."/>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:for-each>
+		</xsl:variable>
+		<xsl:value-of select="normalize-space(java:replaceAll(java:java.lang.String.new($updated_ref),'= ','='))"/>
+	</xsl:template>
 	
 </xsl:stylesheet>
