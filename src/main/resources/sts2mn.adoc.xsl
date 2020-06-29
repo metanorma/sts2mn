@@ -472,20 +472,35 @@
 	<xsl:template match="tbx:source">
 		<xsl:text>[.source]</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
-		<xsl:variable name="modified_text" select="'modified — '"/>
+		<xsl:variable name="modified_text" select="' modified — '"/>
 		
-		<xsl:variable name="source_text" select="."/>
+		<xsl:variable name="source_text" select="normalize-space(translate(., '&#xA0;', ' '))"/>
 		<!-- Output examples: <<ref_2,clause=3.1>> -->
 		<!-- <<ref_3,clause=3.2>>, The term “cargo rice” is shown as deprecated, and Note 1 to entry is not included here  -->
+		
+		<xsl:variable name="part1">
+			<xsl:choose>
+				<xsl:when test="contains($source_text, $modified_text)">
+					<xsl:value-of select="substring-before($source_text, $modified_text)"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="$source_text"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		
+		<xsl:variable name="part_modified" select="substring-after($source_text, $modified_text)"/>		
+		
+		<xsl:text>&lt;&lt;</xsl:text>
 		<xsl:choose>
-			<xsl:when test="contains(., ',')">
+			<xsl:when test="contains($part1, ',')">
 				<xsl:variable name="source_parts">
 					<xsl:call-template name="split">
-						<xsl:with-param name="pText" select="."/>
+						<xsl:with-param name="pText" select="$part1"/>
 						<xsl:with-param name="sep" select="','"/>
 					</xsl:call-template>
 				</xsl:variable>
-				<xsl:text>&lt;&lt;</xsl:text>
+				
 				<xsl:for-each select="xalan:nodeset($source_parts)//item">					
 					<!-- text=<xsl:value-of select="."/> -->
 					<xsl:choose>
@@ -494,27 +509,31 @@
 								<xsl:with-param name="text" select="."/>
 							</xsl:call-template>					
 						</xsl:when>
-						<xsl:when test="starts-with(., $modified_text)">
+						<!-- <xsl:when test="starts-with(., $modified_text)">
 							<xsl:text>&gt;&gt;</xsl:text>
 							<xsl:text>, </xsl:text>
 							<xsl:value-of select="substring-after(., $modified_text)"/>
-						</xsl:when>						
+						</xsl:when>	 -->					
 						<xsl:otherwise>
 							<xsl:text>,</xsl:text>
 							<xsl:call-template name="getUpdatedRef">
 								<xsl:with-param name="text" select="."/>
 							</xsl:call-template>
-							<xsl:if test="not(contains($source_text,$modified_text)) and position() = last()"><!-- i.e. if not closed yet -->
+							<!-- <xsl:if test="not(contains($source_text,$modified_text)) and position() = last()">
 								<xsl:text>&gt;&gt;</xsl:text>
-							</xsl:if>
+							</xsl:if> -->
 						</xsl:otherwise>
 					</xsl:choose>
 				</xsl:for-each>
 			</xsl:when>
 			<xsl:otherwise>
-				<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
+				<xsl:value-of select="$part1"/>
 			</xsl:otherwise>
 		</xsl:choose>
+		<xsl:text>&gt;&gt;</xsl:text>
+		<xsl:if test="$part_modified != ''">
+			<xsl:text>, </xsl:text><xsl:value-of select="$part_modified"/>
+		</xsl:if>
 		
 		<xsl:text>&#xa;&#xa;</xsl:text>
 	</xsl:template>
