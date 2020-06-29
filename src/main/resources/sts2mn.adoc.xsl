@@ -24,6 +24,12 @@
 			
 	<xsl:variable name="path" select="java:replaceAll(java:java.lang.String.new($path_),'#lang',$language)"/>
 	
+	<xsl:variable name="refs">
+		<xsl:for-each select="//ref">
+			<ref id="{@id}" std-ref="{std/std-ref}"/>			
+		</xsl:for-each>
+	</xsl:variable>
+	
 	<xsl:template match="adoption">
 		<xsl:apply-templates />
 	</xsl:template>
@@ -457,20 +463,7 @@
 				<xsl:apply-templates />
 			</xsl:when>
 			<xsl:otherwise>
-				<xsl:variable name="std-ref" select="java:replaceAll(java:java.lang.String.new(.),'--','—')"/>
-				<xsl:variable name="ref1" select="//ref[std/std-ref = $std-ref]/@id"/>
-				<xsl:variable name="ref2" select="//ref[starts-with(std/std-ref, concat($std-ref, ' '))]/@id"/>
-				<xsl:choose>
-					<xsl:when test="$ref1 != ''">
-						<xsl:value-of select="$ref1"/>
-					</xsl:when>
-					<xsl:when test="$ref2 != ''">
-						<xsl:value-of select="$ref2"/>
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:apply-templates />
-					</xsl:otherwise>
-				</xsl:choose>
+				<xsl:call-template name="getStdRef"/>
 			</xsl:otherwise>
 		</xsl:choose>
 		
@@ -479,17 +472,44 @@
 	<xsl:template match="tbx:source">
 		<xsl:text>[.source]</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
-		<xsl:variable name="modified_text" select="', modified — '"/>
+		<xsl:variable name="modified_text" select="'modified — '"/>
+		
+		<xsl:variable name="source_text" select="."/>
+		<!-- Output examples: <<ref_2,clause=3.1>> -->
+		<!-- <<ref_3,clause=3.2>>, The term “cargo rice” is shown as deprecated, and Note 1 to entry is not included here  -->
 		<xsl:choose>
-			<xsl:when test="contains(., $modified_text)">
-				<xsl:text>&lt;&lt;</xsl:text>
-					<!-- <xsl:value-of select="substring-before(., $modified_text)"/> -->
-					<xsl:call-template name="getUpdatedRef">
-						<xsl:with-param name="text" select="substring-before(., $modified_text)"/>
+			<xsl:when test="contains(., ',')">
+				<xsl:variable name="source_parts">
+					<xsl:call-template name="split">
+						<xsl:with-param name="pText" select="."/>
+						<xsl:with-param name="sep" select="','"/>
 					</xsl:call-template>
-				<xsl:text>&gt;&gt;</xsl:text>
-				<xsl:text>, </xsl:text>
-				<xsl:value-of select="substring-after(., $modified_text)"/>
+				</xsl:variable>
+				<xsl:text>&lt;&lt;</xsl:text>
+				<xsl:for-each select="xalan:nodeset($source_parts)//item">					
+					<!-- text=<xsl:value-of select="."/> -->
+					<xsl:choose>
+						<xsl:when test="position() = 1">
+							<xsl:call-template name="getStdRef">
+								<xsl:with-param name="text" select="."/>
+							</xsl:call-template>					
+						</xsl:when>
+						<xsl:when test="starts-with(., $modified_text)">
+							<xsl:text>&gt;&gt;</xsl:text>
+							<xsl:text>, </xsl:text>
+							<xsl:value-of select="substring-after(., $modified_text)"/>
+						</xsl:when>						
+						<xsl:otherwise>
+							<xsl:text>,</xsl:text>
+							<xsl:call-template name="getUpdatedRef">
+								<xsl:with-param name="text" select="."/>
+							</xsl:call-template>
+							<xsl:if test="not(contains($source_text,$modified_text)) and position() = last()"><!-- i.e. if not closed yet -->
+								<xsl:text>&gt;&gt;</xsl:text>
+							</xsl:if>
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:for-each>
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
@@ -1426,6 +1446,25 @@
 	<!-- ===================== -->	
 	<!-- ===================== -->	
 	
+	<xsl:template name="getStdRef">
+		<xsl:param name="text" select="."/>
+		<xsl:variable name="std-ref" select="java:replaceAll(java:java.lang.String.new($text),'--','—')"/>
+		<!-- <xsl:variable name="ref1" select="//ref[std/std-ref = $std-ref]/@id"/> -->
+		<xsl:variable name="ref1" select="xalan:nodeset($refs)//ref[@std-ref = $std-ref]/@id"/>				
+		<!-- <xsl:variable name="ref2" select="//ref[starts-with(std/std-ref, concat($std-ref, ' '))]/@id"/> -->
+		<xsl:variable name="ref2" select="xalan:nodeset($refs)//ref[starts-with(@std-ref, concat($std-ref, ' '))]/@id"/>		
+		<xsl:choose>
+			<xsl:when test="$ref1 != ''">
+				<xsl:value-of select="$ref1"/>
+			</xsl:when>
+			<xsl:when test="$ref2 != ''">
+				<xsl:value-of select="$ref2"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$text"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
 	
 	<xsl:template name="getUpdatedRef">
 		<xsl:param name="text"/>
