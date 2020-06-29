@@ -338,7 +338,7 @@
 		<xsl:choose>
 			<xsl:when test="parent::sec/@sec-type = 'foreword'">
 				<xsl:text>.</xsl:text>
-				<xsl:text> </xsl:text><xsl:apply-templates />
+				<xsl:apply-templates />
 				<xsl:text>&#xa;</xsl:text>
 			</xsl:when>
 			<xsl:otherwise>
