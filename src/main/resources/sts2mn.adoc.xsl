@@ -349,8 +349,7 @@
 			<xsl:otherwise>
 				<xsl:variable name="level">
 					<xsl:call-template name="getLevel"/>
-				</xsl:variable>
-				
+				</xsl:variable>				
 				<xsl:value-of select="$level"/>
 				<xsl:text> </xsl:text><xsl:apply-templates />
 				<xsl:text>&#xa;</xsl:text>
@@ -1198,19 +1197,36 @@
 		
 		<xsl:variable name="level_standard" select="count(ancestor::standard/ancestor::*)"/>
 		
-		<xsl:variable name="level">
+		<xsl:variable name="level_">
 			<xsl:choose>
 				<xsl:when test="ancestor::app-group">
-					<xsl:value-of select="$level_total - $level_standard - 3"/>
+					<xsl:value-of select="$level_total - $level_standard - 2"/>
 				</xsl:when>
 				<xsl:otherwise>
-					<xsl:value-of select="$level_total - $level_standard - 2"/>
+					<xsl:value-of select="$level_total - $level_standard - 1"/>
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
-			
+		
+		<xsl:variable name="level_max" select="5"/>
+		<xsl:variable name="level">
+			<xsl:choose>
+				<xsl:when test="$level_ &lt;= $level_max">
+					<xsl:value-of select="$level_"/>
+				</xsl:when>
+				<xsl:otherwise><xsl:value-of select="$level_max"/></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:if test="$level_ &gt; $level_max">
+			<xsl:text>```adoc</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:text>[level=</xsl:text>
+			<xsl:value-of select="$level_"/>
+			<xsl:text>]</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
 		<xsl:call-template name="repeat">
-			<xsl:with-param name="count" select="$level + 1"/>
+			<xsl:with-param name="count" select="$level"/>
 		</xsl:call-template>
 		
 	</xsl:template>
