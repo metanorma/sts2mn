@@ -248,6 +248,7 @@
 					<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
 					<xsl:text>&#xa;</xsl:text>
 					<xsl:text>:technical-committee: </xsl:text>
+					<xsl:text>&#xa;</xsl:text>
 				</xsl:when>
 				<xsl:when test="starts-with(., 'SC ')">
 					<xsl:text>:subcommittee-type: SC</xsl:text>
@@ -256,17 +257,19 @@
 					<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
 					<xsl:text>&#xa;</xsl:text>
 					<xsl:text>:subcommittee: </xsl:text>				
+					<xsl:text>&#xa;</xsl:text>
 				</xsl:when>
 				<xsl:when test="starts-with(., 'WG ')">					
 					<xsl:text>:workgroup-type: WG</xsl:text>
+					<xsl:text>&#xa;</xsl:text>
 					<xsl:text>:workgroup-number: </xsl:text>
 					<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
 					<xsl:text>&#xa;</xsl:text>
 					<xsl:text>:workgroup: </xsl:text>
+					<xsl:text>&#xa;</xsl:text>
 				</xsl:when>
 			</xsl:choose>
 		</xsl:for-each>
-		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="secretariat[ancestor::front or ancestor::adoption-front]">
