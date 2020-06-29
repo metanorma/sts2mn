@@ -315,6 +315,11 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
+	<xsl:template match="sec/text() | list-item/text() | list/text()">
+		<xsl:value-of select="normalize-space(.)"/>
+	</xsl:template>
+	
+	
 	<xsl:template match="term-sec">
 		<xsl:text>[[</xsl:text>
 		<xsl:value-of select="@id"/>
