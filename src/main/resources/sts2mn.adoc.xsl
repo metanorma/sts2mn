@@ -433,8 +433,63 @@
 	
 	<xsl:template match="std-id-group"/>
 	
+	<xsl:template match="std[not(ancestor::ref)]/text()">
+		<xsl:variable name="text" select="normalize-space(translate(.,'&#xA0;', ' '))"/>
+		<xsl:choose>
+			<xsl:when test="starts-with($text, ',')">				
+				<xsl:variable name="text_items">
+					<xsl:call-template name="split">
+						<xsl:with-param name="pText" select="$text"/>
+						<xsl:with-param name="sep" select="' '"/>
+					</xsl:call-template>
+				</xsl:variable>
+				<xsl:variable name="updated_ref">
+					<xsl:for-each select="xalan:nodeset($text_items)//item">
+						<xsl:variable name="item" select="java:toLowerCase(java:java.lang.String.new(.))"/>
+						<xsl:choose>
+							<xsl:when test=". = ','">
+								<xsl:value-of select="."/>
+							</xsl:when>
+							<xsl:when test="$item = 'clause' or $item = 'table' or $item = 'annex'">
+								<xsl:value-of select="$item"/><xsl:text>=</xsl:text>
+							</xsl:when>
+							<xsl:otherwise>
+								<xsl:text> </xsl:text><xsl:value-of select="."/>
+							</xsl:otherwise>
+						</xsl:choose>
+					</xsl:for-each>
+				</xsl:variable>
+				<xsl:value-of select="java:replaceAll(java:java.lang.String.new($updated_ref),'= ','=')"/>				
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="."/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+	
 	<xsl:template match="std-ref">
-		<xsl:apply-templates />
+		<xsl:choose>
+			<xsl:when test="ancestor::ref"> <!-- sec[@sec-type = 'norm-refs'] -->
+				<xsl:apply-templates />
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:variable name="std-ref" select="java:replaceAll(java:java.lang.String.new(.),'--','—')"/>
+				<xsl:variable name="ref1" select="//ref[std/std-ref = $std-ref]/@id"/>
+				<xsl:variable name="ref2" select="//ref[starts-with(std/std-ref, concat($std-ref, ' '))]/@id"/>
+				<xsl:choose>
+					<xsl:when test="$ref1 != ''">
+						<xsl:value-of select="$ref1"/>
+					</xsl:when>
+					<xsl:when test="$ref2 != ''">
+						<xsl:value-of select="$ref2"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:apply-templates />
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:otherwise>
+		</xsl:choose>
+		
 	</xsl:template>
 	
 	<xsl:template match="tbx:source">
@@ -923,7 +978,10 @@
 	<xsl:template match="ref/std/std-ref"/>
 	<xsl:template match="ref/std/std-ref" mode="std">
 		<xsl:text>,</xsl:text>
-		<xsl:apply-templates/>
+		<xsl:apply-templates mode="std"/>
+	</xsl:template>
+	<xsl:template match="ref/std/std-ref/text()" mode="std">
+		<xsl:value-of select="translate(.,'[]','')"/>
 	</xsl:template>
 	
 	<xsl:template match="ref/mixed-citation/std" mode="std">
@@ -1107,7 +1165,7 @@
 	<xsl:template name="split">
 		<xsl:param name="pText" select="."/>
 		<xsl:param name="sep" select="'/'"/>
-		<xsl:if test="string-length($pText) >0">
+		<xsl:if test="string-length($pText) &gt; 0">
 			<item>
 				<xsl:value-of select="normalize-space(substring-before(concat($pText, $sep), $sep))"/>
 			</item>
@@ -1321,5 +1379,6 @@
 	<!-- End mode simple-table-rowspan  -->
 	<!-- ===================== -->	
 	<!-- ===================== -->	
+	
 	
 </xsl:stylesheet>
