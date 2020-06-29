@@ -90,13 +90,14 @@
 
 		<xsl:if test="$split-bibdata != 'true'">
 			
-			<xsl:if test="not(//adoption)"> <!-- for adoption create a one adoc -->
+			<!-- for adoption create a one adoc -->
+			<!-- <xsl:if test="not(//adoption)">
 				<xsl:text>include::</xsl:text><xsl:value-of select="$path"/>
 				<xsl:text>&#xa;</xsl:text>
 				
 				<xsl:text>///SPLIT </xsl:text><xsl:value-of select="$path"/>
 				<xsl:text>&#xa;</xsl:text>
-			</xsl:if>
+			</xsl:if> -->
 			
 			<xsl:apply-templates select="*[local-name() != 'iso-meta' and local-name() != 'std-meta']"/>
 			<!-- <xsl:apply-templates select="/standard/body"/>			
