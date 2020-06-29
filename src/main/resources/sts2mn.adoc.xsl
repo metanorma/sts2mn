@@ -672,6 +672,7 @@
 	</xsl:template>
 		
 	<xsl:template match="array">
+		<xsl:text>&#xa;</xsl:text>
 		<xsl:choose>
 			<xsl:when test="count(table/col) = 2">				
 				<xsl:apply-templates mode="dl"/>				
@@ -1119,7 +1120,7 @@
 		<xsl:text>stem:[</xsl:text>				
 		<xsl:apply-templates />		
 		<xsl:text>]</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
+		<!-- <xsl:text>&#xa;</xsl:text> -->
 	</xsl:template>
 	
 	<!-- MathML -->
