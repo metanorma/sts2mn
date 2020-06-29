@@ -289,11 +289,11 @@
 			<xsl:when test="@sec-type = 'intro'">
 				<xsl:text>[[introduction]]</xsl:text>
 				<xsl:text>&#xa;</xsl:text>
-				<xsl:text>&#xa;</xsl:text>
-				<xsl:text>:sectnums!:</xsl:text>
+				<!-- <xsl:text>&#xa;</xsl:text>
+				<xsl:text>:sectnums!:</xsl:text> -->
 			</xsl:when>
 			<xsl:when test="@sec-type = 'scope'">
-				<xsl:text>:sectnums:</xsl:text>			
+				<!-- <xsl:text>:sectnums:</xsl:text> -->
 			</xsl:when>
 			<xsl:when test="@sec-type = 'norm-refs'">
 				<xsl:text>[bibliography]</xsl:text>			
