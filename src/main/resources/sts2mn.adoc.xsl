@@ -1125,7 +1125,7 @@
 		
 		<xsl:variable name="level">
 			<xsl:choose>
-				<xsl:when test="ancestor::back">
+				<xsl:when test="ancestor::app-group">
 					<xsl:value-of select="$level_total - $level_standard - 3"/>
 				</xsl:when>
 				<xsl:otherwise>
