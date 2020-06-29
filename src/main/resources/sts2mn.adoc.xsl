@@ -441,30 +441,10 @@
 	<xsl:template match="std[not(ancestor::ref)]/text()">
 		<xsl:variable name="text" select="normalize-space(translate(.,'&#xA0;', ' '))"/>
 		<xsl:choose>
-			<xsl:when test="starts-with($text, ',')">				
-				<xsl:variable name="text_items">
-					<xsl:call-template name="split">
-						<xsl:with-param name="pText" select="$text"/>
-						<xsl:with-param name="sep" select="' '"/>
-					</xsl:call-template>
-				</xsl:variable>
-				<xsl:variable name="updated_ref">
-					<xsl:for-each select="xalan:nodeset($text_items)//item">
-						<xsl:variable name="item" select="java:toLowerCase(java:java.lang.String.new(.))"/>
-						<xsl:choose>
-							<xsl:when test=". = ','">
-								<xsl:value-of select="."/>
-							</xsl:when>
-							<xsl:when test="$item = 'clause' or $item = 'table' or $item = 'annex'">
-								<xsl:value-of select="$item"/><xsl:text>=</xsl:text>
-							</xsl:when>
-							<xsl:otherwise>
-								<xsl:text> </xsl:text><xsl:value-of select="."/>
-							</xsl:otherwise>
-						</xsl:choose>
-					</xsl:for-each>
-				</xsl:variable>
-				<xsl:value-of select="java:replaceAll(java:java.lang.String.new($updated_ref),'= ','=')"/>				
+			<xsl:when test="starts-with($text, ',')">
+				<xsl:call-template name="getUpdatedRef">
+					<xsl:with-param name="text" select="$text"/>
+				</xsl:call-template>				
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:value-of select="."/>
@@ -500,7 +480,23 @@
 	<xsl:template match="tbx:source">
 		<xsl:text>[.source]</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
+		<xsl:variable name="modified_text" select="', modified — '"/>
+		<xsl:choose>
+			<xsl:when test="contains(., $modified_text)">
+				<xsl:text>&lt;&lt;</xsl:text>
+					<!-- <xsl:value-of select="substring-before(., $modified_text)"/> -->
+					<xsl:call-template name="getUpdatedRef">
+						<xsl:with-param name="text" select="substring-before(., $modified_text)"/>
+					</xsl:call-template>
+				<xsl:text>&gt;&gt;</xsl:text>
+				<xsl:text>, </xsl:text>
+				<xsl:value-of select="substring-after(., $modified_text)"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
+			</xsl:otherwise>
+		</xsl:choose>
+		
 		<xsl:text>&#xa;&#xa;</xsl:text>
 	</xsl:template>
 	
@@ -1385,5 +1381,32 @@
 	<!-- ===================== -->	
 	<!-- ===================== -->	
 	
+	
+	<xsl:template name="getUpdatedRef">
+		<xsl:param name="text"/>
+		<xsl:variable name="text_items">
+			<xsl:call-template name="split">
+				<xsl:with-param name="pText" select="$text"/>
+				<xsl:with-param name="sep" select="' '"/>
+			</xsl:call-template>
+		</xsl:variable>
+		<xsl:variable name="updated_ref">
+			<xsl:for-each select="xalan:nodeset($text_items)//item">
+				<xsl:variable name="item" select="java:toLowerCase(java:java.lang.String.new(.))"/>
+				<xsl:choose>
+					<xsl:when test=". = ','">
+						<xsl:value-of select="."/>
+					</xsl:when>
+					<xsl:when test="$item = 'clause' or $item = 'table' or $item = 'annex'">
+						<xsl:value-of select="$item"/><xsl:text>=</xsl:text>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:text> </xsl:text><xsl:value-of select="."/>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:for-each>
+		</xsl:variable>
+		<xsl:value-of select="normalize-space(java:replaceAll(java:java.lang.String.new($updated_ref),'= ','='))"/>
+	</xsl:template>
 	
 </xsl:stylesheet>
