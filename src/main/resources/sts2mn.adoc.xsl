@@ -1109,11 +1109,11 @@
 		<xsl:value-of select="."/>
 	</xsl:template>	
 
-	<!-- <xsl:template match="alt-text">
+	<xsl:template match="alt-text">
 		<xsl:text>[</xsl:text>
 		<xsl:value-of select="."/>
 		<xsl:text>]</xsl:text>
-	</xsl:template> -->
+	</xsl:template>
 
 	<xsl:template match="object-id">
 		<xsl:choose>
