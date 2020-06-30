@@ -130,32 +130,35 @@
 		<xsl:value-of select="originator"/>
 		<xsl:text> </xsl:text>
 		<xsl:value-of select="doc-number"/>
-		<xsl:text>-</xsl:text>
-		<xsl:value-of select="part-number"/>
+		
+		<xsl:if test="part-number != ''">
+			<xsl:text>-</xsl:text>
+			<xsl:value-of select="part-number"/>
+		</xsl:if>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/doc-number">
+	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/doc-number[normalize-space(.) != '']">
 		<xsl:text>:docnumber: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/part-number">
+	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/part-number[normalize-space(.) != '']">		
 		<xsl:text>:partnumber: </xsl:text><xsl:value-of select="."/>
-		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>&#xa;</xsl:text>		
 	</xsl:template>
 	
-	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/edition">
+	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/edition[normalize-space(.) != '']">
 		<xsl:text>:edition: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="permissions[ancestor::front or ancestor::adoption-front]/copyright-year">
+	<xsl:template match="permissions[ancestor::front or ancestor::adoption-front]/copyright-year[normalize-space(.) != '']">
 		<xsl:text>:copyright-year: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="doc-ident[ancestor::front or ancestor::adoption-front]/language">
+	<xsl:template match="doc-ident[ancestor::front or ancestor::adoption-front]/language[normalize-space(.) != '']">
 		<xsl:text>:language: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
@@ -167,26 +170,26 @@
 		</xsl:apply-templates>
 	</xsl:template>
 	
-	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/intro">
+	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/intro[normalize-space(.) != '']">
 		<xsl:param name="lang"/>
 		<xsl:text>:title-intro-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
-	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/main">
+	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/main[normalize-space(.) != '']">
 		<xsl:param name="lang"/>
 		<xsl:text>:title-main-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
-	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/compl">
+	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/compl[normalize-space(.) != '']">
 		<xsl:param name="lang"/>
 		<xsl:text>:title-part-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
-	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/full">
+	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/full[normalize-space(.) != '']">
 		<xsl:text></xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/doc-type">
+	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/doc-type[normalize-space(.) != '']">
 		<xsl:variable name="value" select="java:toLowerCase(java:java.lang.String.new(.))"/>
 		<xsl:text>:doctype: </xsl:text>
 		<!-- https://www.niso-sts.org/TagLibrary/niso-sts-TL-1-0-html/element/doc-type.html -->
@@ -201,7 +204,7 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="doc-ident[ancestor::front or ancestor::adoption-front]/release-version">
+	<xsl:template match="doc-ident[ancestor::front or ancestor::adoption-front]/release-version[normalize-space(.) != '']">
 		<!-- https://www.niso-sts.org/TagLibrary/niso-sts-TL-1-0-html/element/release-version.html -->
 		<!-- Possible values: WD, CD, DIS, FDIS, IS -->
 		<xsl:variable name="value" select="java:toUpperCase(java:java.lang.String.new(.))"/>
@@ -254,8 +257,8 @@
 					<xsl:text>:technical-committee-number: </xsl:text>					
 					<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
 					<xsl:text>&#xa;</xsl:text>
-					<xsl:text>:technical-committee: </xsl:text>
-					<xsl:text>&#xa;</xsl:text>
+					<!-- <xsl:text>:technical-committee: </xsl:text>
+					<xsl:text>&#xa;</xsl:text> -->
 				</xsl:when>
 				<xsl:when test="starts-with(., 'SC ')">
 					<xsl:text>:subcommittee-type: SC</xsl:text>
@@ -263,8 +266,8 @@
 					<xsl:text>:subcommittee-number: </xsl:text>
 					<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
 					<xsl:text>&#xa;</xsl:text>
-					<xsl:text>:subcommittee: </xsl:text>				
-					<xsl:text>&#xa;</xsl:text>
+					<!-- <xsl:text>:subcommittee: </xsl:text>				
+					<xsl:text>&#xa;</xsl:text> -->
 				</xsl:when>
 				<xsl:when test="starts-with(., 'WG ')">					
 					<xsl:text>:workgroup-type: WG</xsl:text>
@@ -272,14 +275,14 @@
 					<xsl:text>:workgroup-number: </xsl:text>
 					<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
 					<xsl:text>&#xa;</xsl:text>
-					<xsl:text>:workgroup: </xsl:text>
-					<xsl:text>&#xa;</xsl:text>
+					<!-- <xsl:text>:workgroup: </xsl:text>
+					<xsl:text>&#xa;</xsl:text> -->
 				</xsl:when>
 			</xsl:choose>
 		</xsl:for-each>
 	</xsl:template>
 	
-	<xsl:template match="secretariat[ancestor::front or ancestor::adoption-front]">
+	<xsl:template match="secretariat[ancestor::front or ancestor::adoption-front][normalize-space(.) != '']">
 		<xsl:text>:secretariat: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
@@ -1105,6 +1108,12 @@
 	<xsl:template match="graphic/processing-instruction('isoimg-id')">
 		<xsl:value-of select="."/>
 	</xsl:template>	
+
+	<!-- <xsl:template match="alt-text">
+		<xsl:text>[</xsl:text>
+		<xsl:value-of select="."/>
+		<xsl:text>]</xsl:text>
+	</xsl:template> -->
 
 	<xsl:template match="object-id">
 		<xsl:choose>
