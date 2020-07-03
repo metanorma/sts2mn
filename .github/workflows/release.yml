@@ -69,3 +69,11 @@ jobs:
           asset_path: ./target/sts2mn-${{ steps.get_version.outputs.VERSION }}.jar
           asset_name: sts2mn-${{ steps.get_version.outputs.VERSION }}.jar
           asset_content_type: application/java-archive
+
+      - name: Notify sts2mn-ruby
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+          repository: metanorma/sts2mn-ruby
+          event-type: metanorma/sts2mn
+          client-payload: '{ "ref": "${{ github.ref }}" }'
