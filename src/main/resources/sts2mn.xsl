@@ -22,7 +22,13 @@
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:element name="iso-standard">
-					 <xsl:apply-templates />					 
+					 <xsl:apply-templates />
+					 <xsl:if test="body/sec[@sec-type = 'norm-refs'] or back/ref-list">
+						<bibliography>
+							<xsl:apply-templates select="body/sec[@sec-type = 'norm-refs']" mode="bibliography"/>
+							<xsl:apply-templates select="back/ref-list" mode="bibliography"/>
+						</bibliography>
+					 </xsl:if>
 				</xsl:element>
 			</xsl:otherwise>
 		</xsl:choose>		
@@ -468,10 +474,18 @@
 	</xsl:template>
 	
 	
-	
-	
+	<xsl:template match="body/sec[@sec-type = 'norm-refs']" priority="2"/> <!-- See Bibliography processing below -->
+  
 	<xsl:template match="body//sec">
 		<clause id="{@id}">
+			<xsl:choose>
+				<xsl:when test="@sec-type = 'scope'">
+					<xsl:attribute name="type">scope</xsl:attribute>
+				</xsl:when>
+				<xsl:when test="@sec-type = 'intro'">
+					<xsl:attribute name="type">intro</xsl:attribute>
+				</xsl:when>
+			</xsl:choose>
 			<xsl:apply-templates />
 		</clause>
 	</xsl:template>
@@ -618,7 +632,10 @@
 			<xsl:copy-of select="@*"/>
 			<xsl:if test="not(@id)">
 				<xsl:attribute name="id">
-					<xsl:value-of select="parent::table-wrap/@id"/>
+					<xsl:choose>
+						<xsl:when test="parent::table-wrap/@id"><xsl:value-of select="parent::table-wrap/@id"/></xsl:when>
+						<xsl:when test="parent::array/@id"><xsl:value-of select="parent::array/@id"/></xsl:when>
+					</xsl:choose>
 				</xsl:attribute>
 			</xsl:if>
 			<xsl:apply-templates select="parent::table-wrap/caption/title"/>
@@ -627,6 +644,7 @@
 	</xsl:template>
 	
 	<xsl:template match="table-wrap">
+		<xsl:apply-templates select="@*" />
 		<xsl:apply-templates/>
 	</xsl:template>
 	
@@ -719,17 +737,25 @@
 	
 	<xsl:template match="list">
 		<xsl:choose>
-			<xsl:when test="@list-type = 'bullet'">
+			<xsl:when test="@list-type = 'bullet' or @list-type = 'simple'">
 				<ul>
+					<xsl:apply-templates select="@*"/>
 					<xsl:apply-templates />
 				</ul>
 			</xsl:when>
 			<xsl:otherwise>
 				<ol>
+					<xsl:apply-templates select="@*"/>
 					<xsl:apply-templates />
 				</ol>
 			</xsl:otherwise>
 		</xsl:choose>
+	</xsl:template>
+	
+	<xsl:template match="list/@list-type">
+		<xsl:attribute name="type">
+			<xsl:value-of select="."/>
+		</xsl:attribute>
 	</xsl:template>
 	
 	<xsl:template match="list-item">
@@ -791,13 +817,8 @@
 		</clause>
 	</xsl:template>
 	
-	<xsl:template match="ref-list">
-		<bibliography>
-			<references id="{@id}">
-				<xsl:apply-templates />
-			</references>
-		</bibliography>
-	</xsl:template>
+	<xsl:template match="back/ref-list" priority="2"/> <!-- See Bibliography processing below -->
+		
 	
 	<xsl:template match="ref">
 		<bibitem id="{@id}" type="{@content-type}">
@@ -853,6 +874,11 @@
 	
 	<xsl:template match="graphic">
 		<image height="auto" width="auto">
+			<xsl:if test="@xlink:href and not(processing-instruction('isoimg-id'))">
+				<xsl:attribute name="src">
+					<xsl:value-of select="@xlink:href"/>
+				</xsl:attribute>
+			</xsl:if>
 			<xsl:apply-templates />
 		</image>
 	</xsl:template>
@@ -891,6 +917,20 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
+	<!-- Bibliography processing -->
+	<xsl:template match="body/sec[@sec-type = 'norm-refs']" mode="bibliography">
+		<references id="{@id}" normative="true">
+			<xsl:apply-templates />
+		</references>
+	</xsl:template>
+	
+	<xsl:template match="back/ref-list" mode="bibliography">
+		<references id="{@id}">
+			<xsl:apply-templates />
+		</references>
+	</xsl:template>
+	
+	<!-- END Bibliography processing -->
 	
 	<xsl:variable name="lower">abcdefghijklmnopqrstuvwxyz</xsl:variable> 
 	<xsl:variable name="upper">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
