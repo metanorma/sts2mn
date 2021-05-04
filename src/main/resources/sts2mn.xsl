@@ -753,9 +753,36 @@
 	</xsl:template>
 	
 	<xsl:template match="list/@list-type">
+		<xsl:variable name="first_label" select="translate(..//label[1], ').', '')"/>
+		<xsl:variable name="type">
+			<xsl:choose>
+				<xsl:when test=". = 'alpha-lower' or . = 'alpha-upper' or . = 'roman-lower' or . = 'roman-upper' or . = 'arabic'"><xsl:value-of select="."/></xsl:when>
+				<xsl:when test="translate($first_label, '1234567890', '') = ''">arabic</xsl:when>
+				<xsl:when test="translate($first_label, 'ixvcm', '') = ''">roman-lower</xsl:when>
+				<xsl:when test="translate($first_label, 'IXVCM', '') = ''">roman-upper</xsl:when>
+				<xsl:when test="translate($first_label, 'abcdefghijklmnopqrstuvwxyz', '') = ''">alpha-lower</xsl:when>
+				<xsl:when test="translate($first_label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '') = ''">alpha-upper</xsl:when>
+				<xsl:otherwise><xsl:value-of select="."/></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
 		<xsl:attribute name="type">
-			<xsl:value-of select="."/>
+			<xsl:value-of select="$type"/>
 		</xsl:attribute>
+		
+		<xsl:variable name="start">
+			<xsl:choose>
+				<xsl:when test="$type = 'arabic' and $first_label != '1'"><xsl:value-of select="$first_label"/></xsl:when>
+				<xsl:when test="$type = 'roman-lower' and $first_label != 'i'"><xsl:value-of select="$first_label"/></xsl:when>
+				<xsl:when test="$type = 'roman-upper' and $first_label != 'I'"><xsl:value-of select="$first_label"/></xsl:when>
+				<xsl:when test="$type = 'alpha-lower' and $first_label != 'a'"><xsl:value-of select="$first_label"/></xsl:when>
+				<xsl:when test="$type = 'alpha-upper' and $first_label != 'A'"><xsl:value-of select="$first_label"/></xsl:when>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:if test="normalize-space($start) != ''">
+			<xsl:attribute name="start">
+				<xsl:value-of select="$start"/>
+			</xsl:attribute>
+		</xsl:if>
 	</xsl:template>
 	
 	<xsl:template match="list-item">
