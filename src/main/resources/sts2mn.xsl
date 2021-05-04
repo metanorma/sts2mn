@@ -80,19 +80,32 @@
 			<xsl:apply-templates select="iso-meta/permissions" mode="bibdata"/>
 			
 			
-			<ext>
-				<xsl:apply-templates select="iso-meta/std-ident/doc-type" mode="bibdata"/>
-				
-				<xsl:apply-templates select="iso-meta/comm-ref" mode="bibdata"/>
-				
-				<xsl:apply-templates select="iso-meta/std-ident" mode="bibdata"/>		
-				<stagename>
-					<xsl:value-of select="iso-meta/doc-ident/release-version"/>
-				</stagename>
-				
-			</ext>
+			<xsl:if test="iso-meta/std-ident/doc-type or iso-meta/comm-ref or iso-meta/std-ident or iso-meta/doc-ident/release-version">
+				<ext>
+					<xsl:apply-templates select="iso-meta/std-ident/doc-type" mode="bibdata"/>
+					
+					<xsl:apply-templates select="iso-meta/comm-ref" mode="bibdata"/>
+					
+					<xsl:apply-templates select="iso-meta/std-ident" mode="bibdata"/>		
+					<stagename>
+						<xsl:value-of select="iso-meta/doc-ident/release-version"/>
+					</stagename>
+					
+				</ext>
+			</xsl:if>
 			
 		</bibdata>
+		
+		<xsl:if test="nat-meta">
+			<bibdata type="nat">
+				<xsl:for-each select="nat-meta">
+					<!-- title @type="main", "title-intro", type="title-main", type="title-part" -->
+					<xsl:apply-templates select="title-wrap" mode="bibdata"/>
+				</xsl:for-each>
+						
+				
+			</bibdata>
+		</xsl:if>
 		
 		<xsl:if test="not ($split-bibdata = 'true')">
 			<boilerplate>
@@ -199,7 +212,7 @@
 	
 	
 	
-	<xsl:template match="iso-meta/title-wrap" mode="bibdata">
+	<xsl:template match="iso-meta/title-wrap | nat-meta/title-wrap" mode="bibdata">
 		<xsl:variable name="lang" select="@xml:lang"/>
 		<title language="{$lang}" format="text/plain" type="main">
 			<xsl:apply-templates select="full" mode="bibdata"/>
@@ -851,6 +864,10 @@
 		<bibitem id="{@id}" type="{@content-type}">
 			<xsl:apply-templates />
 		</bibitem>
+	</xsl:template>
+	
+	<xsl:template match="ref-list/ref/label">
+		<docidentifier type="metanorma"><xsl:apply-templates /></docidentifier>
 	</xsl:template>
 	
 	<xsl:template match="mixed-citation">
