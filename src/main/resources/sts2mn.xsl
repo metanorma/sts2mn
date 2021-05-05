@@ -38,67 +38,10 @@
 	<!-- front -> bib data -->
 	<!-- ============= -->
 	<xsl:template match="front" > <!-- mode="bibdata" -->
-		<bibdata type="standard">
-			<!-- title @type="main", "title-intro", type="title-main", type="title-part" -->
-			<xsl:apply-templates select="iso-meta/title-wrap" mode="bibdata"/>
-			
-			<!-- docidentifier @type="iso", "iso-with-lang", "iso-reference" -->
-			<xsl:apply-templates select="iso-meta/std-ref[@type='dated']" mode="bibdata"/>
-			
-			<!-- docnumber -->
-			<xsl:apply-templates select="iso-meta/std-ident/doc-number" mode="bibdata"/>
-
-			<!-- date @type="published"  on -->
-			<xsl:apply-templates select="iso-meta/pub-date" mode="bibdata"/>
-			<xsl:apply-templates select="iso-meta/release-date" mode="bibdata"/>
-			
-			
-			<!-- contributor role @type="author" -->
-			<xsl:apply-templates select="iso-meta/doc-ident/sdo" mode="bibdata"/>
-			
 		
-			<!-- contributor role @type="publisher -->
-			<xsl:apply-templates select="iso-meta/std-ident/originator" mode="bibdata"/>
-		
-			<!-- edition -->
-			<xsl:apply-templates select="iso-meta/std-ident/edition" mode="bibdata"/>
-		
-			<!-- version revision-date -->
-			<xsl:apply-templates select="iso-meta/std-ident/version" mode="bibdata"/>
-		
-			<!-- language -->
-			<xsl:apply-templates select="iso-meta/content-language" mode="bibdata"/>
+		<xsl:for-each select="iso-meta | nat-meta">
+			<bibdata type="standard">
 			
-		
-			<!-- status/stage @abbreviation , substage -->
-			<xsl:apply-templates select="iso-meta/doc-ident/release-version" mode="bibdata"/>
-			
-			<!-- relation bibitem -->
-			<xsl:apply-templates select="iso-meta/std-xref" mode="bibdata"/>
-			
-			<!-- copyright from, owner/organization/abbreviation -->
-			<xsl:apply-templates select="iso-meta/permissions" mode="bibdata"/>
-			
-			
-			<xsl:if test="iso-meta/std-ident/doc-type or iso-meta/comm-ref or iso-meta/std-ident or iso-meta/doc-ident/release-version">
-				<ext>
-					<xsl:apply-templates select="iso-meta/std-ident/doc-type" mode="bibdata"/>
-					
-					<xsl:apply-templates select="iso-meta/comm-ref" mode="bibdata"/>
-					
-					<xsl:apply-templates select="iso-meta/std-ident" mode="bibdata"/>		
-					<stagename>
-						<xsl:value-of select="iso-meta/doc-ident/release-version"/>
-					</stagename>
-					
-				</ext>
-			</xsl:if>
-			
-		</bibdata>
-		
-		<xsl:if test="nat-meta">
-			<bibdata type="nat">
-				<xsl:for-each select="nat-meta">
 					<!-- title @type="main", "title-intro", type="title-main", type="title-part" -->
 					<xsl:apply-templates select="title-wrap" mode="bibdata"/>
           
@@ -158,29 +101,29 @@
 							
 						</ext>
 					</xsl:if>
-					
-				</xsl:for-each>
 			</bibdata>
-		</xsl:if>
+		</xsl:for-each>
+	
 		
 		<xsl:if test="not ($split-bibdata = 'true')">
-			<boilerplate>
-				<copyright-statement>
-					<xsl:if test="/standard/front/iso-meta">
-						<clause>
-							<p id="boilerplate-year">© <xsl:value-of select="/standard/front/iso-meta/permissions/copyright-holder"/><xsl:text> </xsl:text><xsl:value-of select="/standard/front/iso-meta/permissions/copyright-year"/></p>
-							<p id="boilerplate-message"><xsl:apply-templates select="/standard/front/iso-meta/permissions/copyright-statement" mode="bibdata"/></p>
-						</clause>
-					</xsl:if>
-					<xsl:if test="/standard/front/nat-meta">
-						<clause>
-							<p id="boilerplate-year">© <xsl:value-of select="/standard/front/nat-meta/permissions/copyright-holder"/><xsl:text> </xsl:text><xsl:value-of select="/standard/front/nat-meta/permissions/copyright-year"/></p>
-							<p id="boilerplate-message"><xsl:apply-templates select="/standard/front/nat-meta/permissions/copyright-statement" mode="bibdata"/></p>
-						</clause>
-					</xsl:if>
-				</copyright-statement>
-			</boilerplate>
-			
+			<xsl:if test="/standard/front/iso-meta">
+				<boilerplate>
+					<copyright-statement>
+						
+							<clause>
+								<p id="boilerplate-year">© <xsl:value-of select="/standard/front/iso-meta/permissions/copyright-holder"/><xsl:text> </xsl:text><xsl:value-of select="/standard/front/iso-meta/permissions/copyright-year"/></p>
+								<p id="boilerplate-message"><xsl:apply-templates select="/standard/front/iso-meta/permissions/copyright-statement" mode="bibdata"/></p>
+							</clause>
+						
+						<!-- <xsl:if test="/standard/front/nat-meta">
+							<clause>
+								<p id="boilerplate-year">© <xsl:value-of select="/standard/front/nat-meta/permissions/copyright-holder"/><xsl:text> </xsl:text><xsl:value-of select="/standard/front/nat-meta/permissions/copyright-year"/></p>
+								<p id="boilerplate-message"><xsl:apply-templates select="/standard/front/nat-meta/permissions/copyright-statement" mode="bibdata"/></p>
+							</clause>
+						</xsl:if> -->
+					</copyright-statement>
+				</boilerplate>
+			</xsl:if>
 			<xsl:if test="sec">
 				<preface>
 					<xsl:apply-templates select="sec" mode="preface"/>
@@ -362,7 +305,7 @@
 		</docidentifier>
 	</xsl:template>
 	
-	<xsl:template match="iso-meta/doc-ref | nat-meta/doc-ref[@type='dated']" mode="bibdata">
+	<xsl:template match="iso-meta/doc-ref | nat-meta/doc-ref" mode="bibdata">
 		<docidentifier type="iso-reference">
 			<xsl:apply-templates mode="bibdata"/>
 		</docidentifier>
@@ -522,22 +465,35 @@
 					<xsl:with-param name="pText" select="."/>
 				</xsl:call-template>
 			</xsl:variable>			
-			<xsl:for-each select="xalan:nodeset($comm-ref)/*">				
-				<xsl:choose>
-					<xsl:when test="starts-with(., 'TC ')">
-						<technical-committee number="{normalize-space(substring-after(., ' '))}" type="TC"></technical-committee>
-					</xsl:when>
-					<xsl:when test="starts-with(., 'SC ')">
-						<subcommittee number="{normalize-space(substring-after(., ' '))}" type="SC"></subcommittee>
-					</xsl:when>
-					<xsl:when test="starts-with(., 'WG ')">
-						<workgroup number="{normalize-space(substring-after(., ' '))}" type="WG"></workgroup>
-					</xsl:when>
-				</xsl:choose>
-			</xsl:for-each>
+			
+			<xsl:variable name="TC_SC_WG">
+				<xsl:for-each select="xalan:nodeset($comm-ref)/*">
+					<xsl:choose>
+						<xsl:when test="starts-with(., 'TC ')">
+							<technical-committee number="{normalize-space(substring-after(., ' '))}" type="TC"></technical-committee>
+						</xsl:when>
+						<xsl:when test="starts-with(., 'SC ')">
+							<subcommittee number="{normalize-space(substring-after(., ' '))}" type="SC"></subcommittee>
+						</xsl:when>
+						<xsl:when test="starts-with(., 'WG ')">
+							<workgroup number="{normalize-space(substring-after(., ' '))}" type="WG"></workgroup>
+						</xsl:when>
+					</xsl:choose>
+				</xsl:for-each>
+			</xsl:variable>
+			<xsl:choose>
+				<xsl:when test="xalan:nodeset($TC_SC_WG)/*">
+					<xsl:copy-of select="$TC_SC_WG"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<technical-committee number="{.}"></technical-committee>
+				</xsl:otherwise>
+			</xsl:choose>
+			
 			<xsl:apply-templates select="../secretariat" mode="bibdata"/>			
-			<xsl:apply-templates select="../ics" mode="bibdata"/>			
 		</editorialgroup>
+		
+		<xsl:apply-templates select="../ics" mode="bibdata"/>			
 	</xsl:template>
 	
 	<xsl:template match="iso-meta/secretariat | nat-meta/secretariat" mode="bibdata">
@@ -1091,6 +1047,23 @@
 	
 	<xsl:template match="element-citation">
 		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="named-content">
+		<xref>
+			<xsl:attribute name="target">
+			<xsl:choose>
+				<xsl:when test="starts-with(@xlink:href, '#')">
+					<xsl:value-of select="substring-after(@xlink:href, '#')"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="@xlink:href"/>
+				</xsl:otherwise>
+			</xsl:choose>
+			</xsl:attribute>
+			<xsl:copy-of select="@content-type"/>
+			<xsl:apply-templates />
+		</xref>
 	</xsl:template>
 	
 	<!-- Bibliography processing -->

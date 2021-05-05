@@ -1236,7 +1236,22 @@
 	
 	
 	<xsl:template match="named-content">
-		<xsl:apply-templates/><xsl:text> </xsl:text>
+		<xsl:text>&lt;&lt;</xsl:text>
+		<xsl:variable name="target">
+			<xsl:choose>
+				<xsl:when test="starts-with(@xlink:href, '#')">
+					<xsl:value-of select="substring-after(@xlink:href, '#')"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="@xlink:href"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:value-of select="$target"/>
+		<xsl:if test="normalize-space() != ''">
+			<xsl:text>,</xsl:text><xsl:apply-templates/>
+		</xsl:if>
+		<xsl:text>&gt;&gt;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template name="split">
