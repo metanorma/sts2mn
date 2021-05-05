@@ -626,7 +626,11 @@
 	<xsl:template match="list/@list-type">
 		<xsl:variable name="listtype">
 			<xsl:choose>
-				<xsl:when test=". = 'alpha-lower'">loweralpha</xsl:when>
+				<xsl:when test=". = 'alpha-lower'"></xsl:when> <!-- loweralpha --> <!-- https://github.com/metanorma/sts2mn/issues/22: on list don't need to be specified because it is default MN-BSI style -->
+				<xsl:when test=". = 'alpha-upper'">upperalpha</xsl:when>
+				<xsl:when test=". = 'roman-lower'">lowerroman</xsl:when>
+				<xsl:when test=". = 'roman-upper'">upperroman</xsl:when>
+				<xsl:when test=". = 'arabic'">arabic</xsl:when>
 				<xsl:otherwise></xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
