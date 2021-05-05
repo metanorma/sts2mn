@@ -5,7 +5,9 @@
 		xmlns:xlink="http://www.w3.org/1999/xlink" 
 		xmlns:xalan="http://xml.apache.org/xalan" 
 		xmlns:java="http://xml.apache.org/xalan/java" 
+		xmlns:redirect="http://xml.apache.org/xalan/redirect"
 		exclude-result-prefixes="mml tbx xlink xalan java" 
+		extension-element-prefixes="redirect"
 		version="1.0">
 
 	<xsl:output method="text" encoding="UTF-8"/>
@@ -17,6 +19,8 @@
 	<xsl:param name="docfile" /> <!-- Example: iso-tc154-8601-1-en.adoc -->
 	
 	<xsl:param name="pathSeparator" select="'/'"/>
+	
+	<xsl:param name="outpath"/>
 	
 	<xsl:variable name="language" select="//standard/front/iso-meta/doc-ident/language"/>
 	
@@ -118,8 +122,23 @@
 				<xsl:text>///SPLIT </xsl:text><xsl:value-of select="$path"/>
 				<xsl:text>&#xa;</xsl:text>
 			</xsl:if> -->
+			<xsl:if test="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'std-meta']">
+				<redirect:write file="{$outpath}/sections/00-publishing.adoc">
+					<xsl:apply-templates select="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'std-meta' and not(sec[@sec-type = 'foreword'])]"/>
+				</redirect:write>
+				<xsl:text>include::sections/00-publishing.adoc[]</xsl:text>
+				<xsl:text>&#xa;&#xa;</xsl:text>
+			</xsl:if>
 			
-			<xsl:apply-templates select="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'std-meta']"/>
+			<xsl:if test="sec[@sec-type = 'foreword']">
+				<redirect:write file="{$outpath}/sections/00-foreword.adoc">
+					<xsl:apply-templates select="sec[@sec-type = 'foreword']"/>
+				</redirect:write>
+				<xsl:text>include::sections/00-foreword.adoc[]</xsl:text>
+				<xsl:text>&#xa;&#xa;</xsl:text>
+			</xsl:if>
+			
+			
 			<!-- <xsl:apply-templates select="/standard/body"/>			
 			<xsl:apply-templates select="/standard/back"/> -->
 		</xsl:if>
@@ -359,24 +378,70 @@
 	<!-- end bibdata (standard/front) -->
 	
 	
+	<!-- 
+	<redirect:write file="{$outpath}/sections/99-bibliography.adoc">
+				<xsl:apply-templates select="resource" mode="bibliography"/> 
+			</redirect:write>
+			<xsl:text>include::sections/99-bibliography.adoc[]</xsl:text>
+			<xsl:text>&#xa;&#xa;</xsl:text>
+	-->
+	
+	<xsl:template match="sec[@sec-type = 'intro']" priority="2">
+		<redirect:write file="{$outpath}/sections/00-introduction.adoc">
+			<xsl:text>[[introduction]]</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:apply-templates />
+		</redirect:write>
+		<xsl:text>include::sections/00-introduction.adoc[]</xsl:text>
+		<xsl:text>&#xa;&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="sec[@sec-type = 'scope']" priority="2">
+		<redirect:write file="{$outpath}/sections/01-scope.adoc">
+			<xsl:apply-templates />
+		</redirect:write>
+		<xsl:text>include::sections/01-scope.adoc[]</xsl:text>
+		<xsl:text>&#xa;&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="sec[@sec-type = 'norm-refs']" priority="2">
+		<redirect:write file="{$outpath}/sections/02-normrefs.adoc">
+			<xsl:text>[bibliography]</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:apply-templates />
+		</redirect:write>
+		<xsl:text>include::sections/02-normrefs.adoc[]</xsl:text>
+		<xsl:text>&#xa;&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="sec[@sec-type = 'terms']" priority="2">
+		<redirect:write file="{$outpath}/sections/03-terms.adoc">
+			<xsl:call-template name="setIdOrType"/>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:apply-templates />
+		</redirect:write>
+		<xsl:text>include::sections/03-terms.adoc[]</xsl:text>
+		<xsl:text>&#xa;&#xa;</xsl:text>
+	</xsl:template>
 	
 	<xsl:template match="sec">
 		<xsl:choose>
-			<xsl:when test="@sec-type = 'foreword'">
-			</xsl:when>
-			<xsl:when test="@sec-type = 'intro'">
+			<!-- <xsl:when test="@sec-type = 'foreword'">
+			</xsl:when> -->
+			<!-- <xsl:when test="@sec-type = 'intro'">
 				<xsl:text>[[introduction]]</xsl:text>
-				<xsl:text>&#xa;</xsl:text>
+				<xsl:text>&#xa;</xsl:text> -->
 				<!-- <xsl:text>&#xa;</xsl:text>
 				<xsl:text>:sectnums!:</xsl:text> -->
-			</xsl:when>
-			<xsl:when test="@sec-type = 'scope'">
+			<!-- </xsl:when> -->
+			<!-- <xsl:when test="@sec-type = 'scope'"> -->
 				<!-- <xsl:text>:sectnums:</xsl:text> -->
-			</xsl:when>
-			<xsl:when test="@sec-type = 'norm-refs'">
+			<!-- </xsl:when> -->
+			<!-- <xsl:when test="@sec-type = 'norm-refs'">
 				<xsl:text>[bibliography]</xsl:text>
 				<xsl:text>&#xa;</xsl:text>				
-			</xsl:when>
+			</xsl:when> -->
+			<xsl:when test="1 = 2"></xsl:when>
 			<xsl:otherwise>
 				<xsl:text>[[</xsl:text>
 					<xsl:choose>
@@ -1603,6 +1668,19 @@
 		<xsl:if test="normalize-space(@id) != ''">
 			<xsl:text>[[</xsl:text><xsl:value-of select="@id"/><xsl:text>]]</xsl:text>
 		</xsl:if>
+	</xsl:template>
+	
+	<xsl:template name="setIdOrType">
+		<xsl:text>[[</xsl:text>
+			<xsl:choose>
+				<xsl:when test="normalize-space(@id) != ''">
+					<xsl:value-of select="@id"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="@sec-type"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		<xsl:text>]]</xsl:text>
 	</xsl:template>
 	
 </xsl:stylesheet>

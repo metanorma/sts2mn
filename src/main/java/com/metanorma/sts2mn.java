@@ -318,7 +318,7 @@ public class sts2mn {
                 transformer.setParameter("split-bibdata", splitBibdata);
                 transformer.setParameter("docfile", bibdataFileName);
                 transformer.setParameter("pathSeparator", File.separator);
-                
+                transformer.setParameter("outpath", outputFolder);
                 transformer.setParameter("debug", DEBUG);
             
                 StringWriter resultWriter = new StringWriter();
