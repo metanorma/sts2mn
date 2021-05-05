@@ -704,15 +704,13 @@
 	</xsl:template>
 	
 	<xsl:template match="ext-link">
-		<xsl:apply-templates />
-		<xsl:apply-templates select="@xlink:href"/>
+		<xsl:value-of select="@xlink:href"/>
+		<xsl:text>[</xsl:text><xsl:apply-templates /><xsl:text>]</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="ext-link/@xlink:href">
-		<xsl:text>[</xsl:text>
-		<xsl:value-of select="."/>
-		<xsl:text>]</xsl:text>
-	</xsl:template>
+	<!-- <xsl:template match="ext-link/@xlink:href">
+		<xsl:text>[</xsl:text><xsl:value-of select="."/><xsl:text>]</xsl:text>
+	</xsl:template> -->
 	
 	<xsl:template match="xref">
 		
