@@ -374,7 +374,8 @@
 				<!-- <xsl:text>:sectnums:</xsl:text> -->
 			</xsl:when>
 			<xsl:when test="@sec-type = 'norm-refs'">
-				<xsl:text>[bibliography]</xsl:text>			
+				<xsl:text>[bibliography]</xsl:text>
+				<xsl:text>&#xa;</xsl:text>				
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:text>[[</xsl:text>
@@ -387,9 +388,9 @@
 						</xsl:otherwise>
 					</xsl:choose>
 				<xsl:text>]]</xsl:text>
+				<xsl:text>&#xa;</xsl:text>
 			</xsl:otherwise>
 		</xsl:choose>
-		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates />
 	</xsl:template>
 	
@@ -399,9 +400,7 @@
 	
 	
 	<xsl:template match="term-sec">
-		<xsl:text>[[</xsl:text>
-		<xsl:value-of select="@id"/>
-		<xsl:text>]]</xsl:text>
+		<xsl:call-template name="setId"/><!-- [[ ]] -->
 		<xsl:text>&#xa;</xsl:text>		
 		<xsl:apply-templates />
 	</xsl:template>
@@ -411,6 +410,7 @@
 			<xsl:call-template name="getLevel"/>
 		</xsl:variable>
 		<xsl:value-of select="$level"/><xsl:text> </xsl:text>
+		<xsl:call-template name="setId"/><!-- [[ ]] -->
 		<xsl:apply-templates select=".//tbx:term" mode="term"/>	
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
@@ -840,9 +840,7 @@
 	</xsl:template>
 	
 	<xsl:template match="table-wrap">
-		<xsl:text>[[</xsl:text>
-		<xsl:value-of select="@id"/>
-		<xsl:text>]]</xsl:text>
+		<xsl:call-template name="setId"/><!-- [[ ]] -->
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates select="table-wrap-foot/fn-group" mode="footnotes"/>
 		<xsl:apply-templates />
@@ -1061,9 +1059,7 @@
 	 -->
 	
 	<xsl:template match="app">
-		<xsl:text>[[</xsl:text>
-		<xsl:value-of select="@id"/>
-		<xsl:text>]]</xsl:text>
+		<xsl:call-template name="setId"/><!-- [[ ]] -->
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>[appendix</xsl:text>
 		<xsl:apply-templates select="annex-type" mode="annex"/>		
@@ -1125,9 +1121,7 @@
 	</xsl:template>
 	
 	<xsl:template match="fig-group">
-		<xsl:text>[[</xsl:text>
-		<xsl:value-of select="@id"/>
-		<xsl:text>]]</xsl:text>
+		<xsl:call-template name="setId"/><!-- [[ ]] -->
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates select="caption/title" mode="fig-group-title"/>
 		<xsl:text>====</xsl:text>
@@ -1147,9 +1141,7 @@
 	
 	<xsl:template match="fig">
 		<xsl:if test="not(parent::fig-group)">
-			<xsl:text>[[</xsl:text>
-			<xsl:value-of select="@id"/>
-			<xsl:text>]]</xsl:text>
+			<xsl:call-template name="setId"/><!-- [[ ]] -->
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 		<xsl:apply-templates/>
@@ -1605,6 +1597,12 @@
 			</xsl:for-each>
 		</xsl:variable>
 		<xsl:value-of select="normalize-space(java:replaceAll(java:java.lang.String.new($updated_ref),'= ','='))"/>
+	</xsl:template>
+	
+	<xsl:template name="setId">
+		<xsl:if test="normalize-space(@id) != ''">
+			<xsl:text>[[</xsl:text><xsl:value-of select="@id"/><xsl:text>]]</xsl:text>
+		</xsl:if>
 	</xsl:template>
 	
 </xsl:stylesheet>
