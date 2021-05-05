@@ -105,7 +105,7 @@
 				<xsl:text>&#xa;</xsl:text>
 			</xsl:if> -->
 			
-			<xsl:apply-templates select="*[local-name() != 'iso-meta' and local-name() != 'std-meta']"/>
+			<xsl:apply-templates select="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'std-meta']"/>
 			<!-- <xsl:apply-templates select="/standard/body"/>			
 			<xsl:apply-templates select="/standard/back"/> -->
 		</xsl:if>
@@ -198,7 +198,7 @@
 			<xsl:when test="$value = 'r'">recommendation</xsl:when>
 			<xsl:when test="$value = 'spec'">spec</xsl:when>
 			 <xsl:otherwise>
-				<xsl:value-of select="."/>
+				<xsl:value-of select="$value"/>
 			 </xsl:otherwise>
 		</xsl:choose>
 		<xsl:text>&#xa;</xsl:text>

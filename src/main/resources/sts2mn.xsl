@@ -568,6 +568,15 @@
 	</xsl:template>
 	
 	
+	<xsl:template match="front//sec">
+		<clause id="{@id}">
+			<xsl:if test="normalize-space(@sec-type) != ''">
+				<xsl:attribute name="type"><xsl:value-of select="@sec-type"/></xsl:attribute>
+			</xsl:if>
+			<xsl:apply-templates />
+		</clause>
+	</xsl:template>
+	
 	<xsl:template match="body">
 		<sections>
 			<xsl:apply-templates />
@@ -728,6 +737,9 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
+	<!-- ============= -->
+	<!-- Table processing -->
+	<!-- ============= -->
 	<xsl:template match="table">
 		<table>
 			<xsl:copy-of select="@*"/>
@@ -745,7 +757,7 @@
 	</xsl:template>
 	
 	<xsl:template match="table-wrap">
-		<xsl:apply-templates select="@*" />
+		<!-- <xsl:apply-templates select="@*" /> -->
 		<xsl:apply-templates/>
 	</xsl:template>
 	
@@ -757,14 +769,16 @@
 		</name>
 	</xsl:template>
 	
-	<xsl:template match="col | tbody | thead | th| td | tr">
+	<xsl:template match="col | tbody | thead | th| td | tr | colgroup">
 		<xsl:element name="{local-name()}">
 			<xsl:copy-of select="@*"/>
 			<xsl:apply-templates/>
 		</xsl:element>
 	</xsl:template>
 	
-	
+	<!-- ============= -->
+	<!-- End Table processing -->
+	<!-- ============= -->
 	
 
 	
@@ -1052,14 +1066,14 @@
 	<xsl:template match="named-content">
 		<xref>
 			<xsl:attribute name="target">
-			<xsl:choose>
-				<xsl:when test="starts-with(@xlink:href, '#')">
-					<xsl:value-of select="substring-after(@xlink:href, '#')"/>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:value-of select="@xlink:href"/>
-				</xsl:otherwise>
-			</xsl:choose>
+				<xsl:choose>
+					<xsl:when test="starts-with(@xlink:href, '#')">
+						<xsl:value-of select="substring-after(@xlink:href, '#')"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:value-of select="@xlink:href"/>
+					</xsl:otherwise>
+				</xsl:choose>
 			</xsl:attribute>
 			<xsl:copy-of select="@content-type"/>
 			<xsl:apply-templates />
@@ -1077,6 +1091,10 @@
 		<references id="{@id}">
 			<xsl:apply-templates />
 		</references>
+	</xsl:template>
+	
+	<xsl:template match="back/ref-list/ref-list">
+		<xsl:apply-templates />
 	</xsl:template>
 	
 	<!-- END Bibliography processing -->
