@@ -30,6 +30,15 @@
 		</xsl:for-each>
 	</xsl:variable>
 	
+	<xsl:variable name="sdo">
+		<xsl:choose>
+			<xsl:when test="normalize-space(//standard/front/*/doc-ident/sdo) != ''">
+				<xsl:value-of  select="java:toLowerCase(java:java.lang.String.new(//standard/front/*/doc-ident/sdo))"/>
+			</xsl:when>
+			<xsl:otherwise>iso</xsl:otherwise>
+		</xsl:choose>
+	</xsl:variable>
+	
 	<xsl:template match="adoption">
 		<xsl:apply-templates />
 	</xsl:template>
@@ -68,6 +77,11 @@
 		:docsubstage: 60 -->		
 		<xsl:apply-templates select="*/doc-ident/release-version"/>
 		
+		<xsl:text>:mn-document-class: </xsl:text><xsl:value-of select="$sdo"/>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>:mn-output-extensions: xml,html</xsl:text> <!-- ,doc,html_alt -->
+		<xsl:text>&#xa;</xsl:text>
+		
 		<!-- 
 		:technical-committee-type: TC
 		:technical-committee-number: 154
@@ -84,14 +98,14 @@
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>:data-uri-image:</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
-		
-		<xsl:text>:docfile: </xsl:text><xsl:value-of select="$docfile"/>
+		<xsl:text>:imagesdir: images</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
 		
-		<xsl:text>:mn-document-class: iso</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>:mn-output-extensions: xml,html,doc,html_alt</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
+		<xsl:if test="normalize-space($docfile) != ''">
+			<xsl:text>:docfile: </xsl:text><xsl:value-of select="$docfile"/>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
+		
 		<xsl:text>&#xa;</xsl:text>
 
 		<xsl:if test="$split-bibdata != 'true'">
@@ -177,8 +191,37 @@
 	</xsl:template>
 	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/main[normalize-space(.) != '']">
 		<xsl:param name="lang"/>
-		<xsl:text>:title-main-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
-		<xsl:text>&#xa;</xsl:text>
+		
+		<xsl:variable name="title_items">
+			<xsl:call-template name="split">
+				<xsl:with-param name="pText" select="."/>
+				<xsl:with-param name="sep" select="'—'"/>
+			</xsl:call-template>
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="count(xalan:nodeset($title_items)//item) &gt; 1">
+				<xsl:for-each select="xalan:nodeset($title_items)//item">
+					<xsl:choose>
+						<xsl:when test="position() = 1">
+							<xsl:text>:title-intro-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="normalize-space(translate(., '&#xA0;', ' '))"/>
+						</xsl:when>
+						<xsl:when test="position() = 2">
+							<xsl:text>:title-main-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="normalize-space(translate(., '&#xA0;', ' '))"/>
+						</xsl:when>
+						<xsl:when test="position() = 3">
+							<xsl:text>:title-part-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="normalize-space(translate(., '&#xA0;', ' '))"/>
+						</xsl:when>
+					</xsl:choose>
+					<xsl:text>&#xa;</xsl:text>
+				</xsl:for-each>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:text>:title-main-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
+				<xsl:text>&#xa;</xsl:text>
+			</xsl:otherwise>
+		</xsl:choose>
+		
+		
 	</xsl:template>
 	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/compl[normalize-space(.) != '']">
 		<xsl:param name="lang"/>
@@ -208,6 +251,7 @@
 		<!-- https://www.niso-sts.org/TagLibrary/niso-sts-TL-1-0-html/element/release-version.html -->
 		<!-- Possible values: WD, CD, DIS, FDIS, IS -->
 		<xsl:variable name="value" select="java:toUpperCase(java:java.lang.String.new(.))"/>
+		<xsl:variable name="doctype" select="java:toLowerCase(java:java.lang.String.new(../../std-ident/doc-type))"/>
 		<xsl:choose>
 			<xsl:when test="$value = 'WD'">
 				<xsl:text>:docstage: 20</xsl:text>
@@ -234,6 +278,11 @@
 				<xsl:text>&#xa;</xsl:text>
 				<xsl:text>:docsubstage: 60</xsl:text>
 			</xsl:when>
+			<xsl:when test="$doctype = 'standard'">
+				<xsl:text>:docstage: 60</xsl:text>
+				<xsl:text>&#xa;</xsl:text>
+				<xsl:text>:docsubstage: 60</xsl:text>
+			</xsl:when>
 			<xsl:otherwise>
 				<xsl:text>:docstage: </xsl:text>
 				<xsl:text>&#xa;</xsl:text>
@@ -244,42 +293,62 @@
 	</xsl:template>
 	
 	<xsl:template match="comm-ref[ancestor::front or ancestor::adoption-front]">
-		<xsl:variable name="comm-ref">
-			<xsl:call-template name="split">
-				<xsl:with-param name="pText" select="."/>
-			</xsl:call-template>
-		</xsl:variable>			
-		<xsl:for-each select="xalan:nodeset($comm-ref)/*">				
-			<xsl:choose>
-				<xsl:when test="starts-with(., 'TC ')">
-					<xsl:text>:technical-committee-type: TC</xsl:text>
+		<xsl:choose>
+			<xsl:when test="contains('TC ', .) or contains('SC ', .) or contains('WG ', .)">
+				<xsl:variable name="comm-ref">
+					<xsl:call-template name="split">
+						<xsl:with-param name="pText" select="."/>
+					</xsl:call-template>
+				</xsl:variable>			
+				<xsl:value-of select="count(xalan:nodeset($comm-ref)/*)"/>
+				<xsl:for-each select="xalan:nodeset($comm-ref)/*">				
+					<xsl:choose>
+						<xsl:when test="starts-with(., 'TC ')">
+							<xsl:text>:technical-committee-type: TC</xsl:text>
+							<xsl:text>&#xa;</xsl:text>
+							<xsl:text>:technical-committee-number: </xsl:text>					
+							<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
+							<xsl:text>&#xa;</xsl:text>
+							<!-- <xsl:text>:technical-committee: </xsl:text>
+							<xsl:text>&#xa;</xsl:text> -->
+						</xsl:when>
+						<xsl:when test="starts-with(., 'SC ')">
+							<xsl:text>:subcommittee-type: SC</xsl:text>
+							<xsl:text>&#xa;</xsl:text>
+							<xsl:text>:subcommittee-number: </xsl:text>
+							<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
+							<xsl:text>&#xa;</xsl:text>
+							<!-- <xsl:text>:subcommittee: </xsl:text>				
+							<xsl:text>&#xa;</xsl:text> -->
+						</xsl:when>
+						<xsl:when test="starts-with(., 'WG ')">					
+							<xsl:text>:workgroup-type: WG</xsl:text>
+							<xsl:text>&#xa;</xsl:text>
+							<xsl:text>:workgroup-number: </xsl:text>
+							<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
+							<xsl:text>&#xa;</xsl:text>
+							<!-- <xsl:text>:workgroup: </xsl:text>
+							<xsl:text>&#xa;</xsl:text> -->
+						</xsl:when>
+					</xsl:choose>
+				</xsl:for-each>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:text>:technical-committee-code: </xsl:text><xsl:value-of select="."/>
+				<xsl:text>&#xa;</xsl:text>
+				<xsl:variable name="tc_name">
+					<xsl:choose>
+						<xsl:when test="starts-with(., 'DEF/')">Defence standardization</xsl:when>
+						<xsl:otherwise></xsl:otherwise>
+					</xsl:choose>
+				</xsl:variable>
+				<xsl:if test="normalize-space($tc_name) != ''">
+					<xsl:text>:technical-committee-name: </xsl:text><xsl:value-of select="$tc_name"/>
 					<xsl:text>&#xa;</xsl:text>
-					<xsl:text>:technical-committee-number: </xsl:text>					
-					<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
-					<xsl:text>&#xa;</xsl:text>
-					<!-- <xsl:text>:technical-committee: </xsl:text>
-					<xsl:text>&#xa;</xsl:text> -->
-				</xsl:when>
-				<xsl:when test="starts-with(., 'SC ')">
-					<xsl:text>:subcommittee-type: SC</xsl:text>
-					<xsl:text>&#xa;</xsl:text>
-					<xsl:text>:subcommittee-number: </xsl:text>
-					<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
-					<xsl:text>&#xa;</xsl:text>
-					<!-- <xsl:text>:subcommittee: </xsl:text>				
-					<xsl:text>&#xa;</xsl:text> -->
-				</xsl:when>
-				<xsl:when test="starts-with(., 'WG ')">					
-					<xsl:text>:workgroup-type: WG</xsl:text>
-					<xsl:text>&#xa;</xsl:text>
-					<xsl:text>:workgroup-number: </xsl:text>
-					<xsl:value-of select="normalize-space(substring-after(., ' '))"/>
-					<xsl:text>&#xa;</xsl:text>
-					<!-- <xsl:text>:workgroup: </xsl:text>
-					<xsl:text>&#xa;</xsl:text> -->
-				</xsl:when>
-			</xsl:choose>
-		</xsl:for-each>
+				</xsl:if>
+			</xsl:otherwise>
+		</xsl:choose>
+		
 	</xsl:template>
 	
 	<xsl:template match="secretariat[ancestor::front or ancestor::adoption-front][normalize-space(.) != '']">
