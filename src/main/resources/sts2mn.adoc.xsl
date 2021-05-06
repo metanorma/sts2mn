@@ -30,7 +30,18 @@
 	
 	<xsl:variable name="refs">
 		<xsl:for-each select="//ref">
-			<ref id="{@id}" std-ref="{std/std-ref}"/>			
+			<xsl:variable name="text" select="std/std-ref"/>
+			<ref id="{@id}" std-ref="{$text}"/>
+			
+			<xsl:variable name="isDated">
+				<xsl:choose>
+					<xsl:when test="string-length($text) - string-length(translate($text, ':', '')) = 1">true</xsl:when>
+					<xsl:otherwise>false</xsl:otherwise>
+				</xsl:choose>
+			</xsl:variable>
+			<xsl:if test="$isDated = 'true'">
+				<ref id="{@id}" std-ref="{substring-before($text, ':')}"/>
+			</xsl:if>
 		</xsl:for-each>
 	</xsl:variable>
 	
@@ -124,6 +135,7 @@
 			</xsl:if> -->
 			<xsl:if test="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'std-meta']">
 				<redirect:write file="{$outpath}/sections/00-publishing.adoc">
+					<xsl:text>&#xa;</xsl:text>
 					<xsl:apply-templates select="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'std-meta' and not(local-name() = 'sec' and @sec-type = 'foreword')]"/>
 				</redirect:write>
 				<xsl:text>include::sections/00-publishing.adoc[]</xsl:text>
@@ -132,6 +144,7 @@
 			
 			<xsl:if test="sec[@sec-type = 'foreword']">
 				<redirect:write file="{$outpath}/sections/00-foreword.adoc">
+					<xsl:text>&#xa;</xsl:text>
 					<xsl:apply-templates select="sec[@sec-type = 'foreword']"/>
 				</redirect:write>
 				<xsl:text>include::sections/00-foreword.adoc[]</xsl:text>
@@ -389,6 +402,7 @@
 	
 	<xsl:template match="sec[@sec-type = 'intro']" priority="2">
 		<redirect:write file="{$outpath}/sections/00-introduction.adoc">
+			<xsl:text>&#xa;</xsl:text>
 			<xsl:text>[[introduction]]</xsl:text>
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:apply-templates />
@@ -399,6 +413,7 @@
 	
 	<xsl:template match="sec[@sec-type = 'scope']" priority="2">
 		<redirect:write file="{$outpath}/sections/01-scope.adoc">
+			<xsl:text>&#xa;</xsl:text>
 			<xsl:apply-templates />
 		</redirect:write>
 		<xsl:text>include::sections/01-scope.adoc[]</xsl:text>
@@ -407,6 +422,7 @@
 	
 	<xsl:template match="sec[@sec-type = 'norm-refs']" priority="2">
 		<redirect:write file="{$outpath}/sections/02-normrefs.adoc">
+			<xsl:text>&#xa;</xsl:text>
 			<xsl:text>[bibliography]</xsl:text>
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:apply-templates />
@@ -435,6 +451,7 @@
 		</xsl:variable>
 		<xsl:variable name="sec_title" select="java:toLowerCase(java:java.lang.String.new($sec_title_))"/>
 		<redirect:write file="{$outpath}/sections/{$sec_number}-{$sec_title}.adoc">
+			<xsl:text>&#xa;</xsl:text>
 			<xsl:call-template name="setIdOrType"/>
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:apply-templates />
@@ -533,6 +550,7 @@
 		<xsl:choose>
 			<xsl:when test="ancestor::list-item and not(following-sibling::p) and following-sibling::non-normative-note"></xsl:when>
 			<xsl:when test="ancestor::non-normative-note and not(following-sibling::p)"></xsl:when>
+			<xsl:when test="not(following-sibling::p) and ancestor::list/following-sibling::non-normative-note"></xsl:when>
 			<xsl:otherwise><xsl:text>&#xa;</xsl:text></xsl:otherwise>
 		</xsl:choose>
 		
@@ -560,7 +578,7 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="non-normative-note[ancestor::list-item]" priority="2">
+	<xsl:template match="non-normative-note[ancestor::list-item]" priority="3">
 		<xsl:text>+</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>--</xsl:text>
@@ -568,6 +586,16 @@
 		<xsl:text>NOTE: </xsl:text>
 		<xsl:apply-templates/>
 		<xsl:text>--</xsl:text>
+		<xsl:text>&#xa;&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="non-normative-note[count(*[not(local-name() = 'label')]) &gt; 1]" priority="2">
+		<xsl:text>[NOTE]</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>====</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:apply-templates/>
+		<xsl:text>====</xsl:text>
 		<xsl:text>&#xa;&#xa;</xsl:text>
 	</xsl:template>
 	
@@ -685,7 +713,7 @@
 	</xsl:template>
 	
 	<xsl:template match="list">
-		<xsl:if test="not(parent::list-item)">
+		<xsl:if test="not(parent::list-item) and not(parent::non-normative-note and preceding-sibling::p)">
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 		<xsl:text>&#xa;</xsl:text>
@@ -698,6 +726,7 @@
 	</xsl:template>
 	
 	<xsl:template match="list/@list-type">
+		<xsl:variable name="first_label" select="translate(..//label[1], ').', '')"/>
 		<xsl:variable name="listtype">
 			<xsl:choose>
 				<xsl:when test=". = 'alpha-lower'"></xsl:when> <!-- loweralpha --> <!-- https://github.com/metanorma/sts2mn/issues/22: on list don't need to be specified because it is default MN-BSI style -->
@@ -705,6 +734,11 @@
 				<xsl:when test=". = 'roman-lower'">lowerroman</xsl:when>
 				<xsl:when test=". = 'roman-upper'">upperroman</xsl:when>
 				<xsl:when test=". = 'arabic'">arabic</xsl:when>
+				<xsl:when test="translate($first_label, '1234567890', '') = ''">arabic</xsl:when>
+				<xsl:when test="translate($first_label, 'ixvcm', '') = ''">lowerroman</xsl:when>
+				<xsl:when test="translate($first_label, 'IXVCM', '') = ''">upperroman</xsl:when>
+				<xsl:when test="translate($first_label, 'abcdefghijklmnopqrstuvwxyz', '') = ''"></xsl:when> <!-- loweralpha -->
+				<xsl:when test="translate($first_label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '') = ''">upperalpha</xsl:when>
 				<xsl:otherwise></xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
@@ -1142,6 +1176,7 @@
 		<xsl:variable name="annex_label_" select="translate(label, ' &#xa0;', '--')" />
 		<xsl:variable name="annex_label" select="java:toLowerCase(java:java.lang.String.new($annex_label_))" />
 		<redirect:write file="{$outpath}/sections/{$annex_label}.adoc">
+			<xsl:text>&#xa;</xsl:text>
 			<xsl:call-template name="setId"/><!-- [[ ]] -->
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:text>[appendix</xsl:text>
@@ -1162,6 +1197,7 @@
 	
 	<xsl:template match="ref-list[@content-type = 'bibl']" priority="2">
 		<redirect:write file="{$outpath}/sections/99-bibliography.adoc">
+			<xsl:text>&#xa;</xsl:text>
 			<xsl:text>[bibliography]</xsl:text>
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:apply-templates />
@@ -1440,8 +1476,8 @@
 				<xsl:variable name="term_name_" select="//*[@id = $target]//tbx:term[1]"/>
 				<xsl:variable name="term_name" select="java:toLowerCase(java:java.lang.String.new(translate($term_name_, ' ', '-')))"/>
 				
-				<xsl:text>term-</xsl:text><xsl:value-of select="$term_name"/>
-				<xsl:if test=". != $term_name_">,<xsl:value-of select="."/></xsl:if>
+				<xsl:text>term-</xsl:text><xsl:value-of select="$term_name"/>,<xsl:value-of select="."/>
+				<!-- <xsl:if test=". != $term_name_"></xsl:if> -->
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:value-of select="$target"/>
