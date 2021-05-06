@@ -124,7 +124,7 @@
 			</xsl:if> -->
 			<xsl:if test="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'std-meta']">
 				<redirect:write file="{$outpath}/sections/00-publishing.adoc">
-					<xsl:apply-templates select="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'std-meta' and not(sec[@sec-type = 'foreword'])]"/>
+					<xsl:apply-templates select="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'std-meta' and not(local-name() = 'sec' and @sec-type = 'foreword')]"/>
 				</redirect:write>
 				<xsl:text>include::sections/00-publishing.adoc[]</xsl:text>
 				<xsl:text>&#xa;&#xa;</xsl:text>
@@ -443,38 +443,9 @@
 		<xsl:text>&#xa;&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="sec2">
-		<xsl:choose>
-			<!-- <xsl:when test="@sec-type = 'foreword'">
-			</xsl:when> -->
-			<!-- <xsl:when test="@sec-type = 'intro'">
-				<xsl:text>[[introduction]]</xsl:text>
-				<xsl:text>&#xa;</xsl:text> -->
-				<!-- <xsl:text>&#xa;</xsl:text>
-				<xsl:text>:sectnums!:</xsl:text> -->
-			<!-- </xsl:when> -->
-			<!-- <xsl:when test="@sec-type = 'scope'"> -->
-				<!-- <xsl:text>:sectnums:</xsl:text> -->
-			<!-- </xsl:when> -->
-			<!-- <xsl:when test="@sec-type = 'norm-refs'">
-				<xsl:text>[bibliography]</xsl:text>
-				<xsl:text>&#xa;</xsl:text>				
-			</xsl:when> -->
-			<xsl:when test="1 = 2"></xsl:when>
-			<xsl:otherwise>
-				<xsl:text>[[</xsl:text>
-					<xsl:choose>
-						<xsl:when test="@id">
-							<xsl:value-of select="@id"/>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:value-of select="@sec-type"/>
-						</xsl:otherwise>
-					</xsl:choose>
-				<xsl:text>]]</xsl:text>
-				<xsl:text>&#xa;</xsl:text>
-			</xsl:otherwise>
-		</xsl:choose>
+	<xsl:template match="sec">
+		<xsl:call-template name="setIdOrType"/>
+		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates />
 	</xsl:template>
 	
@@ -484,8 +455,9 @@
 	
 	
 	<xsl:template match="term-sec">
-		<xsl:call-template name="setId"/><!-- [[ ]] -->
-		<xsl:text>&#xa;</xsl:text>		
+		<!-- [[ ]] -->
+		<!-- <xsl:call-template name="setId"/>
+		<xsl:text>&#xa;</xsl:text>		 -->
 		<xsl:apply-templates />
 	</xsl:template>
 	
@@ -494,7 +466,7 @@
 			<xsl:call-template name="getLevel"/>
 		</xsl:variable>
 		<xsl:value-of select="$level"/><xsl:text> </xsl:text>
-		<xsl:call-template name="setId"/><!-- [[ ]] -->
+		<!-- <xsl:call-template name="setId"/> --><!-- [[ ]] -->
 		<xsl:apply-templates select=".//tbx:term" mode="term"/>	
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
@@ -506,7 +478,7 @@
 			<xsl:when test="parent::sec/@sec-type = 'foreword'">
 				<xsl:text>== </xsl:text>
 				<xsl:apply-templates />
-				<xsl:text>&#xa;</xsl:text>
+				<xsl:text>&#xa;&#xa;</xsl:text>
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:variable name="level">
@@ -557,7 +529,13 @@
 	
 	<xsl:template match="p">
 		<xsl:apply-templates />
-		<xsl:text>&#xa;&#xa;</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:choose>
+			<xsl:when test="ancestor::list-item and not(following-sibling::p) and following-sibling::non-normative-note"></xsl:when>
+			<xsl:when test="ancestor::non-normative-note and not(following-sibling::p)"></xsl:when>
+			<xsl:otherwise><xsl:text>&#xa;</xsl:text></xsl:otherwise>
+		</xsl:choose>
+		
 	</xsl:template>
 		
 	<xsl:template match="tbx:entailedTerm">
@@ -582,9 +560,21 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
+	<xsl:template match="non-normative-note[ancestor::list-item]" priority="2">
+		<xsl:text>+</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>--</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>NOTE: </xsl:text>
+		<xsl:apply-templates/>
+		<xsl:text>--</xsl:text>
+		<xsl:text>&#xa;&#xa;</xsl:text>
+	</xsl:template>
+	
 	<xsl:template match="non-normative-note">
 		<xsl:text>NOTE: </xsl:text>
 		<xsl:apply-templates/>
+		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="std">
@@ -839,6 +829,12 @@
 			<xsl:when test="@ref-type = 'other'">
 				<xsl:text>&lt;</xsl:text><xsl:value-of select="."/><xsl:text>&gt;</xsl:text>
 			</xsl:when>
+			<xsl:when test="@ref-type = 'sec' and local-name(//*[@id = current()/@rid]) = 'term-sec'"> <!-- <xref ref-type="sec" rid="sec_3.21"> link to term-->
+				<xsl:variable name="term_name_" select="translate(//*[@id = current()/@rid]//tbx:term[1], ' ', '-')"/>
+				<xsl:variable name="term_name" select="java:toLowerCase(java:java.lang.String.new($term_name_))"/>
+				
+				<xsl:text>&lt;&lt;</xsl:text>term-<xsl:value-of select="$term_name"/><xsl:text>&gt;&gt;</xsl:text>
+			</xsl:when>
 			<xsl:otherwise> <!-- example: ref-type="sec" "table" "app" -->
 				<xsl:text>&lt;&lt;</xsl:text><xsl:value-of select="@rid"/><xsl:text>&gt;&gt;</xsl:text>
 			</xsl:otherwise>
@@ -864,7 +860,7 @@
 	</xsl:template>
 	
 	<xsl:template match="mixed-citation">		
-		<xsl:apply-templates/>
+		<xsl:text> </xsl:text><xsl:apply-templates/>
 	</xsl:template>
 		
 	<xsl:template match="array">
@@ -1182,6 +1178,10 @@
 		<xsl:apply-templates/>
 	</xsl:template>
 	
+	<xsl:template match="ref-list/title/bold">
+		<xsl:apply-templates/>
+	</xsl:template>
+	
 	<xsl:template match="ref">
 		<xsl:text>* </xsl:text>
 		<xsl:if test="@id or std/std-ref">
@@ -1189,6 +1189,7 @@
 			<xsl:value-of select="@id"/>
 			<xsl:apply-templates select="std/std-ref" mode="std"/>
 			<xsl:apply-templates select="mixed-citation/std" mode="std"/>
+			<xsl:apply-templates select="label" mode="std"/>
 			<xsl:text>]]]</xsl:text>
 		</xsl:if>
 		<xsl:apply-templates/>
@@ -1200,13 +1201,33 @@
 		<xsl:apply-templates/>
 	</xsl:template>
 	
+	<xsl:template match="ref/label" mode="std">
+		<xsl:text>, </xsl:text><xsl:value-of select="translate(., '[]', '')"/>
+	</xsl:template>
+	
 	<xsl:template match="ref/std/std-ref"/>
 	<xsl:template match="ref/std/std-ref" mode="std">
 		<xsl:text>,</xsl:text>
 		<xsl:apply-templates mode="std"/>
 	</xsl:template>
 	<xsl:template match="ref/std/std-ref/text()" mode="std">
-		<xsl:value-of select="translate(.,'[]','')"/>
+		<xsl:variable name="text" select="translate(translate(.,'[]',''), '&#xA0;', ' ')"/>
+		<xsl:variable name="isDated">
+			<xsl:choose>
+				<xsl:when test="string-length($text) - string-length(translate($text, ':', '')) = 1">true</xsl:when>
+				<xsl:otherwise>false</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:text>(</xsl:text>
+		<xsl:choose>
+			<xsl:when test="$isDated = 'true'">
+				<xsl:value-of select="substring-before($text, ':')"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$text"/>
+			</xsl:otherwise>
+		</xsl:choose>
+		<xsl:text>)</xsl:text><xsl:value-of select="$text"/>
 	</xsl:template>
 	
 	<xsl:template match="ref/mixed-citation/std" mode="std">
@@ -1218,6 +1239,10 @@
 		<xsl:text>_</xsl:text>
 		<xsl:apply-templates/>
 		<xsl:text>_</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="ref/std//title/text()">
+		<xsl:value-of select="translate(., '&#xA0;', ' ')"/>
 	</xsl:template>
 	
 	<xsl:template match="fig-group">
@@ -1410,10 +1435,21 @@
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
-		<xsl:value-of select="$target"/>
-		<xsl:if test="normalize-space() != ''">
-			<xsl:text>,</xsl:text><xsl:apply-templates/>
-		</xsl:if>
+		<xsl:choose>
+			<xsl:when test="@content-type = 'term' and (local-name(//*[@id = $target]) = 'term-sec' or local-name(//*[@id = $target]) = 'termEntry')">
+				<xsl:variable name="term_name_" select="//*[@id = $target]//tbx:term[1]"/>
+				<xsl:variable name="term_name" select="java:toLowerCase(java:java.lang.String.new(translate($term_name_, ' ', '-')))"/>
+				
+				<xsl:text>term-</xsl:text><xsl:value-of select="$term_name"/>
+				<xsl:if test=". != $term_name_">,<xsl:value-of select="."/></xsl:if>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$target"/>
+				<xsl:if test="normalize-space() != ''">
+					<xsl:text>,</xsl:text><xsl:apply-templates/>
+				</xsl:if>
+			</xsl:otherwise>
+		</xsl:choose>
 		<xsl:text>&gt;&gt;</xsl:text>
 	</xsl:template>
 	
