@@ -152,8 +152,9 @@
 	</xsl:template>
 	
 	<xsl:template match="//standard/back">
-		<xsl:if test="$split-bibdata != 'true'">			
-			<xsl:apply-templates />
+		<xsl:if test="$split-bibdata != 'true'">		
+			<xsl:apply-templates select="ref-list[@content-type = 'bibl']" />
+			<xsl:apply-templates select="*[not(local-name() = 'ref-list' and @content-type = 'bibl')]" />
 		</xsl:if>
 	</xsl:template>
 	
@@ -414,7 +415,7 @@
 		<xsl:text>&#xa;&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="sec[@sec-type = 'terms']" priority="2">
+	<!-- <xsl:template match="sec[@sec-type = 'terms']" priority="2">
 		<redirect:write file="{$outpath}/sections/03-terms.adoc">
 			<xsl:call-template name="setIdOrType"/>
 			<xsl:text>&#xa;</xsl:text>
@@ -422,9 +423,27 @@
 		</redirect:write>
 		<xsl:text>include::sections/03-terms.adoc[]</xsl:text>
 		<xsl:text>&#xa;&#xa;</xsl:text>
+	</xsl:template> -->
+	
+	<xsl:template match="body/sec">
+		<xsl:variable name="sec_number" select="format-number(label, '00')" />
+		<xsl:variable name="sec_title_">
+			<xsl:choose>
+				<xsl:when test="contains(title, ' ')"><xsl:value-of select="substring-before(title,' ')"/></xsl:when>
+				<xsl:otherwise><xsl:value-of select="title"/></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:variable name="sec_title" select="java:toLowerCase(java:java.lang.String.new($sec_title_))"/>
+		<redirect:write file="{$outpath}/sections/{$sec_number}-{$sec_title}.adoc">
+			<xsl:call-template name="setIdOrType"/>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:apply-templates />
+		</redirect:write>
+		<xsl:text>include::sections/</xsl:text><xsl:value-of select="$sec_number"/>-<xsl:value-of select="$sec_title"/><xsl:text>.adoc[]</xsl:text>
+		<xsl:text>&#xa;&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="sec">
+	<xsl:template match="sec2">
 		<xsl:choose>
 			<!-- <xsl:when test="@sec-type = 'foreword'">
 			</xsl:when> -->
@@ -485,7 +504,7 @@
 	<xsl:template match="title">
 		<xsl:choose>
 			<xsl:when test="parent::sec/@sec-type = 'foreword'">
-				<xsl:text>.</xsl:text>
+				<xsl:text>== </xsl:text>
 				<xsl:apply-templates />
 				<xsl:text>&#xa;</xsl:text>
 			</xsl:when>
@@ -1124,13 +1143,19 @@
 	 -->
 	
 	<xsl:template match="app">
-		<xsl:call-template name="setId"/><!-- [[ ]] -->
-		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>[appendix</xsl:text>
-		<xsl:apply-templates select="annex-type" mode="annex"/>		
-		<xsl:text>]</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
-		<xsl:apply-templates/>
+		<xsl:variable name="annex_label_" select="translate(label, ' &#xa0;', '--')" />
+		<xsl:variable name="annex_label" select="java:toLowerCase(java:java.lang.String.new($annex_label_))" />
+		<redirect:write file="{$outpath}/sections/{$annex_label}.adoc">
+			<xsl:call-template name="setId"/><!-- [[ ]] -->
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:text>[appendix</xsl:text>
+			<xsl:apply-templates select="annex-type" mode="annex"/>		
+			<xsl:text>]</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:apply-templates />
+		</redirect:write>
+		<xsl:text>include::sections/</xsl:text><xsl:value-of select="$annex_label"/><xsl:text>.adoc[]</xsl:text>
+		<xsl:text>&#xa;&#xa;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="app/annex-type"/>
@@ -1139,11 +1164,21 @@
 		<xsl:value-of select="translate(., '()','')"/>
 	</xsl:template>
 	
-	<xsl:template match="ref-list">
-		<xsl:if test="@content-type = 'bibl'">
+	<xsl:template match="ref-list[@content-type = 'bibl']" priority="2">
+		<redirect:write file="{$outpath}/sections/99-bibliography.adoc">
 			<xsl:text>[bibliography]</xsl:text>
 			<xsl:text>&#xa;</xsl:text>
-		</xsl:if>
+			<xsl:apply-templates />
+		</redirect:write>
+		<xsl:text>include::sections/99-bibliography.adoc[]</xsl:text>
+		<xsl:text>&#xa;&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="ref-list">
+		<!-- <xsl:if test="@content-type = 'bibl'"> -->
+			<!-- <xsl:text>[bibliography]</xsl:text> -->
+			<!-- <xsl:text>&#xa;</xsl:text> -->
+		<!-- </xsl:if> -->
 		<xsl:apply-templates/>
 	</xsl:template>
 	
