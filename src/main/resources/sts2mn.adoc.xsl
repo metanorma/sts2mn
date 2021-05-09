@@ -92,6 +92,17 @@
 		:docsubstage: 60 -->		
 		<xsl:apply-templates select="*/doc-ident/release-version"/>
 		
+		<xsl:if test="*/ics">
+			<xsl:text>:library-ics: </xsl:text>
+			<xsl:for-each select="*/ics">
+				<xsl:value-of select="."/><xsl:if test="position() != last()">,</xsl:if>
+			</xsl:for-each>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
+		
+		<xsl:apply-templates select="*/custom-meta-group/custom-meta[meta-name = 'ISBN']/meta-value"/>
+		
+		
 		<xsl:text>:mn-document-class: </xsl:text><xsl:value-of select="$sdo"/>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>:mn-output-extensions: xml,html</xsl:text> <!-- ,doc,html_alt -->
@@ -388,6 +399,12 @@
 		<xsl:text>:secretariat: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
+	
+	<xsl:template match="custom-meta-group/custom-meta[meta-name = 'ISBN']/meta-value">
+		<xsl:text>:isbn: </xsl:text><xsl:value-of select="."/>
+		<xsl:text>&#xa;</xsl:text>
+	</xsl:template>
+	
 	<!-- =========== -->
 	<!-- end bibdata (standard/front) -->
 	

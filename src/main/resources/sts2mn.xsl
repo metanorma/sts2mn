@@ -525,6 +525,9 @@
 			<project-number>
 				<xsl:value-of select="proj-id"/>
 			</project-number>
+			<xsl:if test="../std-ident/part-number">
+				<partnumber><xsl:value-of select="../std-ident/part-number"/></partnumber>
+			</xsl:if>
 		</structuredidentifier>		
 	</xsl:template>
 	
@@ -1102,6 +1105,10 @@
 	</xsl:template>
 	
 	<!-- END Bibliography processing -->
+	
+	<xsl:template match="processing-instruction('doi')">
+		<xsl:copy-of select="."/>
+	</xsl:template>
 	
 	<xsl:variable name="lower">abcdefghijklmnopqrstuvwxyz</xsl:variable> 
 	<xsl:variable name="upper">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
