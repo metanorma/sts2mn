@@ -16,22 +16,48 @@
 	<xsl:param name="split-bibdata">false</xsl:param>
 
 	<xsl:template match="/*">	
-		<xsl:choose>
-			<xsl:when test="$split-bibdata = 'true'">
-				<xsl:apply-templates select="front"/>
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:element name="iso-standard">
-					 <xsl:apply-templates />
-					 <xsl:if test="body/sec[@sec-type = 'norm-refs'] or back/ref-list">
-						<bibliography>
-							<xsl:apply-templates select="body/sec[@sec-type = 'norm-refs']" mode="bibliography"/>
-							<xsl:apply-templates select="back/ref-list" mode="bibliography"/>
-						</bibliography>
-					 </xsl:if>
-				</xsl:element>
-			</xsl:otherwise>
-		</xsl:choose>		
+		<xsl:variable name="xml_result">
+			<xsl:choose>
+				<xsl:when test="$split-bibdata = 'true'">
+					<xsl:apply-templates select="front"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:element name="iso-standard">
+						 <xsl:apply-templates />
+						 <xsl:if test="body/sec[@sec-type = 'norm-refs'] or back/ref-list">
+							<bibliography>
+								<xsl:apply-templates select="body/sec[@sec-type = 'norm-refs']" mode="bibliography"/>
+								<xsl:apply-templates select="back/ref-list" mode="bibliography"/>
+							</bibliography>
+						 </xsl:if>
+					</xsl:element>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:copy-of select="$xml_result"/>
+		
+		<!-- non-processed element checking -->
+		<xsl:variable name="xml_result_namespace">https://www.metanorma.org/ns/iso</xsl:variable>
+		<xsl:variable name="xml_namespace">http://www.w3.org/XML/1998/namespace</xsl:variable>
+		<xsl:variable name="unknown_elements">
+			<xsl:for-each select="xalan:nodeset($xml_result)//*">
+				<xsl:if test="namespace::*[. != $xml_result_namespace and . != $xml_namespace]">
+					<element>
+						<xsl:for-each select="ancestor-or-self::*">
+							<xsl:value-of select="local-name()"/><xsl:if test="position() != last()">/</xsl:if>
+						</xsl:for-each>
+					</element>
+				</xsl:if>
+			</xsl:for-each>
+		</xsl:variable>
+	
+		<xsl:for-each select="xalan:nodeset($unknown_elements)/*">
+			<xsl:if test="position() = 1"><xsl:text>&#xa;Non-processed elements found:&#xa;</xsl:text></xsl:if>
+			<xsl:if test="not(preceding-sibling::*/text() = current()/text())">
+				<xsl:value-of select="normalize-space()	"/><xsl:text>&#xa;</xsl:text>
+			</xsl:if>
+		</xsl:for-each>
+		
 	</xsl:template>
 
 	<!-- ============= -->
