@@ -803,6 +803,7 @@
 	</xsl:template>
 
 	<xsl:template match="bold">
+		<xsl:if test="parent::*[local-name() = 'td' or local-name() = 'th'] and not(preceding-sibling::node())"><xsl:text> </xsl:text></xsl:if>
 		<xsl:text>*</xsl:text><xsl:apply-templates /><xsl:text>*</xsl:text>
 	</xsl:template>
 	
@@ -986,24 +987,32 @@
 	<xsl:template match="table">
 		<xsl:text>[</xsl:text>
 		<xsl:text>cols="</xsl:text>
-		<xsl:variable name="simple-table">
-			<xsl:call-template  name="getSimpleTable"/>
-		</xsl:variable>
 		<xsl:variable name="cols-count">
 			<xsl:choose>
-				<xsl:when test="col">
-					<xsl:value-of select="count(col)"/>
+				<xsl:when test="colgroup/col">
+					<xsl:value-of select="count(colgroup/col)"/>
 				</xsl:when>
 				<xsl:otherwise>
+					<xsl:variable name="simple-table">
+						<xsl:call-template  name="getSimpleTable"/>
+					</xsl:variable>
 					<xsl:value-of select="count(xalan:nodeset($simple-table)//tr[1]/td)"/>				
 				</xsl:otherwise>				
 			</xsl:choose>
 		</xsl:variable>
 		<xsl:choose>
-			<xsl:when test="col">				
-				<xsl:for-each select="col">
+			<xsl:when test="colgroup/col">				
+				<xsl:for-each select="colgroup/col">
 					<xsl:variable name="width" select="translate(@width, '%cm', '')"/>
-					<xsl:value-of select="round($width)"/>
+					<xsl:variable name="width_number" select="number($width)"/>
+					<xsl:choose>
+						<xsl:when test="normalize-space($width_number) != 'NaN'">
+							<xsl:value-of select="round($width_number * 100)"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:value-of select="$width"/>
+						</xsl:otherwise>
+					</xsl:choose>
 					<xsl:if test="position() != last()">,</xsl:if>
 				</xsl:for-each>
 			</xsl:when>
@@ -1078,9 +1087,9 @@
 	</xsl:template>
 	
 	<xsl:template match="tr">
-		<xsl:if test="position() != 1">
+		<!-- <xsl:if test="position() != 1">
 			<xsl:text>&#xa;</xsl:text>
-		</xsl:if>
+		</xsl:if> -->
 		<xsl:apply-templates />
 	</xsl:template>
 	
@@ -1094,7 +1103,12 @@
 	<xsl:template match="td">
 		<xsl:call-template name="spanProcessing"/>		
 		<xsl:text>|</xsl:text>
-		<xsl:apply-templates />
+		<xsl:choose>
+			<xsl:when test="position() = last() and normalize-space() = '' and not(*)"></xsl:when>
+			<xsl:otherwise>
+				<xsl:apply-templates />
+			</xsl:otherwise>
+		</xsl:choose>
 		<xsl:choose>
 			<xsl:when test="position() = last() and ../following-sibling::tr">
 				<xsl:text>&#xa;</xsl:text>
