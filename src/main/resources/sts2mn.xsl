@@ -15,6 +15,8 @@
 	
 	<xsl:param name="split-bibdata">false</xsl:param>
 
+	<xsl:variable name="organization" select="/standard/front/*/doc-ident/sdo"/>
+
 	<xsl:template match="/*">	
 		<xsl:variable name="xml_result">
 			<xsl:choose>
@@ -74,6 +76,8 @@
 					<!-- docidentifier @type="iso", "iso-with-lang", "iso-reference" -->
 					<xsl:apply-templates select="std-ref[@type='dated']" mode="bibdata"/>	
 					<xsl:apply-templates select="doc-ref" mode="bibdata"/>	
+					
+					<xsl:apply-templates select="custom-meta-group/custom-meta[meta-name = 'ISBN']/meta-value" mode="bibdata"/>	
           
 					<!-- docnumber -->
 					<xsl:apply-templates select="std-ident/doc-number" mode="bibdata"/>
@@ -153,6 +157,9 @@
 			<xsl:if test="sec">
 				<preface>
 					<xsl:apply-templates select="sec" mode="preface"/>
+					<xsl:if test="$organization = 'BSI'">
+						<xsl:apply-templates select="/standard/body/sec[@sec-type = 'intro']" mode="preface"/>
+					</xsl:if>
 				</preface>
 			</xsl:if>
 		</xsl:if>
@@ -335,6 +342,10 @@
 		<docidentifier type="iso-reference">
 			<xsl:apply-templates mode="bibdata"/>
 		</docidentifier>
+	</xsl:template>
+
+	<xsl:template match="custom-meta-group/custom-meta[meta-name = 'ISBN']/meta-value" mode="bibdata">
+		<docidentifier type="ISBN"><xsl:apply-templates mode="bibdata"/></docidentifier>
 	</xsl:template>
 	
 	<xsl:template match="iso-meta/std-ident/doc-number | nat-meta/std-ident/doc-number" mode="bibdata">
@@ -581,7 +592,7 @@
 	<xsl:template match="processing-instruction('foreward')"/>
 	
 	
-	<xsl:template match="front/sec" mode="preface">
+	<xsl:template match="front/sec | body/sec[@sec-type = 'intro']" mode="preface">
 		<xsl:variable name="name">
 			<xsl:choose>
 				<xsl:when test="@sec-type = 'intro'">introduction</xsl:when>
@@ -616,17 +627,22 @@
 	<xsl:template match="body/sec[@sec-type = 'norm-refs']" priority="2"/> <!-- See Bibliography processing below -->
   
 	<xsl:template match="body//sec">
-		<clause id="{@id}">
-			<xsl:choose>
-				<xsl:when test="@sec-type = 'scope'">
-					<xsl:attribute name="type">scope</xsl:attribute>
-				</xsl:when>
-				<xsl:when test="@sec-type = 'intro'">
-					<xsl:attribute name="type">intro</xsl:attribute>
-				</xsl:when>
-			</xsl:choose>
-			<xsl:apply-templates />
-		</clause>
+		<xsl:choose>
+			<xsl:when test="$organization = 'BSI' and @sec-type = 'intro'"></xsl:when> <!-- introduction added in preface tag for BSI -->
+			<xsl:otherwise>
+				<clause id="{@id}">
+					<xsl:choose>
+						<xsl:when test="@sec-type = 'scope'">
+							<xsl:attribute name="type">scope</xsl:attribute>
+						</xsl:when>
+						<xsl:when test="@sec-type = 'intro'">
+							<xsl:attribute name="type">intro</xsl:attribute>
+						</xsl:when>
+					</xsl:choose>
+					<xsl:apply-templates />
+				</clause>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 	
 	<xsl:template match="body//sec[./term-sec]" priority="2">
