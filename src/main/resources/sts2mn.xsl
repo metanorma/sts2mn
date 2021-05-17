@@ -56,7 +56,7 @@
 		<xsl:for-each select="xalan:nodeset($unknown_elements)/*">
 			<xsl:if test="position() = 1"><xsl:text>&#xa;Non-processed elements found:&#xa;</xsl:text></xsl:if>
 			<xsl:if test="not(preceding-sibling::*/text() = current()/text())">
-				<xsl:value-of select="normalize-space()	"/><xsl:text>&#xa;</xsl:text>
+				<xsl:value-of select="normalize-space()"/><xsl:text>&#xa;</xsl:text>
 			</xsl:if>
 		</xsl:for-each>
 		
@@ -472,10 +472,19 @@
 	
 	<xsl:template match="iso-meta/permissions/copyright-holder | nat-meta/permissions/copyright-holder" mode="bibdata">
 		<owner>
-				<organization>					
-					<abbreviation>
-						<xsl:apply-templates mode="bibdata"/>
-					</abbreviation>
+				<organization>
+					<xsl:choose>
+						<xsl:when test="string-length(text()) != string-length(translate(text(),' ',''))">
+							<name>
+								<xsl:apply-templates mode="bibdata"/>
+							</name>
+						</xsl:when>
+						<xsl:otherwise>
+							<abbreviation>
+								<xsl:apply-templates mode="bibdata"/>
+							</abbreviation>
+						</xsl:otherwise>
+					</xsl:choose>
 				</organization>
 			</owner>
 	</xsl:template>
@@ -548,13 +557,15 @@
 	</xsl:template>
 	
 	<xsl:template match="iso-meta/std-ident | nat-meta/std-ident" mode="bibdata">
-		<structuredidentifier>
-			<project-number part="{part-number}">
-				<xsl:value-of select="originator"/>
-				<xsl:text> </xsl:text>
-				<xsl:value-of select="doc-number"/>
-			</project-number>
-		</structuredidentifier>		
+		<xsl:if test="$organization != 'BSI'">
+			<structuredidentifier>
+				<project-number part="{part-number}">
+					<xsl:value-of select="originator"/>
+					<xsl:text> </xsl:text>
+					<xsl:value-of select="doc-number"/>
+				</project-number>
+			</structuredidentifier>
+		</xsl:if>
 	</xsl:template>
 	
 	<xsl:template match="iso-meta/doc-ident | nat-meta/doc-ident" mode="bibdata_project_number">
@@ -593,11 +604,13 @@
 	
 	
 	<xsl:template match="front/sec | body/sec[@sec-type = 'intro']" mode="preface">
+		<xsl:variable name="sec_type" select="normalize-space(@sec-type)"/>
 		<xsl:variable name="name">
 			<xsl:choose>
-				<xsl:when test="@sec-type = 'intro'">introduction</xsl:when>
+				<xsl:when test="$sec_type = 'intro'">introduction</xsl:when>
+				<xsl:when test="$sec_type = ''">clause</xsl:when>
 				<xsl:otherwise>
-					<xsl:value-of select="@sec-type"/>
+					<xsl:value-of select="$sec_type"/>
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
@@ -798,7 +811,13 @@
 			</xsl:if>
 			<xsl:apply-templates select="parent::table-wrap/caption/title"/>
 			<xsl:apply-templates/>
+			<xsl:apply-templates select="parent::table-wrap/table-wrap-foot" mode="table"/>
 		</table>
+	</xsl:template>
+	
+	<xsl:template match="table-wrap-foot"/>
+	<xsl:template match="table-wrap-foot" mode="table">
+		<xsl:apply-templates/>
 	</xsl:template>
 	
 	<xsl:template match="table-wrap">
@@ -1133,6 +1152,10 @@
 			<xsl:copy-of select="@content-type"/>
 			<xsl:apply-templates />
 		</xref>
+	</xsl:template>
+	
+	<xsl:template match="sub-part">
+		<xsl:apply-templates />
 	</xsl:template>
 	
 	<!-- Bibliography processing -->
