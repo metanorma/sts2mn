@@ -811,6 +811,10 @@
 		<xsl:text>_</xsl:text><xsl:apply-templates /><xsl:text>_</xsl:text>
 	</xsl:template>
 	
+	<xsl:template match="underline">
+		<xsl:text>[underline]#</xsl:text><xsl:apply-templates /><xsl:text>#</xsl:text>
+	</xsl:template>
+	
 	<xsl:template match="sub">
 		<xsl:text>~</xsl:text><xsl:apply-templates /><xsl:text>~</xsl:text>
 	</xsl:template>

@@ -863,6 +863,12 @@
 		</em>
 	</xsl:template>
 	
+	<xsl:template match="underline">
+		<underline>
+			<xsl:apply-templates />
+		</underline>
+	</xsl:template>
+	
 	<xsl:template match="sub">
 		<sub>
 			<xsl:apply-templates />
