@@ -1011,6 +1011,25 @@
 	</xsl:template>
 	<xsl:template match="std/std-ref"/>
 	
+	<xsl:template match="std[italic]" priority="2">
+		<em>
+			<eref type="inline" citeas="{italic/std-ref}">
+				<xsl:apply-templates />
+			</eref>
+		</em>
+	</xsl:template>
+	<xsl:template match="std[bold]" priority="2">
+		<strong>
+			<eref type="inline" citeas="{italic/std-ref}">
+				<xsl:apply-templates />
+			</eref>
+		</strong>
+	</xsl:template>
+	<xsl:template match="std/italic | std/bold" priority="2">
+		<xsl:apply-templates />
+	</xsl:template>
+	<xsl:template match="std/italic/std-ref | std/bold/std-ref" priority="2"/>
+	
 	
 	<xsl:template match="list">
 		<xsl:choose>
