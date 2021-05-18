@@ -919,6 +919,9 @@
 		<xsl:text> </xsl:text><xsl:apply-templates/>
 	</xsl:template>
 		
+	<!-- =============== -->
+	<!-- Definitions list (dl) -->
+	<!-- =============== -->
 	<xsl:template match="array">
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:choose>
@@ -974,6 +977,10 @@
 	<xsl:template match="td" mode="dl">
 		<xsl:apply-templates />
 	</xsl:template>
+
+	<!-- =============== -->
+	<!-- End Definitions list (dl) -->
+	<!-- =============== -->
 	
 	<xsl:template match="table-wrap">
 		<xsl:call-template name="setId"/><!-- [[ ]] -->
@@ -1465,7 +1472,9 @@
 		<xsl:text>&gt;</xsl:text>
 	</xsl:template>
 	
-	
+	<!-- =============== -->
+	<!-- Definitions list (dl) -->
+	<!-- =============== -->
 	<xsl:template match="def-list">
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
@@ -1492,7 +1501,9 @@
 	<xsl:template match="def-item/def">
 		<xsl:apply-templates/>
 	</xsl:template>
-	
+	<!-- =============== -->
+	<!-- End Definitions list (dl) -->
+	<!-- =============== -->
 	
 	<xsl:template match="named-content">
 		<xsl:text>&lt;&lt;</xsl:text>

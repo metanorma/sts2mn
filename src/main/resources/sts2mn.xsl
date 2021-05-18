@@ -32,6 +32,7 @@
 								<xsl:apply-templates select="back/ref-list" mode="bibliography"/>
 							</bibliography>
 						 </xsl:if>
+						 <xsl:apply-templates select="//sec[@sec-type = 'index']" mode="index"/>
 					</xsl:element>
 				</xsl:otherwise>
 			</xsl:choose>
@@ -801,6 +802,9 @@
 		<link target="{.}"/>
 	</xsl:template>
 	
+	<!-- =============== -->
+	<!-- Definitions list (dl) -->
+	<!-- =============== -->
 	<xsl:template match="array">
 		<xsl:choose>
 			<xsl:when test="count(table/col) = 2">
@@ -819,8 +823,7 @@
 				<xsl:apply-templates select="@*|node()" mode="dl"/>
 		</xsl:copy>
 	</xsl:template>
-	
-	
+
 	<xsl:template match="table" mode="dl">
 		<xsl:apply-templates mode="dl"/>
 	</xsl:template>
@@ -844,6 +847,33 @@
 	<xsl:template match="td" mode="dl">
 		<xsl:apply-templates />
 	</xsl:template>
+	
+	<xsl:template match="def-list">
+		<dl>
+			<xsl:apply-templates />
+		</dl>
+	</xsl:template>
+	
+	<xsl:template match="def-list/def-item">
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="def-item/term">
+		<dt>
+			<xsl:copy-of select="parent::*/@id"/>
+			<xsl:apply-templates />
+		</dt>
+	</xsl:template>
+	
+	<xsl:template match="def-item/def">
+		<dd>
+			<xsl:apply-templates />
+		</dd>
+	</xsl:template>
+	<!-- =============== -->
+	<!-- End Definitions list (dl) -->
+	<!-- =============== -->
+	
 	
 	<!-- ============= -->
 	<!-- Table processing -->
@@ -1108,6 +1138,13 @@
 				<xsl:apply-templates />
 			</stem>
 		</formula>
+	</xsl:template>
+	
+	<xsl:template match="sec[@sec-type = 'index']" priority="2"/>
+	<xsl:template match="sec[@sec-type = 'index']" mode="index">
+		<indexsect id="{@id}">
+			<xsl:apply-templates />
+		</indexsect>
 	</xsl:template>
 	
 	<xsl:template match="mml:math">
