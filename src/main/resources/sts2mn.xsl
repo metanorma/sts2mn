@@ -42,9 +42,10 @@
 		<!-- non-processed element checking -->
 		<xsl:variable name="xml_result_namespace">https://www.metanorma.org/ns/iso</xsl:variable>
 		<xsl:variable name="xml_namespace">http://www.w3.org/XML/1998/namespace</xsl:variable>
+		<xsl:variable name="mathml_namespace">http://www.w3.org/1998/Math/MathML</xsl:variable>
 		<xsl:variable name="unknown_elements">
 			<xsl:for-each select="xalan:nodeset($xml_result)//*">
-				<xsl:if test="namespace::*[. != $xml_result_namespace and . != $xml_namespace]">
+				<xsl:if test="namespace::*[. != $xml_result_namespace and . != $xml_namespace and . != $mathml_namespace]">
 					<element>
 						<xsl:for-each select="ancestor-or-self::*">
 							<xsl:value-of select="local-name()"/><xsl:if test="position() != last()">/</xsl:if>
@@ -1150,6 +1151,13 @@
 			</stem>
 		</formula>
 	</xsl:template>
+	
+	<xsl:template match="inline-formula">
+		<stem type="MathML">
+			<xsl:apply-templates />
+		</stem>
+	</xsl:template>
+	
 	
 	<xsl:template match="sec[@sec-type = 'index']" priority="2"/>
 	<xsl:template match="sec[@sec-type = 'index']" mode="index">
