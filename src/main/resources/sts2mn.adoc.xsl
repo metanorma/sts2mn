@@ -1364,7 +1364,7 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="graphic">
+	<xsl:template match="graphic | inline-graphic">
 		<xsl:text>image::</xsl:text>
 		<xsl:if test="not(processing-instruction('isoimg-id'))">
 			<xsl:value-of select="@xlink:href"/>

@@ -1198,7 +1198,7 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
-	<xsl:template match="graphic">
+	<xsl:template match="graphic | inline-graphic">
 		<image height="auto" width="auto">
 			<xsl:if test="@xlink:href and not(processing-instruction('isoimg-id'))">
 				<xsl:attribute name="src">
