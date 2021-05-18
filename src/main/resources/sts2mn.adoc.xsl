@@ -1410,7 +1410,7 @@
 	
 	<xsl:template match="disp-quote/related-object"/>
 		
-	<xsl:template match="code">
+	<xsl:template match="code | preformat">
 		<xsl:text>[source,</xsl:text><xsl:value-of select="@language"/><xsl:text>]</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>--</xsl:text>

@@ -368,7 +368,8 @@
 		<docidentifier type="iso">
 			<xsl:apply-templates mode="bibdata"/>
 		</docidentifier>
-		<xsl:variable name="language" select="translate(substring(//*[contains(local-name(), '-meta')]/doc-ident/language,1,1), $lower, $upper)"/> <!-- iso-meta -->
+		<xsl:variable name="language_" select="substring(//*[contains(local-name(), '-meta')]/doc-ident/language,1,1)"/> <!-- iso-meta -->
+		<xsl:variable name="language" select="java:toUpperCase(java:java.lang.String.new($language_))"/>
 		<docidentifier type="iso-with-lang">
 			<xsl:apply-templates mode="bibdata"/>
 			<xsl:text>(</xsl:text><xsl:value-of select="$language"/><xsl:text>)</xsl:text>
@@ -1272,8 +1273,11 @@
 		<xsl:copy-of select="."/>
 	</xsl:template>
 	
-	<xsl:variable name="lower">abcdefghijklmnopqrstuvwxyz</xsl:variable> 
-	<xsl:variable name="upper">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
+	<xsl:template match="preformat">
+		<sourcecode>
+			<xsl:apply-templates />
+		</sourcecode>
+	</xsl:template>
 	
 	
 	

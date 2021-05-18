@@ -17,7 +17,7 @@
 				<xsl:apply-templates select="@*|node()"/>
 		</xsl:copy>
 	</xsl:template>
-	<xsl:template match="text()[not(parent::code) and not(parent::mml:*)]">
+	<xsl:template match="text()[not(parent::code) and not(parent::preformat) and not(parent::mml:*)]">
 		<xsl:choose>
 			<xsl:when test="parent::body or parent::sec or parent::term-sec or parent::tbx:termEntry or parent::back or parent::app-group or parent::app or parent::ref-list or parent::fig or parent::caption or parent::table-wrap or parent::tr or parent::thead or parent::colgroup or parent::table or parent::tbody">
 				<xsl:value-of select="normalize-space()"/>
