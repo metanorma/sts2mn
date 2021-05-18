@@ -770,10 +770,20 @@
 	</xsl:template>
 	
 	<xsl:template match="tbx:tig/tbx:term">
-		<preferred>
+		<xsl:variable name="element_name">
+			<xsl:choose>
+				<xsl:when test="../tbx:normativeAuthorization/@value = 'preferredTerm'">preferred</xsl:when>
+				<xsl:when test="../tbx:normativeAuthorization/@value = 'admittedTerm'">admitted</xsl:when>
+				<xsl:when test="../tbx:normativeAuthorization/@value = 'deprecatedTerm'">deprecates</xsl:when>
+				<xsl:otherwise>preferred</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:element name="{$element_name}">
 			<xsl:apply-templates />
-		</preferred>
+		</xsl:element>
 	</xsl:template>
+	
+	<xsl:template match="tbx:normativeAuthorization"/>
 	
 	<xsl:template match="tbx:partOfSpeech"/>
 	

@@ -535,7 +535,12 @@
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:text>&#xa;</xsl:text>
-				<xsl:text>alt:[</xsl:text>
+				<xsl:choose>
+					<xsl:when test="../tbx:normativeAuthorization/@value = 'admittedTerm'">alt</xsl:when>
+					<xsl:when test="../tbx:normativeAuthorization/@value = 'deprecatedTerm'">deprecated</xsl:when>
+					<xsl:otherwise>alt</xsl:otherwise>
+				</xsl:choose>
+				<xsl:text>:[</xsl:text>
 				<xsl:apply-templates />
 				<xsl:text>]</xsl:text>
 			</xsl:otherwise>			
