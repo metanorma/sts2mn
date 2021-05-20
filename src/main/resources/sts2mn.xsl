@@ -56,9 +56,14 @@
 		</xsl:variable>
 	
 		<xsl:for-each select="xalan:nodeset($unknown_elements)/*">
-			<xsl:if test="position() = 1"><xsl:text>&#xa;Non-processed elements found:&#xa;</xsl:text></xsl:if>
+			<xsl:if test="position() = 1">
+				<xsl:text disable-output-escaping="yes">&lt;!-- </xsl:text>
+				<xsl:text>&#xa;Non-processed elements found:&#xa;</xsl:text></xsl:if>
 			<xsl:if test="not(preceding-sibling::*/text() = current()/text())">
 				<xsl:value-of select="normalize-space()"/><xsl:text>&#xa;</xsl:text>
+			</xsl:if>
+			<xsl:if test="position() = last()">
+				<xsl:text disable-output-escaping="yes"> --&gt;</xsl:text>
 			</xsl:if>
 		</xsl:for-each>
 		
@@ -1314,6 +1319,22 @@
 		<sourcecode>
 			<xsl:apply-templates />
 		</sourcecode>
+	</xsl:template>
+	
+	<xsl:template match="styled-content">
+		<!-- copy opening tag with attributes -->
+		<xsl:text disable-output-escaping="yes">&lt;!--STS: &lt;</xsl:text><xsl:value-of select="local-name()"/>
+		<xsl:for-each select="@*">
+			<xsl:if test="position() = 1"><xsl:text> </xsl:text></xsl:if>
+			<xsl:value-of select="local-name()"/>="<xsl:value-of select="."/><xsl:text>"</xsl:text>
+		</xsl:for-each>
+		<xsl:text disable-output-escaping="yes">&gt;--&gt;</xsl:text>
+		<xsl:text disable-output-escaping="yes"></xsl:text>
+		
+		<xsl:apply-templates />
+		
+		<!-- copy closing tag -->
+		<xsl:text disable-output-escaping="yes">&lt;!--STS: &lt;/</xsl:text><xsl:value-of select="local-name()"/><xsl:text disable-output-escaping="yes">&gt;--&gt;</xsl:text>
 	</xsl:template>
 	
 	
