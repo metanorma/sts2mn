@@ -1100,7 +1100,24 @@
 	
 	<xsl:template match="xref">
 		<xsl:choose>
-			<xsl:when test="@ref-type = 'fn'"/>
+			<xsl:when test="@ref-type = 'fn' and following-sibling::*[1][self::fn]"/>
+			<xsl:when test="@ref-type = 'fn'">
+				<fn>
+					<xsl:attribute name="reference">
+							<xsl:value-of select="normalize-space(translate(., ')',''))"/>
+						</xsl:attribute>
+						<xsl:apply-templates select="//fn-group/fn[@id = current()/@rid]/node()" />
+				</fn>
+			</xsl:when>
+			<xsl:when test="@ref-type = 'table-fn'">
+				<fn>
+					<xsl:attribute name="reference">
+							<xsl:value-of select="normalize-space(translate(., ')',''))"/>
+						</xsl:attribute>
+						<xsl:apply-templates select="ancestor::table-wrap//fn[@id = current()/@rid]/node()" />
+				</fn>
+			</xsl:when>
+			
 			<xsl:otherwise>
 				<xref target="{@rid}">
 					<xsl:apply-templates />
@@ -1108,6 +1125,12 @@
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
+	
+	<xsl:template match="sup[xref[@ref-type='fn']]">
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="fn-group | table-wrap-foot/fn"/>
 	
 	<xsl:template match="fn">
 		<fn>
