@@ -1344,20 +1344,29 @@
 		</sourcecode>
 	</xsl:template>
 	
-	<xsl:template match="styled-content">
+	<xsl:template match="styled-content | tbx:termType">
 		<!-- copy opening tag with attributes -->
-		<xsl:text disable-output-escaping="yes">&lt;!--STS: &lt;</xsl:text><xsl:value-of select="local-name()"/>
+		<xsl:text disable-output-escaping="yes">&lt;!--STS: &lt;</xsl:text><xsl:value-of select="name()"/>
 		<xsl:for-each select="@*">
 			<xsl:if test="position() = 1"><xsl:text> </xsl:text></xsl:if>
 			<xsl:value-of select="local-name()"/>="<xsl:value-of select="."/><xsl:text>"</xsl:text>
 		</xsl:for-each>
+		
+		<xsl:choose>
+			<xsl:when test="node()">
+				<xsl:text disable-output-escaping="yes">&gt;--&gt;</xsl:text>
+				<xsl:text disable-output-escaping="yes"></xsl:text>
+				
+				<xsl:apply-templates />
+				
+				<!-- copy closing tag -->
+				<xsl:text disable-output-escaping="yes">&lt;!--STS: &lt;/</xsl:text><xsl:value-of select="name()"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:text disable-output-escaping="yes">/</xsl:text>
+			</xsl:otherwise>
+		</xsl:choose>
 		<xsl:text disable-output-escaping="yes">&gt;--&gt;</xsl:text>
-		<xsl:text disable-output-escaping="yes"></xsl:text>
-		
-		<xsl:apply-templates />
-		
-		<!-- copy closing tag -->
-		<xsl:text disable-output-escaping="yes">&lt;!--STS: &lt;/</xsl:text><xsl:value-of select="local-name()"/><xsl:text disable-output-escaping="yes">&gt;--&gt;</xsl:text>
 	</xsl:template>
 	
 	
