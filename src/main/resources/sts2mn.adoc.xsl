@@ -891,10 +891,11 @@
 				<xsl:text>&lt;</xsl:text><xsl:value-of select="."/><xsl:text>&gt;</xsl:text>
 			</xsl:when>
 			<xsl:when test="@ref-type = 'sec' and local-name(//*[@id = current()/@rid]) = 'term-sec'"> <!-- <xref ref-type="sec" rid="sec_3.21"> link to term-->
-				<xsl:variable name="term_name_" select="translate(//*[@id = current()/@rid]//tbx:term[1], ' ', '-')"/>
-				<xsl:variable name="term_name" select="java:toLowerCase(java:java.lang.String.new($term_name_))"/>
+				<xsl:variable name="term_name" select="//*[@id = current()/@rid]//tbx:term[1]"/>
 				
-				<xsl:text>&lt;&lt;</xsl:text>term-<xsl:value-of select="$term_name"/><xsl:text>&gt;&gt;</xsl:text>
+				<!-- <xsl:variable name="term_name" select="java:toLowerCase(java:java.lang.String.new(translate($term_name_, ' ', '-')_))"/>				 -->
+				<!-- <xsl:text>&lt;&lt;</xsl:text>term-<xsl:value-of select="$term_name"/><xsl:text>&gt;&gt;</xsl:text> -->
+				<xsl:text>term:[</xsl:text><xsl:value-of select="$term_name"/><xsl:text>]</xsl:text>
 			</xsl:when>
 			<xsl:otherwise> <!-- example: ref-type="sec" "table" "app" -->
 				<xsl:text>&lt;&lt;</xsl:text><xsl:value-of select="@rid"/><xsl:text>&gt;&gt;</xsl:text>
@@ -1511,7 +1512,8 @@
 	<!-- =============== -->
 	
 	<xsl:template match="named-content">
-		<xsl:text>&lt;&lt;</xsl:text>
+		<!-- <xsl:text>&lt;&lt;</xsl:text> -->
+		<xsl:text>term:[</xsl:text>
 		<xsl:variable name="target">
 			<xsl:choose>
 				<xsl:when test="starts-with(@xlink:href, '#')">
@@ -1524,11 +1526,14 @@
 		</xsl:variable>
 		<xsl:choose>
 			<xsl:when test="@content-type = 'term' and (local-name(//*[@id = $target]) = 'term-sec' or local-name(//*[@id = $target]) = 'termEntry')">
-				<xsl:variable name="term_name_" select="//*[@id = $target]//tbx:term[1]"/>
-				<xsl:variable name="term_name" select="java:toLowerCase(java:java.lang.String.new(translate($term_name_, ' ', '-')))"/>
+				<xsl:variable name="term_name" select="//*[@id = $target]//tbx:term[1]"/>
+				<!-- <xsl:variable name="term_name" select="java:toLowerCase(java:java.lang.String.new(translate($term_name_, ' ', '-')))"/> -->
+				<!-- <xsl:text>term-</xsl:text><xsl:value-of select="$term_name"/>,<xsl:value-of select="."/> -->
 				
-				<xsl:text>term-</xsl:text><xsl:value-of select="$term_name"/>,<xsl:value-of select="."/>
-				<!-- <xsl:if test=". != $term_name_"></xsl:if> -->
+				<xsl:variable name="value" select="."/>
+				<xsl:if test="$value != $term_name"><xsl:value-of select="$value"/><xsl:text>,</xsl:text></xsl:if>
+				<xsl:value-of select="$term_name"/>
+
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:value-of select="$target"/>
@@ -1537,7 +1542,8 @@
 				</xsl:if>
 			</xsl:otherwise>
 		</xsl:choose>
-		<xsl:text>&gt;&gt;</xsl:text>
+		<!-- <xsl:text>&gt;&gt;</xsl:text> -->
+		<xsl:text>]</xsl:text>
 	</xsl:template>
 	
 	<xsl:template name="split">
