@@ -22,7 +22,9 @@
 	
 	<xsl:param name="outpath"/>
 	
-	<xsl:variable name="language" select="//standard/front/iso-meta/doc-ident/language"/>
+	<xsl:variable name="language" select="//standard/front/*/doc-ident/language"/>
+	
+	<xsl:variable name="organization" select="/standard/front/*/doc-ident/sdo"/>
 	
 	<xsl:variable name="path_" select="concat('body', $pathSeparator, 'body-#lang.adoc[]')"/>
 			
@@ -281,6 +283,15 @@
 		<xsl:text>:doctype: </xsl:text>
 		<!-- https://www.niso-sts.org/TagLibrary/niso-sts-TL-1-0-html/element/doc-type.html -->
 		<xsl:choose>
+			<xsl:when test="$organization = 'BSI'">
+				<xsl:variable name="originator" select=" normalize-space(ancestor::std-ident/originator)"/>
+				<xsl:choose>
+					<xsl:when test="starts-with($originator, 'BS') and $value = 'standard'">standard</xsl:when>
+					<xsl:when test="starts-with($originator, 'PAS') and ($value = 'publicly available specification' or $value = 'standard')">publicly-available-specification</xsl:when>
+					<xsl:when test="starts-with($originator, 'PD') and $value = 'published document'">published-document</xsl:when>
+					<xsl:otherwise><xsl:value-of select="."/></xsl:otherwise>
+				</xsl:choose>
+			</xsl:when>
 			<xsl:when test="$value = 'is'">international-standard</xsl:when>
 			<xsl:when test="$value = 'r'">recommendation</xsl:when>
 			<xsl:when test="$value = 'spec'">spec</xsl:when>

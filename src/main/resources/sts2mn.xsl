@@ -548,6 +548,15 @@
 		<xsl:variable name="value" select="java:toLowerCase(java:java.lang.String.new(.))"/>
 		<doctype>
 			<xsl:choose>
+				<xsl:when test="$organization = 'BSI'">
+					<xsl:variable name="originator" select=" normalize-space(ancestor::std-ident/originator)"/>
+					<xsl:choose>
+						<xsl:when test="starts-with($originator, 'BS') and $value = 'standard'">standard</xsl:when>
+						<xsl:when test="starts-with($originator, 'PAS') and ($value = 'publicly available specification' or $value = 'standard')">publicly-available-specification</xsl:when>
+						<xsl:when test="starts-with($originator, 'PD') and $value = 'published document'">published-document</xsl:when>
+						<xsl:otherwise><xsl:value-of select="."/></xsl:otherwise>
+					</xsl:choose>
+				</xsl:when>
 				<xsl:when test="$value = 'is'">international-standard</xsl:when>
 				<xsl:when test="$value = 'r'">recommendation</xsl:when>
 				<xsl:when test="$value = 'spec'">spec</xsl:when>
