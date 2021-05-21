@@ -338,10 +338,80 @@
 		<title language="{$lang}" format="text/plain" type="title-part">
 			<xsl:apply-templates select="compl" mode="bibdata"/>
 		</title> -->
-		<xsl:apply-templates select="full" mode="bibdata"/>
-		<xsl:apply-templates select="intro" mode="bibdata"/>
-		<xsl:apply-templates select="main" mode="bibdata"/>
-		<xsl:apply-templates select="compl" mode="bibdata"/>
+		
+		<xsl:choose>
+			<xsl:when test="$organization = 'BSI'">
+				<!-- priority: get intro and compl from separate field -->
+				<xsl:variable name="titles">
+					<xsl:apply-templates select="intro[normalize-space() != '']" mode="bibdata"/>
+					<xsl:apply-templates select="compl[normalize-space() != '']" mode="bibdata"/>
+					<xsl:if test="normalize-space(main) = ''">
+						<xsl:apply-templates select="full[normalize-space() != '']" mode="bibdata_title_full"/>
+					</xsl:if>
+					<xsl:if test="normalize-space(intro) = ''">
+						<xsl:apply-templates select="main[normalize-space() != '']" mode="bibdata_title_full"/>
+					</xsl:if>
+					<xsl:if test="normalize-space(intro) != ''">
+						<xsl:apply-templates select="main[normalize-space() != '']" mode="bibdata"/>
+					</xsl:if>
+				</xsl:variable>
+
+				<xsl:variable name="title_components">
+					<xsl:copy-of select="xalan:nodeset($titles)/*[@type='title-intro'][1]"/>
+					<xsl:copy-of select="xalan:nodeset($titles)/*[@type='title-main'][1]"/>
+					<xsl:copy-of select="xalan:nodeset($titles)/*[@type='title-part'][1]"/>
+				</xsl:variable>
+				
+				<title language="{@xml:lang}" format="text/plain" type="main">
+					<xsl:for-each select="xalan:nodeset($title_components)/*">
+						<xsl:apply-templates mode="bibdata"/>
+						<xsl:if test="position() != last()"> — </xsl:if>
+					</xsl:for-each>
+				</title>
+				
+				<xsl:copy-of select="$title_components"/>
+				
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:apply-templates select="full[normalize-space() != '']" mode="bibdata"/>
+				<xsl:apply-templates select="intro[normalize-space() != '']" mode="bibdata"/>
+				<xsl:apply-templates select="main[normalize-space() != '']" mode="bibdata"/>
+				<xsl:apply-templates select="compl[normalize-space() != '']" mode="bibdata"/>
+			</xsl:otherwise>
+		</xsl:choose>
+		
+	</xsl:template>
+
+	
+	<xsl:template match="title-wrap/full | title-wrap/main" mode="bibdata_title_full">
+	
+		<xsl:variable name="title" select="translate(., '–', '—')"/> <!-- replace en dash to em dash -->
+		<xsl:variable name="parts">
+			<xsl:call-template name="split">
+				<xsl:with-param name="pText" select="$title"/>
+				<xsl:with-param name="sep" select="'—'"/>
+			</xsl:call-template>
+		</xsl:variable>
+		
+		<xsl:variable name="lang" select="../@xml:lang"/>
+		<xsl:for-each select="xalan:nodeset($parts)/*">
+			<xsl:if test="position() = 1">
+				<title language="{$lang}" format="text/plain" type="title-intro">
+					<xsl:apply-templates mode="bibdata"/>
+				</title>
+			</xsl:if>
+			<xsl:if test="position() = 2">
+				<title language="{$lang}" format="text/plain" type="title-main">
+					<xsl:apply-templates mode="bibdata"/>
+				</title>
+			</xsl:if>
+			<xsl:if test="position() &gt; 2">
+				<title language="{$lang}" format="text/plain" type="title-part">
+					<xsl:apply-templates mode="bibdata"/>
+				</title>
+			</xsl:if>
+		</xsl:for-each>
+		
 	</xsl:template>
 	
 	<xsl:template match="title-wrap/full" mode="bibdata">
@@ -367,7 +437,6 @@
 			<xsl:apply-templates mode="bibdata"/>
 		</title>
 	</xsl:template>
-  
   
   
 	<xsl:template match="iso-meta/std-ref[@type='dated'] | nat-meta/std-ref[@type='dated'] | reg-meta/std-ref[@type='dated']" mode="bibdata">
@@ -1383,9 +1452,10 @@
 	<xsl:template name="split">
 		<xsl:param name="pText" select="."/>
 		<xsl:param name="sep" select="'/'"/>
-		<xsl:if test="string-length($pText) >0">
+		<xsl:if test="string-length($pText) &gt; 0">
 			<item>
-				<xsl:value-of select="normalize-space(substring-before(concat($pText, $sep), $sep))"/>
+				<xsl:variable name="value" select="substring-before(concat($pText, $sep), $sep)"/>
+				<xsl:value-of select="normalize-space(translate($value, '&#xA0;', ' '))"/>
 			</item>
 			<xsl:call-template name="split">
 				<xsl:with-param name="pText" select="substring-after($pText, $sep)"/>

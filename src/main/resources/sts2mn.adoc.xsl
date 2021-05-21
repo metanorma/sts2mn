@@ -224,11 +224,97 @@
 	</xsl:template>
 	
 	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/text()"/>
-	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]">
-		<xsl:apply-templates>
-			<xsl:with-param name="lang" select="@xml:lang"/>
-		</xsl:apply-templates>
+	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]">	
+		<xsl:choose>
+			<xsl:when test="$organization = 'BSI'">
+				
+				<!-- priority: get intro and compl from separate field -->
+				<xsl:variable name="titles">
+					<xsl:apply-templates select="intro[normalize-space() != '']" mode="bibdata"/>
+					<xsl:apply-templates select="compl[normalize-space() != '']" mode="bibdata"/>
+					<xsl:if test="normalize-space(main) = ''">
+						<xsl:apply-templates select="full[normalize-space() != '']" mode="bibdata_title_full"/>
+					</xsl:if>
+					<xsl:if test="normalize-space(intro) = ''">
+						<xsl:apply-templates select="main[normalize-space() != '']" mode="bibdata_title_full"/>
+					</xsl:if>
+					<xsl:if test="normalize-space(intro) != ''">
+						<xsl:apply-templates select="main[normalize-space() != '']" mode="bibdata"/>
+					</xsl:if>
+				</xsl:variable>
+
+				<xsl:variable name="title_components">
+					<xsl:copy-of select="xalan:nodeset($titles)/*[@type='title-intro'][1]"/>
+					<xsl:copy-of select="xalan:nodeset($titles)/*[@type='title-main'][1]"/>
+					<xsl:copy-of select="xalan:nodeset($titles)/*[@type='title-part'][1]"/>
+				</xsl:variable>
+				
+				<xsl:variable name="lang" select="@xml:lang"/>
+				<xsl:for-each select="xalan:nodeset($title_components)/*">
+					<xsl:text>:</xsl:text><xsl:value-of select="@type"/><xsl:text>-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
+					<xsl:text>&#xa;</xsl:text>
+				</xsl:for-each>
+				
+				
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:apply-templates>
+					<xsl:with-param name="lang" select="@xml:lang"/>
+				</xsl:apply-templates>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
+	
+	
+	<xsl:template match="title-wrap/full | title-wrap/main" mode="bibdata_title_full">
+	
+		<xsl:variable name="title" select="translate(., '–', '—')"/> <!-- replace en dash to em dash -->
+		<xsl:variable name="parts">
+			<xsl:call-template name="split">
+				<xsl:with-param name="pText" select="$title"/>
+				<xsl:with-param name="sep" select="'—'"/>
+			</xsl:call-template>
+		</xsl:variable>
+		
+		<xsl:variable name="lang" select="../@xml:lang"/>
+		<xsl:for-each select="xalan:nodeset($parts)/*">
+			<xsl:if test="position() = 1">
+				<title language="{$lang}" format="text/plain" type="title-intro">
+					<xsl:apply-templates mode="bibdata"/>
+				</title>
+			</xsl:if>
+			<xsl:if test="position() = 2">
+				<title language="{$lang}" format="text/plain" type="title-main">
+					<xsl:apply-templates mode="bibdata"/>
+				</title>
+			</xsl:if>
+			<xsl:if test="position() &gt; 2">
+				<title language="{$lang}" format="text/plain" type="title-part">
+					<xsl:apply-templates mode="bibdata"/>
+				</title>
+			</xsl:if>
+		</xsl:for-each>
+		
+	</xsl:template>
+	
+	<xsl:template match="title-wrap/intro" mode="bibdata">
+		<title language="{../@xml:lang}" format="text/plain" type="title-intro">
+			<xsl:apply-templates mode="bibdata"/>
+		</title>
+	</xsl:template>
+	
+	<xsl:template match="title-wrap/main" mode="bibdata">
+		<title language="{../@xml:lang}" format="text/plain" type="title-main">
+			<xsl:apply-templates mode="bibdata"/>
+		</title>
+	</xsl:template>
+	
+	<xsl:template match="title-wrap/compl" mode="bibdata">
+		<title language="{../@xml:lang}" format="text/plain" type="title-part">
+			<xsl:apply-templates mode="bibdata"/>
+		</title>
+	</xsl:template>
+	
 	
 	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/intro[normalize-space(.) != '']">
 		<xsl:param name="lang"/>
@@ -265,18 +351,21 @@
 				<xsl:text>:title-main-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
 				<xsl:text>&#xa;</xsl:text>
 			</xsl:otherwise>
-		</xsl:choose>
-		
-		
+		</xsl:choose>	
 	</xsl:template>
+	
 	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/compl[normalize-space(.) != '']">
 		<xsl:param name="lang"/>
 		<xsl:text>:title-part-</xsl:text><xsl:value-of select="$lang"/><xsl:text>: </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
+	
+	
+	
 	<xsl:template match="title-wrap[ancestor::front or ancestor::adoption-front]/full[normalize-space(.) != '']">
 		<xsl:text></xsl:text>
 	</xsl:template>
+	
 	
 	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/doc-type[normalize-space(.) != '']">
 		<xsl:variable name="value" select="java:toLowerCase(java:java.lang.String.new(.))"/>
@@ -1562,7 +1651,8 @@
 		<xsl:param name="sep" select="'/'"/>
 		<xsl:if test="string-length($pText) &gt; 0">
 			<item>
-				<xsl:value-of select="normalize-space(substring-before(concat($pText, $sep), $sep))"/>
+				<xsl:variable name="value" select="substring-before(concat($pText, $sep), $sep)"/>
+				<xsl:value-of select="normalize-space(translate($value, '&#xA0;', ' '))"/>
 			</item>
 			<xsl:call-template name="split">
 				<xsl:with-param name="pText" select="substring-after($pText, $sep)"/>
