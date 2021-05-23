@@ -844,7 +844,7 @@
 			</xsl:otherwise>
 		</xsl:choose>
 		<xsl:text> (</xsl:text>
-		<xref target="{@target}"/>
+		<xref target="{@target}"><xsl:if test="contains(., concat('(', $target, ')'))"><strong><xsl:value-of select="$target"/></strong></xsl:if></xref>
 		<xsl:text>)</xsl:text>
 	</xsl:template>
 	
