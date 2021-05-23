@@ -680,17 +680,33 @@
 		
 	<xsl:template match="tbx:entailedTerm">
 		<xsl:variable name="target" select="substring-after(@target, 'term_')"/>
-		<xsl:choose>
-			<xsl:when test="contains(., concat('(', $target, ')'))">
-				<xsl:text>_</xsl:text><xsl:value-of select="normalize-space(substring-before(., concat('(', $target, ')')))"/><xsl:text>_</xsl:text>
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:text>_</xsl:text><xsl:value-of select="."/><xsl:text>_</xsl:text>
-			</xsl:otherwise>
-		</xsl:choose>
-		<xsl:text> (</xsl:text>
+		<xsl:variable name="term">
+			<xsl:choose>
+				<xsl:when test="contains(., concat('(', $target, ')'))">
+					<!-- <xsl:text>_</xsl:text> -->
+					<xsl:value-of select="normalize-space(substring-before(., concat('(', $target, ')')))"/>
+					<!-- <xsl:text>_</xsl:text> -->
+				</xsl:when>
+				<xsl:otherwise>
+					<!-- <xsl:text>_</xsl:text> -->
+					<xsl:value-of select="."/>
+					<!-- <xsl:text>_</xsl:text> -->
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:variable name="term_real" select="normalize-space(//*[@id = current()/@target]//tbx:term)"/>
+		<!-- term:[objectives] -->
+		<!-- term:[objectives,objective] -->
+		<xsl:text>term:[</xsl:text>
+		<xsl:value-of select="$term"/>
+		<xsl:if test="$term != $term_real">
+			<xsl:text>,</xsl:text><xsl:value-of select="$term_real"/>
+		</xsl:if>
+		<xsl:text>]</xsl:text>
+		
+		<!-- <xsl:text> (</xsl:text>
 		<xsl:text>&lt;&lt;</xsl:text><xsl:value-of select="@target"/><xsl:text>&gt;&gt;</xsl:text>
-		<xsl:text>)</xsl:text>		
+		<xsl:text>)</xsl:text>		 -->
 	</xsl:template>
 	
 	<xsl:template match="tbx:note">
