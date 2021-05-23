@@ -1008,6 +1008,24 @@
 		</name>
 	</xsl:template>
 	
+	<!-- table/col processing -->
+	<xsl:template match="col[not(parent::colgroup)][1]" priority="2">
+		<colgroup>
+			<xsl:element name="{local-name()}">
+				<xsl:copy-of select="@*"/>
+				<xsl:apply-templates/>
+			</xsl:element>
+			<xsl:for-each select="following-sibling::col">
+				<xsl:element name="{local-name()}">
+					<xsl:copy-of select="@*"/>
+					<xsl:apply-templates/>
+				</xsl:element>
+			</xsl:for-each>
+		</colgroup>
+	</xsl:template>
+	<xsl:template match="col[not(parent::colgroup)][position() &gt; 1]" priority="2"/>
+
+	<!-- table/colgroup/col processing -->
 	<xsl:template match="col | tbody | thead | th| td | tr | colgroup">
 		<xsl:element name="{local-name()}">
 			<xsl:copy-of select="@*"/>

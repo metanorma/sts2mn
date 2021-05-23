@@ -1106,8 +1106,8 @@
 		<xsl:text>cols="</xsl:text>
 		<xsl:variable name="cols-count">
 			<xsl:choose>
-				<xsl:when test="colgroup/col">
-					<xsl:value-of select="count(colgroup/col)"/>
+				<xsl:when test="colgroup/col or col">
+					<xsl:value-of select="count(colgroup/col) + count(col)"/>
 				</xsl:when>
 				<xsl:otherwise>
 					<xsl:variable name="simple-table">
@@ -1118,8 +1118,8 @@
 			</xsl:choose>
 		</xsl:variable>
 		<xsl:choose>
-			<xsl:when test="colgroup/col">				
-				<xsl:for-each select="colgroup/col">
+			<xsl:when test="colgroup/col or col">				
+				<xsl:for-each select="colgroup/col | col">
 					<xsl:variable name="width" select="translate(@width, '%cm', '')"/>
 					<xsl:variable name="width_number" select="number($width)"/>
 					<xsl:choose>
