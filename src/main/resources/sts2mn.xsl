@@ -784,6 +784,9 @@
 							<xsl:attribute name="type">intro</xsl:attribute>
 						</xsl:when>
 					</xsl:choose>
+					<xsl:if test="not(title)">
+						<xsl:apply-templates select="label" mode="label_name"/>
+					</xsl:if>
 					<xsl:apply-templates />
 				</clause>
 			</xsl:otherwise>
@@ -1059,8 +1062,17 @@
 	<xsl:template match="title">
 		<xsl:element name="{local-name()}">
 			<xsl:apply-templates select="@*"/>
+			<xsl:apply-templates select="parent::sec/label" mode="label"/>
 			<xsl:apply-templates />
 		</xsl:element>
+	</xsl:template>
+	
+	<xsl:template match="label" mode="label">
+		<xsl:apply-templates/><tab/>
+	</xsl:template>
+	
+	<xsl:template match="label" mode="label_name">
+		<title><xsl:apply-templates/></title>
 	</xsl:template>
 	
 	<xsl:template match="ext-link">
