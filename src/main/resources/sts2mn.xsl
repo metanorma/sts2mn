@@ -807,9 +807,14 @@
 	</xsl:template>
 	
 	<xsl:template match="tbx:termEntry">
-		<term id="{@id}">			
+		<term id="{@id}">
+			<xsl:apply-templates select="../label" mode="term_sec_label"/>
 			<xsl:apply-templates />
 		</term>
+	</xsl:template>
+	
+	<xsl:template match="term-sec/label" mode="term_sec_label">
+		<name><xsl:apply-templates /></name>
 	</xsl:template>
 	
 	<xsl:template match="tbx:langSet">
@@ -1004,8 +1009,13 @@
 	
 	<xsl:template match="table-wrap/caption/title">
 		<name>
+			<xsl:apply-templates select="ancestor::table-wrap[1]/label" mode="table_label"/>
 			<xsl:apply-templates/>
 		</name>
+	</xsl:template>
+	
+	<xsl:template match="table-wrap/label" mode="table_label">
+		<xsl:apply-templates/><xsl:text> &#8212; </xsl:text>
 	</xsl:template>
 	
 	<!-- table/col processing -->
@@ -1333,8 +1343,13 @@
 	
 	<xsl:template match="fig/caption">
 		<name>
+			<xsl:apply-templates select="../label" mode="fig_label"/>
 			<xsl:apply-templates />
 		</name>
+	</xsl:template>
+	
+	<xsl:template match="fig/label" mode="fig_label">
+		<xsl:apply-templates/><xsl:text> &#8212; </xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="fig/caption/title">
