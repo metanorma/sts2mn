@@ -1610,6 +1610,7 @@
 	</xsl:template>
 	
 	<xsl:template match="def-item">
+		<xsl:call-template name="setId"/>
 		<xsl:apply-templates />		
 	</xsl:template>
 	

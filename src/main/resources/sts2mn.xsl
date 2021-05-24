@@ -911,7 +911,7 @@
 	<!-- =============== -->
 	<xsl:template match="array">
 		<xsl:choose>
-			<xsl:when test="count(table/col) = 2">
+			<xsl:when test="count(table/col) + count(table/colgroup/col)  = 2">
 				<dl id="{@id}">
 					<xsl:apply-templates mode="dl"/>
 				</dl>
@@ -1309,7 +1309,11 @@
 		
 	
 	<xsl:template match="ref">
-		<bibitem id="{@id}" type="{@content-type}">
+		<bibitem>
+			<xsl:copy-of select="@id"/>
+			<xsl:if test="@content-type">
+				<xsl:attribute name="type"><xsl:value-of select="@content-type"/></xsl:attribute>
+			</xsl:if>
 			<xsl:apply-templates />
 		</bibitem>
 	</xsl:template>
