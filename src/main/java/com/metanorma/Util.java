@@ -106,7 +106,10 @@ public class Util {
     
     
   public static String getListStartValue(String type, String label) {
-      
+    if (type.isEmpty() || label.isEmpty()) {
+        return "";
+    }
+    
     label = label.toUpperCase();
     
     if (type.equals("roman") || type.equals("roman_upper")) {

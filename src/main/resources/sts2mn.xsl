@@ -1129,6 +1129,9 @@
 	</xsl:template>
 	
 	<xsl:template match="std">
+		<xsl:if test="parent::ref and ancestor::ref-list and @std-id"><!-- Bibliography section -->
+			<docidentifier type="URN"><xsl:value-of select="@std-id"/></docidentifier>
+		</xsl:if>
 		<eref type="inline" citeas="{std-ref}">
 			<xsl:apply-templates />
 		</eref>
@@ -1174,6 +1177,7 @@
 	
 	<xsl:template match="list/@list-type">
 		<xsl:variable name="first_label" select="translate(..//label[1], ').', '')"/>
+			
 		<xsl:variable name="type">
 			<xsl:choose>
 				<xsl:when test=". = 'alpha-lower'">alphabet</xsl:when>
@@ -1194,13 +1198,12 @@
 		</xsl:attribute>
 		
 		<xsl:variable name="start">
-		
 			<xsl:choose>
 				<xsl:when test="$type = 'arabic' and $first_label != '1'"><xsl:value-of select="$first_label"/></xsl:when>
-				<xsl:when test="($type = 'roman' and $first_label != 'i') or
+				<xsl:when test="normalize-space($first_label) != '' and (($type = 'roman' and $first_label != 'i') or
 						($type = 'roman_upper' and $first_label != 'I') or 
 						($type = 'alphabet' and $first_label != 'a') or
-						($type = 'alphabet_upper' and $first_label != 'A')">
+						($type = 'alphabet_upper' and $first_label != 'A'))">
 						<xsl:value-of select="java:com.metanorma.Util.getListStartValue($type, $first_label)"/>
 				</xsl:when>
 			</xsl:choose>
