@@ -5,7 +5,8 @@
 					xmlns:xlink="http://www.w3.org/1999/xlink" 
 					xmlns:xalan="http://xml.apache.org/xalan" 
 					xmlns:java="http://xml.apache.org/xalan/java" 
-					exclude-result-prefixes="xalan mml tbx xlink java"
+					xmlns:metanorma-class-util="xalan://com.metanorma.Util"
+					exclude-result-prefixes="xalan mml tbx xlink java metanorma-class-util"
 					xmlns="https://www.metanorma.org/ns/iso"
 					version="1.0">
 
@@ -1193,13 +1194,24 @@
 		</xsl:attribute>
 		
 		<xsl:variable name="start">
+		
 			<xsl:choose>
+				<xsl:when test="$type = 'arabic' and $first_label != '1'"><xsl:value-of select="$first_label"/></xsl:when>
+				<xsl:when test="($type = 'roman' and $first_label != 'i') or
+						($type = 'roman_upper' and $first_label != 'I') or 
+						($type = 'alphabet' and $first_label != 'a') or
+						($type = 'alphabet_upper' and $first_label != 'A')">
+						<xsl:value-of select="java:com.metanorma.Util.getListStartValue($type, $first_label)"/>
+				</xsl:when>
+			</xsl:choose>
+		
+			<!-- <xsl:choose>
 				<xsl:when test="$type = 'arabic' and $first_label != '1'"><xsl:value-of select="$first_label"/></xsl:when>
 				<xsl:when test="$type = 'roman' and $first_label != 'i'"><xsl:value-of select="$first_label"/></xsl:when>
 				<xsl:when test="$type = 'roman_upper' and $first_label != 'I'"><xsl:value-of select="$first_label"/></xsl:when>
 				<xsl:when test="$type = 'alphabet' and $first_label != 'a'"><xsl:value-of select="$first_label"/></xsl:when>
 				<xsl:when test="$type = 'alphabet_upper' and $first_label != 'A'"><xsl:value-of select="$first_label"/></xsl:when>
-			</xsl:choose>
+			</xsl:choose> -->
 		</xsl:variable>
 		<xsl:if test="normalize-space($start) != ''">
 			<xsl:attribute name="start">

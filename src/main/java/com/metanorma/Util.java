@@ -104,4 +104,67 @@ public class Util {
     }
   }
     
+    
+  public static String getListStartValue(String type, String label) {
+      
+    label = label.toUpperCase();
+    
+    if (type.equals("roman") || type.equals("roman_upper")) {
+        //https://www.w3resource.com/java-exercises/math/java-math-exercise-7.php
+        int len = label.length();
+        label = label + " ";
+        int result = 0;
+        for (int i = 0; i < len; i++) {
+            char ch   = label.charAt(i);
+            char next_char = label.charAt(i+1);
+
+            if (ch == 'M') {
+                result += 1000;
+            } else if (ch == 'C') {
+                if (next_char == 'M') {
+                    result += 900;
+                    i++;
+                } else if (next_char == 'D') {
+                    result += 400;
+                    i++;
+                } else {
+                    result += 100;
+                }
+            } else if (ch == 'D') {
+                result += 500;
+            } else if (ch == 'X') {
+                if (next_char == 'C') {
+                    result += 90;
+                    i++;
+                } else if (next_char == 'L') {
+                    result += 40;
+                    i++;
+                } else {
+                    result += 10;
+                }
+            } else if (ch == 'L') {
+                result += 50;
+            } else if (ch == 'I') {
+                if (next_char == 'X') {
+                    result += 9;
+                    i++;
+                } else if (next_char == 'V') {
+                    result += 4;
+                    i++;
+                } else {
+                    result++;
+                }
+            } else { // if (ch == 'V')
+                result += 5;
+            }
+        }
+
+        return String.valueOf(result);
+    }
+    else if (type.equals("alphabet") || type.equals("alphabet_upper")) {
+        return String.valueOf((int)(label.charAt(0)) - 64);
+    }
+      
+    return "";
+  }
 }
