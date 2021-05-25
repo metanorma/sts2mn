@@ -894,8 +894,13 @@
 	
 	<xsl:template match="non-normative-note">
 		<note>
+			<xsl:apply-templates select="label" mode="note_label" />
 			<xsl:apply-templates />
 		</note>
+	</xsl:template>
+	
+	<xsl:template match="non-normative-note/label" mode="note_label">
+		<name><xsl:apply-templates/></name>
 	</xsl:template>
 	
 	<xsl:template match="body//uri">
