@@ -25,6 +25,10 @@
 		</xsl:choose>
 	</xsl:variable> 
 
+	<xsl:variable name="nat_meta_only">
+		<xsl:if test="/standard/front/nat-meta and not(/standard/front/iso-meta) and not(/standard/front/reg-meta)">true</xsl:if>
+	</xsl:variable>
+
 	<xsl:template match="/*">	
 		<xsl:variable name="xml_result">
 			<xsl:choose>
@@ -148,7 +152,7 @@
 			<xsl:if test="sec">
 				<preface>
 					<xsl:apply-templates select="sec" mode="preface"/>
-					<xsl:if test="$organization = 'BSI'">
+					<xsl:if test="$nat_meta_only = 'true'"> <!-- move Introduction section from body to preface, if  nat_meta_only -->
 						<xsl:apply-templates select="/standard/body/sec[@sec-type = 'intro']" mode="preface"/>
 					</xsl:if>
 				</preface>
@@ -818,6 +822,7 @@
 		<xsl:variable name="name">
 			<xsl:choose>
 				<xsl:when test="$sec_type = 'intro'">introduction</xsl:when>
+				<xsl:when test="$sec_type = 'titlepage'">clause</xsl:when>
 				<xsl:when test="$sec_type = ''">clause</xsl:when>
 				<xsl:otherwise>
 					<xsl:value-of select="$sec_type"/>
@@ -851,7 +856,7 @@
   
 	<xsl:template match="body//sec">
 		<xsl:choose>
-			<xsl:when test="$organization = 'BSI' and @sec-type = 'intro'"></xsl:when> <!-- introduction added in preface tag for BSI -->
+			<xsl:when test="$nat_meta_only = 'true' and @sec-type = 'intro'"></xsl:when> <!-- introduction added in preface tag, if $nat_meta_only = 'true' -->
 			<xsl:otherwise>
 				<clause id="{@id}">
 					<xsl:choose>
