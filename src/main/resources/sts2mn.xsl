@@ -697,10 +697,11 @@
 
 	<xsl:template match="iso-meta/std-ident/doc-type | nat-meta/std-ident/doc-type | reg-meta/std-ident/doc-type" mode="bibdata">
 		<xsl:variable name="value" select="java:toLowerCase(java:java.lang.String.new(.))"/>
+		<xsl:variable name="originator" select=" normalize-space(ancestor::std-ident/originator)"/>
 		<doctype>
 			<xsl:choose>
-				<xsl:when test="$organization = 'BSI'">
-					<xsl:variable name="originator" select=" normalize-space(ancestor::std-ident/originator)"/>
+				<xsl:when test="$organization = 'BSI' and (starts-with($originator, 'BS') or starts-with($originator, 'PAS') or starts-with($originator, 'PD'))">
+					<xsl:value-of select="$originator"/>
 					<xsl:choose>
 						<xsl:when test="starts-with($originator, 'BS') and $value = 'standard'">standard</xsl:when>
 						<xsl:when test="starts-with($originator, 'PAS') and ($value = 'publicly available specification' or $value = 'standard')">publicly-available-specification</xsl:when>
@@ -822,11 +823,12 @@
 		<xsl:variable name="name">
 			<xsl:choose>
 				<xsl:when test="$sec_type = 'intro'">introduction</xsl:when>
-				<xsl:when test="$sec_type = 'titlepage'">clause</xsl:when>
+				<!-- <xsl:when test="$sec_type = 'titlepage'">clause</xsl:when> -->
+				<xsl:when test="$sec_type = 'foreword'">foreword</xsl:when>
 				<xsl:when test="$sec_type = ''">clause</xsl:when>
-				<xsl:otherwise>
-					<xsl:value-of select="$sec_type"/>
-				</xsl:otherwise>
+				<xsl:otherwise>clause</xsl:otherwise>
+					<!-- <xsl:value-of select="$sec_type"/>
+				</xsl:otherwise> -->
 			</xsl:choose>
 		</xsl:variable>
 		<xsl:element name="{$name}">
