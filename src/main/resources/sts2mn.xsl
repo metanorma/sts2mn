@@ -16,7 +16,14 @@
 	
 	<xsl:param name="split-bibdata">false</xsl:param>
 
-	<xsl:variable name="organization" select="/standard/front/*/doc-ident/sdo"/>
+	<xsl:variable name="organization">
+		<xsl:choose>
+			<xsl:when test="/standard/front/nat-meta/@originator = 'BSI' or /standard/front/iso-meta/secretariat = 'BSI'">BSI</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="/standard/front/*/doc-ident/sdo"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:variable> 
 
 	<xsl:template match="/*">	
 		<xsl:variable name="xml_result">
@@ -40,7 +47,10 @@
 		</xsl:variable>
 		<xsl:copy-of select="$xml_result"/>
 		
+		
+		<!-- ======================= -->
 		<!-- non-processed element checking -->
+		<!-- ======================= -->
 		<xsl:variable name="xml_result_namespace">https://www.metanorma.org/ns/iso</xsl:variable>
 		<xsl:variable name="xml_namespace">http://www.w3.org/XML/1998/namespace</xsl:variable>
 		<xsl:variable name="mathml_namespace">http://www.w3.org/1998/Math/MathML</xsl:variable>
@@ -67,22 +77,54 @@
 				<xsl:text disable-output-escaping="yes"> --&gt;</xsl:text>
 			</xsl:if>
 		</xsl:for-each>
-		
+		<!-- ======================= -->
+		<!-- ======================= -->
 	</xsl:template>
 
 	<!-- ============= -->
 	<!-- front -> bib data -->
 	<!-- ============= -->
-	<xsl:template match="front" > <!-- mode="bibdata" -->
+	<xsl:template match="front"> <!-- mode="bibdata" -->
 		
-		<xsl:for-each select="iso-meta | nat-meta">
+		<xsl:for-each select="nat-meta">
 			<bibdata type="standard">
-			
-					<xsl:call-template name="xxx-meta" />
-					
+					<xsl:call-template name="xxx-meta">
+						<xsl:with-param name="include_iso_meta">true</xsl:with-param>
+						<xsl:with-param name="include_reg_meta">true</xsl:with-param>
+						<xsl:with-param name="include_std_meta">true</xsl:with-param>
+					</xsl:call-template>
 			</bibdata>
 		</xsl:for-each>
-	
+		
+		<xsl:if test="not(nat-meta)">
+		
+			<xsl:for-each select="iso-meta">
+				<bibdata type="standard">
+						<xsl:call-template name="xxx-meta">
+							<xsl:with-param name="include_reg_meta">true</xsl:with-param>
+							<xsl:with-param name="include_std_meta">true</xsl:with-param>
+						</xsl:call-template>
+				</bibdata>
+			</xsl:for-each>
+		
+			<xsl:if test="not(iso-meta)">
+				<xsl:for-each select="reg-meta">
+					<bibdata type="standard">
+							<xsl:call-template name="xxx-meta">
+								<xsl:with-param name="include_std_meta">true</xsl:with-param>
+							</xsl:call-template>
+					</bibdata>
+				</xsl:for-each>
+				
+				<xsl:if test="not(std-meta)">
+					<xsl:for-each select="std-meta">
+						<bibdata type="standard">
+								<xsl:call-template name="xxx-meta"/>
+						</bibdata>
+					</xsl:for-each>
+				</xsl:if>
+			</xsl:if>
+		</xsl:if>
 		
 		<xsl:if test="not ($split-bibdata = 'true')">
 			<xsl:if test="/standard/front/iso-meta">
@@ -113,7 +155,9 @@
 			</xsl:if>
 		</xsl:if>
 		
+		<!-- ========================== -->
 		<!-- check non-processed elements in bibdata -->
+		<!-- ========================== -->
 		<xsl:variable name="bibdata_check">
 			<xsl:apply-templates mode="bibdata_check"/>
 		</xsl:variable>			
@@ -122,10 +166,17 @@
 			</xsl:text>
 			<xsl:apply-templates select="xalan:nodeset($bibdata_check)" mode="display_check"/>
 		</xsl:if>
+		<!-- ========================== -->
+		<!-- ========================== -->
 		
 	</xsl:template>
 
 	<xsl:template name="xxx-meta">
+		<xsl:param name="include_iso_meta">false</xsl:param>
+		<xsl:param name="include_reg_meta">false</xsl:param>
+		<xsl:param name="include_std_meta">false</xsl:param>
+		<xsl:param name="originator"/>
+		
 		<!-- title @type="main", "title-intro", type="title-main", type="title-part" -->
 		<xsl:apply-templates select="title-wrap" mode="bibdata"/>
 		
@@ -162,10 +213,31 @@
 		
 		<!-- relation bibitem -->
 		<xsl:apply-templates select="std-xref" mode="bibdata"/>
-		
-		<xsl:if test="local-name() != 'reg-meta'">
-			<xsl:apply-templates select="ancestor::front/reg-meta" mode="bibdata" />
+		<xsl:if test="$include_iso_meta = 'true'">
+			<xsl:for-each select="ancestor::front/iso-meta">
+				<relation type="adopted-from">
+					<bibitem>
+						<xsl:call-template name="xxx-meta"/> <!-- process iso-meta -->
+					</bibitem>
+				</relation>
+			</xsl:for-each>
 		</xsl:if>
+		
+		<xsl:if test="$include_reg_meta = 'true'">
+			<xsl:for-each select="ancestor::front/reg-meta">
+				<relation type="adopted-from">
+					<bibitem>
+						<xsl:call-template name="xxx-meta"> <!-- process reg-meta -->
+							<!-- <xsl:with-param name="originator" select="std-ident/originator"/> -->
+						</xsl:call-template>
+					</bibitem>
+				</relation>
+			</xsl:for-each>
+		</xsl:if>
+		
+		<!-- <xsl:if test="local-name() != 'reg-meta'">
+			<xsl:apply-templates select="ancestor::front/reg-meta" mode="bibdata" />
+		</xsl:if> -->
 		
 		<!-- copyright from, owner/organization/abbreviation -->
 		<xsl:apply-templates select="permissions" mode="bibdata"/>
@@ -457,9 +529,14 @@
 	</xsl:template>
 	
 	<xsl:template match="iso-meta/doc-ref | nat-meta/doc-ref | reg-meta/doc-ref" mode="bibdata">
-		<docidentifier type="iso-reference">
+		<xsl:variable name="iso_reference">
 			<xsl:apply-templates mode="bibdata"/>
-		</docidentifier>
+		</xsl:variable>
+		<xsl:if test="normalize-space($iso_reference) != ''">
+			<docidentifier type="iso-reference">
+				<xsl:value-of select="normalize-space($iso_reference)"/>
+			</docidentifier>
+		</xsl:if>
 	</xsl:template>
 
 	<xsl:template match="custom-meta-group/custom-meta[meta-name = 'ISBN']/meta-value" mode="bibdata">
