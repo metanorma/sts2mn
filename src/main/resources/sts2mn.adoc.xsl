@@ -570,7 +570,6 @@
 		<redirect:write file="{$outpath}/sections/{$sec_number}-{$sec_title}.adoc">
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:call-template name="setIdOrType"/>
-			<xsl:text>&#xa;</xsl:text>
 			<xsl:apply-templates />
 		</redirect:write>
 		<xsl:text>include::sections/</xsl:text><xsl:value-of select="$sec_number"/>-<xsl:value-of select="$sec_title"/><xsl:text>.adoc[]</xsl:text>
@@ -579,7 +578,6 @@
 	
 	<xsl:template match="sec">
 		<xsl:call-template name="setIdOrType"/>
-		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates />
 	</xsl:template>
 	
@@ -1963,6 +1961,11 @@
 				</xsl:otherwise>
 			</xsl:choose>
 		<xsl:text>]]</xsl:text>
+		<xsl:if test="not(title) and label">
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:text>==== {blank}</xsl:text>
+		</xsl:if>
+		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
 </xsl:stylesheet>

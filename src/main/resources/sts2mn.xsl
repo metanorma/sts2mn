@@ -701,7 +701,6 @@
 		<doctype>
 			<xsl:choose>
 				<xsl:when test="$organization = 'BSI' and (starts-with($originator, 'BS') or starts-with($originator, 'PAS') or starts-with($originator, 'PD'))">
-					<xsl:value-of select="$originator"/>
 					<xsl:choose>
 						<xsl:when test="starts-with($originator, 'BS') and $value = 'standard'">standard</xsl:when>
 						<xsl:when test="starts-with($originator, 'PAS') and ($value = 'publicly available specification' or $value = 'standard')">publicly-available-specification</xsl:when>
@@ -843,6 +842,12 @@
 			<xsl:if test="normalize-space(@sec-type) != ''">
 				<xsl:attribute name="type"><xsl:value-of select="@sec-type"/></xsl:attribute>
 			</xsl:if>
+			<xsl:if test="not(title)">
+				<xsl:if test="label">
+					<xsl:attribute name="inline-header">true</xsl:attribute>
+					<xsl:apply-templates select="label" mode="label_name"/>
+				</xsl:if>
+			</xsl:if>
 			<xsl:apply-templates />
 		</clause>
 	</xsl:template>
@@ -870,7 +875,10 @@
 						</xsl:when>
 					</xsl:choose>
 					<xsl:if test="not(title)">
-						<xsl:apply-templates select="label" mode="label_name"/>
+						<xsl:if test="label">
+							<xsl:attribute name="inline-header">true</xsl:attribute>
+							<xsl:apply-templates select="label" mode="label_name"/>
+						</xsl:if>
 					</xsl:if>
 					<xsl:apply-templates />
 				</clause>
