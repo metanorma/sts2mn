@@ -246,11 +246,33 @@
 		<!-- copyright from, owner/organization/abbreviation -->
 		<xsl:apply-templates select="permissions" mode="bibdata"/>
 		
-		<xsl:if test="std-ident/doc-type or comm-ref or std-ident or doc-ident/release-version">
+		
+		<xsl:if test="$organization = 'BSI'">
+			<xsl:for-each select="comm-ref">
+				<relation type="related">
+					<bibitem>
+					<title>--</title>
+					<docidentifier>Committee reference <xsl:value-of select="."/></docidentifier> <!-- Example: Committee reference DEF/1 -->
+					</bibitem>
+				</relation>
+			</xsl:for-each>
+			<xsl:for-each select="std-xref[@type='isPublishedFormatOf']">
+				<relation type="related">
+					<bibitem>
+					<title>--</title>
+					<docidentifier>Draft for comment <xsl:value-of select="std-ref"/></docidentifier> <!-- Example: Draft for comment 20/30387670 DC -->
+					</bibitem>
+				</relation>
+			</xsl:for-each>
+		</xsl:if>
+		
+		<xsl:if test="std-ident/doc-type or (comm-ref and $organization != 'BSI')  or std-ident or doc-ident/release-version">
 			<ext>
 				<xsl:apply-templates select="std-ident/doc-type" mode="bibdata"/>
 				
-				<xsl:apply-templates select="comm-ref" mode="bibdata"/>
+				<xsl:if test="$organization != 'BSI'">
+					<xsl:apply-templates select="comm-ref" mode="bibdata"/>
+				</xsl:if>
 				
 				<!-- project number -->
 				<xsl:choose>

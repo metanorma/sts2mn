@@ -110,14 +110,43 @@
 		<xsl:text>:mn-output-extensions: xml,html</xsl:text> <!-- ,doc,html_alt -->
 		<xsl:text>&#xa;</xsl:text>
 		
-		<!-- 
-		:technical-committee-type: TC
-		:technical-committee-number: 154
-		:technical-committee: Processes, data elements and documents in commerce, industry and administration
-		:workgroup-type: WG
-		:workgroup-number: 5
-		:workgroup: Representation of dates and times -->		
-		<xsl:apply-templates select="*/comm-ref"/>
+		<xsl:choose>
+			<xsl:when test="$organization = 'BSI'">
+				<xsl:variable name="data">
+					<xsl:for-each select="*/comm-ref">
+						<item>Committee reference <xsl:value-of select="."/></item> <!-- Example: Committee reference DEF/1 -->
+					</xsl:for-each>
+					<xsl:if test="*/std-xref[@type='isPublishedFormatOf']">
+						<item>
+							<xsl:text>Draft for comment </xsl:text>
+							<xsl:for-each select="*/std-xref[@type='isPublishedFormatOf']">
+								<xsl:value-of select="std-ref"/><!-- Example: Draft for comment 20/30387670 DC -->
+								<xsl:if test="position() != last()">,</xsl:if>
+							</xsl:for-each>
+					</item>
+					</xsl:if>
+				</xsl:variable>
+				<!-- Example: :bsi-related: Committee reference DEF/1; Draft for comment 20/30387670 DC -->
+				<xsl:if test="xalan:nodeset($data)//item">
+					<xsl:text>:bsi-related: </xsl:text>
+					<xsl:for-each select="xalan:nodeset($data)//item">
+						<xsl:value-of select="."/>
+						<xsl:if test="position() != last()">; </xsl:if>
+					</xsl:for-each>
+					<xsl:text>&#xa;</xsl:text>
+				</xsl:if>
+			</xsl:when>
+			<xsl:otherwise>
+				<!-- 
+				:technical-committee-type: TC
+				:technical-committee-number: 154
+				:technical-committee: Processes, data elements and documents in commerce, industry and administration
+				:workgroup-type: WG
+				:workgroup-number: 5
+				:workgroup: Representation of dates and times -->		
+				<xsl:apply-templates select="*/comm-ref"/>
+		</xsl:otherwise>
+		</xsl:choose>
 		
 		<!-- :secretariat: SAC -->
 		<xsl:apply-templates select="*/secretariat"/>
