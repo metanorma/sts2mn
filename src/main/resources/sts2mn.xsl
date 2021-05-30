@@ -266,13 +266,13 @@
 			</xsl:for-each>
 		</xsl:if>
 		
-		<xsl:if test="std-ident/doc-type or (comm-ref and $organization != 'BSI')  or std-ident or doc-ident/release-version">
+		<xsl:if test="std-ident/doc-type or comm-ref or ics or std-ident or doc-ident/release-version or secretariat">
 			<ext>
 				<xsl:apply-templates select="std-ident/doc-type" mode="bibdata"/>
+
+				<xsl:apply-templates select="comm-ref" mode="bibdata"/>
 				
-				<xsl:if test="$organization != 'BSI'">
-					<xsl:apply-templates select="comm-ref" mode="bibdata"/>
-				</xsl:if>
+				<xsl:apply-templates select="ics" mode="bibdata"/>			
 				
 				<!-- project number -->
 				<xsl:choose>
@@ -742,40 +742,41 @@
 	
 	<xsl:template match="iso-meta/comm-ref | nat-meta/comm-ref | reg-meta/comm-ref" mode="bibdata">
 		<editorialgroup>
-			<xsl:variable name="comm-ref">
-				<xsl:call-template name="split">
-					<xsl:with-param name="pText" select="."/>
-				</xsl:call-template>
-			</xsl:variable>			
-			
-			<xsl:variable name="TC_SC_WG">
-				<xsl:for-each select="xalan:nodeset($comm-ref)/*">
-					<xsl:choose>
-						<xsl:when test="starts-with(., 'TC ')">
-							<technical-committee number="{normalize-space(substring-after(., ' '))}" type="TC"></technical-committee>
-						</xsl:when>
-						<xsl:when test="starts-with(., 'SC ')">
-							<subcommittee number="{normalize-space(substring-after(., ' '))}" type="SC"></subcommittee>
-						</xsl:when>
-						<xsl:when test="starts-with(., 'WG ')">
-							<workgroup number="{normalize-space(substring-after(., ' '))}" type="WG"></workgroup>
-						</xsl:when>
-					</xsl:choose>
-				</xsl:for-each>
-			</xsl:variable>
-			<xsl:choose>
-				<xsl:when test="xalan:nodeset($TC_SC_WG)/*">
-					<xsl:copy-of select="$TC_SC_WG"/>
-				</xsl:when>
-				<xsl:otherwise>
-					<technical-committee number="{.}"></technical-committee>
-				</xsl:otherwise>
-			</xsl:choose>
+			<xsl:if test="$organization != 'BSI'">
+				<xsl:variable name="comm-ref">
+					<xsl:call-template name="split">
+						<xsl:with-param name="pText" select="."/>
+					</xsl:call-template>
+				</xsl:variable>			
+				
+				<xsl:variable name="TC_SC_WG">
+					<xsl:for-each select="xalan:nodeset($comm-ref)/*">
+						<xsl:choose>
+							<xsl:when test="starts-with(., 'TC ')">
+								<technical-committee number="{normalize-space(substring-after(., ' '))}" type="TC"></technical-committee>
+							</xsl:when>
+							<xsl:when test="starts-with(., 'SC ')">
+								<subcommittee number="{normalize-space(substring-after(., ' '))}" type="SC"></subcommittee>
+							</xsl:when>
+							<xsl:when test="starts-with(., 'WG ')">
+								<workgroup number="{normalize-space(substring-after(., ' '))}" type="WG"></workgroup>
+							</xsl:when>
+						</xsl:choose>
+					</xsl:for-each>
+				</xsl:variable>
+				<xsl:choose>
+					<xsl:when test="xalan:nodeset($TC_SC_WG)/*">
+						<xsl:copy-of select="$TC_SC_WG"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<technical-committee number="{.}"></technical-committee>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:if>
 			
 			<xsl:apply-templates select="../secretariat" mode="bibdata"/>			
 		</editorialgroup>
 		
-		<xsl:apply-templates select="../ics" mode="bibdata"/>			
 	</xsl:template>
 	
 	<xsl:template match="iso-meta/secretariat | nat-meta/secretariat | reg-meta/secretariat" mode="bibdata">
