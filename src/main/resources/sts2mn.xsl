@@ -44,7 +44,7 @@
 								<xsl:apply-templates select="back/ref-list" mode="bibliography"/>
 							</bibliography>
 						 </xsl:if>
-						 <xsl:apply-templates select="//sec[@sec-type = 'index']" mode="index"/>
+						 <xsl:apply-templates select="//sec[@sec-type = 'index'] | //back/sec[@id = 'ind']" mode="index"/>
 					</xsl:element>
 				</xsl:otherwise>
 			</xsl:choose>
@@ -1388,7 +1388,9 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
-	<xsl:template match="fn-group | table-wrap-foot/fn"/>
+	<xsl:template match="back/fn-group"/>
+	
+	<xsl:template match="table-wrap-foot/fn"/>
 	
 	<xsl:template match="fn">
 		<fn>
@@ -1468,8 +1470,8 @@
 	</xsl:template>
 	
 	
-	<xsl:template match="sec[@sec-type = 'index']" priority="2"/>
-	<xsl:template match="sec[@sec-type = 'index']" mode="index">
+	<xsl:template match="sec[@sec-type = 'index'] | back/sec[@id = 'ind']" priority="2"/>
+	<xsl:template match="sec[@sec-type = 'index'] | back/sec[@id = 'ind']" mode="index">
 		<indexsect id="{@id}">
 			<xsl:apply-templates />
 		</indexsect>

@@ -201,7 +201,7 @@
 	
 	<xsl:template match="//standard/body">
 		<xsl:if test="$split-bibdata != 'true'">
-			<xsl:apply-templates select="../back/fn-group" mode="footnotes"/>
+			<!-- <xsl:apply-templates select="../back/fn-group" mode="footnotes"/> -->
 			<xsl:apply-templates />
 		</xsl:if>
 	</xsl:template>
@@ -614,6 +614,8 @@
 		<xsl:value-of select="normalize-space(.)"/>
 	</xsl:template>
 	
+	<!-- ignore index -->
+	<xsl:template match="sec[@sec-type = 'index'] | back/sec[@id = 'ind']" priority="2"/> 
 	
 	<xsl:template match="term-sec">
 		<!-- [[ ]] -->
@@ -1045,6 +1047,8 @@
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
+	
+	<xsl:template match="fn-group"/><!-- fn from fn-group  moved to after the text -->
 	
 	<xsl:template match="fn">
 		<xsl:text> footnote:[</xsl:text>
