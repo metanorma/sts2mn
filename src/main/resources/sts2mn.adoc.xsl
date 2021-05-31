@@ -899,11 +899,11 @@
 				<xsl:when test=". = 'roman-lower'">lowerroman</xsl:when>
 				<xsl:when test=". = 'roman-upper'">upperroman</xsl:when>
 				<xsl:when test=". = 'arabic'">arabic</xsl:when>
-				<xsl:when test="translate($first_label, '1234567890', '') = ''">arabic</xsl:when>
-				<xsl:when test="translate($first_label, 'ixvcm', '') = ''">lowerroman</xsl:when>
-				<xsl:when test="translate($first_label, 'IXVCM', '') = ''">upperroman</xsl:when>
-				<xsl:when test="translate($first_label, 'abcdefghijklmnopqrstuvwxyz', '') = ''"></xsl:when> <!-- loweralpha -->
-				<xsl:when test="translate($first_label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '') = ''">upperalpha</xsl:when>
+				<xsl:when test="$first_label != '' and translate($first_label, '1234567890', '') = ''">arabic</xsl:when>
+				<xsl:when test="$first_label != '' and translate($first_label, 'ixvcm', '') = ''">lowerroman</xsl:when>
+				<xsl:when test="$first_label != '' and translate($first_label, 'IXVCM', '') = ''">upperroman</xsl:when>
+				<xsl:when test="$first_label != '' and translate($first_label, 'abcdefghijklmnopqrstuvwxyz', '') = ''"></xsl:when> <!-- loweralpha -->
+				<xsl:when test="$first_label != '' and translate($first_label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '') = ''">upperalpha</xsl:when>
 				<xsl:otherwise></xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>

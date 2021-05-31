@@ -667,9 +667,14 @@
 	</xsl:template>
 	
 	<xsl:template match="iso-meta/std-xref | nat-meta/std-xref | reg-meta/std-xref" mode="bibdata">
-		<relation type="{@type}">
-			<xsl:apply-templates mode="bibdata"/>
-		</relation>
+		<xsl:choose>
+			<xsl:when test="@type = 'isPublishedFormatOf'"></xsl:when> <!-- see <relation type="related"> -->
+			<xsl:otherwise>
+				<relation type="{@type}">
+					<xsl:apply-templates mode="bibdata"/>
+				</relation>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 	
 	<xsl:template match="front/reg-meta" mode="bibdata">
@@ -1305,11 +1310,11 @@
 				<xsl:when test=". = 'roman-lower'">roman</xsl:when>
 				<xsl:when test=". = 'roman-upper'">roman_upper</xsl:when>
 				<xsl:when test=". = 'arabic'">arabic</xsl:when>
-				<xsl:when test="translate($first_label, '1234567890', '') = ''">arabic</xsl:when>
-				<xsl:when test="translate($first_label, 'ixvcm', '') = ''">roman</xsl:when>
-				<xsl:when test="translate($first_label, 'IXVCM', '') = ''">roman_upper</xsl:when>
-				<xsl:when test="translate($first_label, 'abcdefghijklmnopqrstuvwxyz', '') = ''">alphabet</xsl:when>
-				<xsl:when test="translate($first_label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '') = ''">alphabet_upper</xsl:when>
+				<xsl:when test="$first_label != '' and translate($first_label, '1234567890', '') = ''">arabic</xsl:when>
+				<xsl:when test="$first_label != '' and translate($first_label, 'ixvcm', '') = ''">roman</xsl:when>
+				<xsl:when test="$first_label != '' and translate($first_label, 'IXVCM', '') = ''">roman_upper</xsl:when>
+				<xsl:when test="$first_label != '' and translate($first_label, 'abcdefghijklmnopqrstuvwxyz', '') = ''">alphabet</xsl:when>
+				<xsl:when test="$first_label != '' and translate($first_label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '') = ''">alphabet_upper</xsl:when>
 				<xsl:otherwise><xsl:value-of select="."/></xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
