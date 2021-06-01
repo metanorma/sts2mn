@@ -276,7 +276,7 @@
 				
 				<!-- project number -->
 				<xsl:choose>
-					<xsl:when test="normalize-space(doc-ident/proj-id) != ''">
+					<xsl:when test="normalize-space(doc-ident/proj-id) != '' or normalize-space(std-ident/part-number) != ''">
 						<xsl:apply-templates select="doc-ident" mode="bibdata_project_number"/>		
 					</xsl:when>
 					<xsl:otherwise>
@@ -585,7 +585,7 @@
 	</xsl:template>
 	
 	<xsl:template match="iso-meta/release-date | nat-meta/release-date | reg-meta/release-date" mode="bibdata">
-		<date type="published">
+		<date type="release">
 			<on>
 				<xsl:apply-templates mode="bibdata"/>
 			</on>

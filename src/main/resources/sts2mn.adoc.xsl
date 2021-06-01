@@ -140,23 +140,34 @@
 				<xsl:text>&#xa;</xsl:text>
 			</xsl:if> -->
 			<!-- if in front there are another elements, except xxx-meta -->
-			<xsl:if test="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'std-meta']">
-				<redirect:write file="{$outpath}/sections/00-publishing.adoc">
-					<xsl:text>&#xa;</xsl:text>
-					<xsl:apply-templates select="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'std-meta' and not(local-name() = 'sec' and @sec-type = 'foreword')]"/>
-				</redirect:write>
-				<xsl:text>include::sections/00-publishing.adoc[]</xsl:text>
-				<xsl:text>&#xa;&#xa;</xsl:text>
-			</xsl:if>
 			
-			<xsl:if test="sec[@sec-type = 'foreword']">
+				
+			<xsl:for-each select="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'reg-meta' and local-name() != 'std-meta']">
+				<xsl:variable name="number_"><xsl:number /></xsl:variable>
+				<xsl:variable name="number" select="format-number($number_, '00')"/>
+				<xsl:variable name="section_name">
+					<xsl:value-of select="@sec-type"/>
+					<xsl:if test="not(@sec-type)"><xsl:value-of select="@id"/></xsl:if>
+				</xsl:variable>
+				<xsl:variable name="filename">
+					<xsl:text>sections/00-</xsl:text><xsl:value-of select="$number"/>-<xsl:value-of select="$section_name"/><xsl:text>.adoc</xsl:text>
+				</xsl:variable>
+				<redirect:write file="{$outpath}/{$filename}">
+					<xsl:text>&#xa;</xsl:text>
+					<xsl:apply-templates select="."/>
+				</redirect:write>
+				<xsl:text>include::</xsl:text><xsl:value-of select="$filename"/><xsl:text>[]</xsl:text>
+				<xsl:text>&#xa;&#xa;</xsl:text>
+			</xsl:for-each>
+			
+			<!-- <xsl:if test="sec[@sec-type = 'foreword']">
 				<redirect:write file="{$outpath}/sections/00-foreword.adoc">
 					<xsl:text>&#xa;</xsl:text>
 					<xsl:apply-templates select="sec[@sec-type = 'foreword']"/>
 				</redirect:write>
 				<xsl:text>include::sections/00-foreword.adoc[]</xsl:text>
 				<xsl:text>&#xa;&#xa;</xsl:text>
-			</xsl:if>
+			</xsl:if> -->
 			
 			
 			<!-- <xsl:apply-templates select="/standard/body"/>			
@@ -180,6 +191,15 @@
 		<xsl:apply-templates select="std-ident/edition"/>		
 		<!-- :copyright-year: 2019 -->
 		<xsl:apply-templates select="permissions/copyright-year"/>
+		
+		
+		<!-- :published-date: -->
+		<xsl:apply-templates select="pub-date"/>
+		
+		<!-- :date: release 2020-01-01 -->
+		<xsl:apply-templates select="release-date"/>
+		
+		
 		<!-- :language: en -->
 		<xsl:apply-templates select="doc-ident/language"/>
 		<!-- :title-intro-en: Date and time
@@ -309,6 +329,16 @@
 	
 	<xsl:template match="permissions[ancestor::front or ancestor::adoption-front]/copyright-year[normalize-space(.) != '']">
 		<xsl:text>:copyright-year: </xsl:text><xsl:value-of select="."/>
+		<xsl:text>&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="pub-date[ancestor::front or ancestor::adoption-front]">
+		<xsl:text>:published-date: </xsl:text><xsl:value-of select="."/>
+		<xsl:text>&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="release-date[ancestor::front or ancestor::adoption-front]">
+		<xsl:text>:date: release </xsl:text><xsl:value-of select="."/>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
@@ -611,7 +641,14 @@
 			<xsl:text>&#xa;&#xa;</xsl:text>
 	-->
 	
-	<xsl:template match="sec[@sec-type = 'intro']" priority="2">
+	<xsl:template match="front/sec[@sec-type = 'intro']" priority="2"> <!-- don't need to add [[introduction]] in annex, example <sec id="sec_A.1" sec-type="intro">  -->
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>[[introduction]]</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:apply-templates />
+	</xsl:template>
+	
+	<xsl:template match="body/sec[@sec-type = 'intro']" priority="2">
 		<redirect:write file="{$outpath}/sections/00-introduction.adoc">
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:text>[[introduction]]</xsl:text>
@@ -654,10 +691,11 @@
 	
 	<xsl:template match="body/sec">
 		<xsl:variable name="sec_number" select="format-number(label, '00')" />
+		<xsl:variable name="title" select="normalize-space(translate(title, ',&#x200b;&#xa0;‑','    '))"/> <!-- get first word -->
 		<xsl:variable name="sec_title_">
 			<xsl:choose>
-				<xsl:when test="contains(title, ' ')"><xsl:value-of select="substring-before(title,' ')"/></xsl:when>
-				<xsl:otherwise><xsl:value-of select="title"/></xsl:otherwise>
+				<xsl:when test="contains($title, ' ')"><xsl:value-of select="substring-before($title,' ')"/></xsl:when>
+				<xsl:otherwise><xsl:value-of select="$title"/></xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
 		<xsl:variable name="sec_title" select="java:toLowerCase(java:java.lang.String.new($sec_title_))"/>
@@ -1482,9 +1520,13 @@
 	
 	<xsl:template match="ref">
 		<xsl:text>* </xsl:text>
-		<xsl:if test="@id or std/std-ref">
+		<xsl:if test="@id or std/@std-id or std/std-ref">
 			<xsl:text>[[[</xsl:text>
 			<xsl:value-of select="@id"/>
+			<xsl:if test="not(@id)">
+				<xsl:variable name="id_normalized" select="translate(std/@std-id, ' &#xA0;:', '___')"/>
+				<xsl:value-of select="std/@std-id"/>
+			</xsl:if>
 			<xsl:apply-templates select="std/std-ref" mode="std"/>
 			<xsl:apply-templates select="mixed-citation/std" mode="std"/>
 			<xsl:apply-templates select="label" mode="std"/>
@@ -1726,6 +1768,8 @@
 	<!-- End Definitions list (dl) -->
 	<!-- =============== -->
 	
+	<xsl:template match="named-content[@content-type = 'ace-tag']" priority="2"/><!-- start end tag for corrections -->
+	
 	<xsl:template match="named-content">
 		<!-- <xsl:text>&lt;&lt;</xsl:text> -->
 		<xsl:text>term:[</xsl:text>
@@ -1805,8 +1849,6 @@
 			</xsl:choose>
 		</xsl:variable>
 		<xsl:if test="$level_ &gt; $level_max">
-			<xsl:text>```adoc</xsl:text>
-			<xsl:text>&#xa;</xsl:text>
 			<xsl:text>[level=</xsl:text>
 			<xsl:value-of select="$level_"/>
 			<xsl:text>]</xsl:text>
