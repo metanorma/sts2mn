@@ -1258,10 +1258,18 @@
 			<docidentifier type="URN"><xsl:value-of select="@std-id"/></docidentifier>
 		</xsl:if>
 		<eref type="inline" citeas="{std-ref}">
+			<xsl:if test="@std-id">
+				<xsl:attribute name="bibitemid">
+					<xsl:variable name="std-id_normalized" select="translate(@std-id, ' &#xA0;:', '___')"/>
+					<xsl:value-of select="$std-id_normalized"/>
+				</xsl:attribute>
+			</xsl:if>
 			<xsl:apply-templates />
 		</eref>
 	</xsl:template>
-	<xsl:template match="std/std-ref"/>
+	<xsl:template match="std/std-ref">
+		<xsl:apply-templates />
+	</xsl:template>
 	
 	<xsl:template match="std[italic]" priority="2">
 		<em>
@@ -1563,6 +1571,9 @@
 		<xref>
 			<xsl:attribute name="target">
 				<xsl:choose>
+					<xsl:when test="translate(@xlink:href, '#', '') = ''"> <!-- empty xlink:href -->
+						<xsl:value-of select="translate(normalize-space(), ' ()', '---')"/>
+					</xsl:when>
 					<xsl:when test="starts-with(@xlink:href, '#')">
 						<xsl:value-of select="substring-after(@xlink:href, '#')"/>
 					</xsl:when>

@@ -837,14 +837,16 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
+	<!-- Example:
+		<std std-id="ISO 12345:2011" type="dated">
+			<std-ref>ISO 12345:2011</std-ref>
+		</std>
+	-->
 	<xsl:template match="std">
-		<xsl:if test="local-name(preceding-sibling::node()) != ''">
-			<xsl:text> </xsl:text>
-		</xsl:if>		
+		<xsl:variable name="space"><xsl:if test="local-name(preceding-sibling::node()) != ''"><xsl:text> </xsl:text></xsl:if></xsl:variable>
+		<xsl:value-of select="$space"/>
 		<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
-		<xsl:if test="local-name(preceding-sibling::node()) != ''">
-			<xsl:text> </xsl:text>
-		</xsl:if>		
+		<xsl:value-of select="$space"/>
 	</xsl:template>
 	
 	<xsl:template match="std-id-group"/>
@@ -1729,6 +1731,9 @@
 		<xsl:text>term:[</xsl:text>
 		<xsl:variable name="target">
 			<xsl:choose>
+				<xsl:when test="translate(@xlink:href, '#', '') = ''"> <!-- empty xlink:href -->
+					<xsl:value-of select="translate(normalize-space(), ' ()', '---')"/>
+				</xsl:when>
 				<xsl:when test="starts-with(@xlink:href, '#')">
 					<xsl:value-of select="substring-after(@xlink:href, '#')"/>
 				</xsl:when>
@@ -2010,7 +2015,7 @@
 				<xsl:value-of select="$ref2"/>
 			</xsl:when>
 			<xsl:otherwise>
-				<xsl:variable name="text_normalized" select="translate($text, '&#xA0;:', '__')"/>
+				<xsl:variable name="text_normalized" select="translate($text, ' &#xA0;:', '___')"/>
 				<xsl:if test="$text_normalized != $text"><xsl:value-of select="$text_normalized"/>,</xsl:if>
 				<xsl:value-of select="$text"/>
 			</xsl:otherwise>
