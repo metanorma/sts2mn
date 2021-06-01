@@ -24,7 +24,14 @@
 	
 	<xsl:variable name="language" select="//standard/front/*/doc-ident/language"/>
 	
-	<xsl:variable name="organization" select="/standard/front/*/doc-ident/sdo"/>
+	<xsl:variable name="organization">
+	<xsl:choose>
+			<xsl:when test="/standard/front/nat-meta/@originator = 'BSI' or /standard/front/iso-meta/secretariat = 'BSI'">BSI</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="/standard/front/*/doc-ident/sdo"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:variable>
 	
 	<xsl:variable name="path_" select="concat('body', $pathSeparator, 'body-#lang.adoc[]')"/>
 			
@@ -69,87 +76,44 @@
 	
 	<!-- <xsl:template match="/*"> -->
 	<xsl:template match="//standard/front | //adoption/adoption-front">
-		<!-- = ISO 8601-1 -->
-		<xsl:apply-templates select="*/std-ident"/> <!-- * -> iso-meta -->
-		<!-- :docnumber: 8601 -->
-		<xsl:apply-templates select="*/std-ident/doc-number"/>		
-		<!-- :partnumber: 1 -->
-		<xsl:apply-templates select="*/std-ident/part-number"/>		
-		<!-- :edition: 1 -->
-		<xsl:apply-templates select="*/std-ident/edition"/>		
-		<!-- :copyright-year: 2019 -->
-		<xsl:apply-templates select="*/permissions/copyright-year"/>
-		<!-- :language: en -->
-		<xsl:apply-templates select="*/doc-ident/language"/>
-		<!-- :title-intro-en: Date and time
-		:title-main-en: Representations for information interchange
-		:title-part-en: Basic rules
-		:title-intro-fr: Date et l'heure
-		:title-main-fr: Représentations pour l'échange d'information
-		:title-part-fr: Règles de base -->
-		<xsl:apply-templates select="*/title-wrap"/>		
-		<!-- :doctype: international-standard -->
-		<xsl:apply-templates select="*/std-ident/doc-type"/>		
-		<!-- :docstage: 60
-		:docsubstage: 60 -->		
-		<xsl:apply-templates select="*/doc-ident/release-version"/>
+	
+		<!-- nat-meta -> iso-meta -> reg-meta -> std-meta -->
+		<xsl:for-each select="nat-meta">
+			<xsl:call-template name="xxx-meta">
+				<xsl:with-param name="include_iso_meta">true</xsl:with-param>
+				<xsl:with-param name="include_reg_meta">true</xsl:with-param>
+				<xsl:with-param name="include_std_meta">true</xsl:with-param>
+			</xsl:call-template>
+		</xsl:for-each>
 		
-		<xsl:if test="*/ics">
-			<xsl:text>:library-ics: </xsl:text>
-			<xsl:for-each select="*/ics">
-				<xsl:value-of select="."/><xsl:if test="position() != last()">,</xsl:if>
+		<xsl:if test="not(nat-meta)">
+			<xsl:for-each select="iso-meta">
+				<xsl:call-template name="xxx-meta">
+					<xsl:with-param name="include_reg_meta">true</xsl:with-param>
+					<xsl:with-param name="include_std_meta">true</xsl:with-param>
+				</xsl:call-template>
 			</xsl:for-each>
-			<xsl:text>&#xa;</xsl:text>
-		</xsl:if>
 		
-		<xsl:apply-templates select="*/custom-meta-group/custom-meta[meta-name = 'ISBN']/meta-value"/>
+			<xsl:if test="not(iso-meta)">
+				<xsl:for-each select="reg-meta">
+					<xsl:call-template name="xxx-meta">
+						<xsl:with-param name="include_std_meta">true</xsl:with-param>
+					</xsl:call-template>
+				</xsl:for-each>
+				
+				<xsl:if test="not(reg-meta)">
+					<xsl:for-each select="std-meta">
+						<xsl:call-template name="xxx-meta"/>
+					</xsl:for-each>
+				</xsl:if>
+			</xsl:if>
+		</xsl:if>
 		
 		
 		<xsl:text>:mn-document-class: </xsl:text><xsl:value-of select="$sdo"/>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>:mn-output-extensions: xml,html</xsl:text> <!-- ,doc,html_alt -->
 		<xsl:text>&#xa;</xsl:text>
-		
-		<xsl:choose>
-			<xsl:when test="$organization = 'BSI'">
-				<xsl:variable name="data">
-					<xsl:for-each select="*/comm-ref">
-						<item>Committee reference <xsl:value-of select="."/></item> <!-- Example: Committee reference DEF/1 -->
-					</xsl:for-each>
-					<xsl:if test="*/std-xref[@type='isPublishedFormatOf']">
-						<item>
-							<xsl:text>Draft for comment </xsl:text>
-							<xsl:for-each select="*/std-xref[@type='isPublishedFormatOf']">
-								<xsl:value-of select="std-ref"/><!-- Example: Draft for comment 20/30387670 DC -->
-								<xsl:if test="position() != last()">,</xsl:if>
-							</xsl:for-each>
-					</item>
-					</xsl:if>
-				</xsl:variable>
-				<!-- Example: :bsi-related: Committee reference DEF/1; Draft for comment 20/30387670 DC -->
-				<xsl:if test="xalan:nodeset($data)//item">
-					<xsl:text>:bsi-related: </xsl:text>
-					<xsl:for-each select="xalan:nodeset($data)//item">
-						<xsl:value-of select="."/>
-						<xsl:if test="position() != last()">; </xsl:if>
-					</xsl:for-each>
-					<xsl:text>&#xa;</xsl:text>
-				</xsl:if>
-			</xsl:when>
-			<xsl:otherwise>
-				<!-- 
-				:technical-committee-type: TC
-				:technical-committee-number: 154
-				:technical-committee: Processes, data elements and documents in commerce, industry and administration
-				:workgroup-type: WG
-				:workgroup-number: 5
-				:workgroup: Representation of dates and times -->		
-				<xsl:apply-templates select="*/comm-ref"/>
-		</xsl:otherwise>
-		</xsl:choose>
-		
-		<!-- :secretariat: SAC -->
-		<xsl:apply-templates select="*/secretariat"/>
 		
 		<xsl:text>:local-cache-only:</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
@@ -175,6 +139,7 @@
 				<xsl:text>///SPLIT </xsl:text><xsl:value-of select="$path"/>
 				<xsl:text>&#xa;</xsl:text>
 			</xsl:if> -->
+			<!-- if in front there are another elements, except xxx-meta -->
 			<xsl:if test="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'std-meta']">
 				<redirect:write file="{$outpath}/sections/00-publishing.adoc">
 					<xsl:text>&#xa;</xsl:text>
@@ -198,6 +163,106 @@
 			<xsl:apply-templates select="/standard/back"/> -->
 		</xsl:if>
 	</xsl:template>
+	
+	<xsl:template name="xxx-meta">
+		<xsl:param name="include_iso_meta">false</xsl:param>
+		<xsl:param name="include_reg_meta">false</xsl:param>
+		<xsl:param name="include_std_meta">false</xsl:param>
+		<xsl:param name="originator"/>
+		
+		<!-- = ISO 8601-1 -->
+		<xsl:apply-templates select="std-ident"/> <!-- * -> iso-meta -->
+		<!-- :docnumber: 8601 -->
+		<xsl:apply-templates select="std-ident/doc-number"/>		
+		<!-- :partnumber: 1 -->
+		<xsl:apply-templates select="std-ident/part-number"/>		
+		<!-- :edition: 1 -->
+		<xsl:apply-templates select="std-ident/edition"/>		
+		<!-- :copyright-year: 2019 -->
+		<xsl:apply-templates select="permissions/copyright-year"/>
+		<!-- :language: en -->
+		<xsl:apply-templates select="doc-ident/language"/>
+		<!-- :title-intro-en: Date and time
+		:title-main-en: Representations for information interchange
+		:title-part-en: Basic rules
+		:title-intro-fr: Date et l'heure
+		:title-main-fr: Représentations pour l'échange d'information
+		:title-part-fr: Règles de base -->
+		<xsl:apply-templates select="title-wrap"/>		
+		<!-- :doctype: international-standard -->
+		<xsl:apply-templates select="std-ident/doc-type"/>		
+		<!-- :docstage: 60
+		:docsubstage: 60 -->		
+		<xsl:apply-templates select="doc-ident/release-version"/>
+		
+		<xsl:if test="ics">
+			<xsl:text>:library-ics: </xsl:text>
+			<xsl:for-each select="ics">
+				<xsl:value-of select="."/><xsl:if test="position() != last()">,</xsl:if>
+			</xsl:for-each>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
+		
+		<xsl:apply-templates select="custom-meta-group/custom-meta[meta-name = 'ISBN']/meta-value"/>
+		
+		<xsl:choose>
+			<xsl:when test="$organization = 'BSI'">
+				<xsl:variable name="data">
+					<xsl:for-each select="comm-ref">
+						<item>Committee reference <xsl:value-of select="."/></item> <!-- Example: Committee reference DEF/1 -->
+					</xsl:for-each>
+					<xsl:if test="std-xref[@type='isPublishedFormatOf']">
+						<item>
+							<xsl:text>Draft for comment </xsl:text>
+							<xsl:for-each select="std-xref[@type='isPublishedFormatOf']">
+								<xsl:value-of select="std-ref"/><!-- Example: Draft for comment 20/30387670 DC -->
+								<xsl:if test="position() != last()">,</xsl:if>
+							</xsl:for-each>
+					</item>
+					</xsl:if>
+				</xsl:variable>
+				<!-- Example: :bsi-related: Committee reference DEF/1; Draft for comment 20/30387670 DC -->
+				<xsl:if test="xalan:nodeset($data)//item">
+					<xsl:text>:bsi-related: </xsl:text>
+					<xsl:for-each select="xalan:nodeset($data)//item">
+						<xsl:value-of select="."/>
+						<xsl:if test="position() != last()">; </xsl:if>
+					</xsl:for-each>
+					<xsl:text>&#xa;</xsl:text>
+				</xsl:if>
+			</xsl:when>
+			<xsl:otherwise>
+					<!-- 
+					:technical-committee-type: TC
+					:technical-committee-number: 154
+					:technical-committee: Processes, data elements and documents in commerce, industry and administration
+					:workgroup-type: WG
+					:workgroup-number: 5
+					:workgroup: Representation of dates and times -->		
+					<xsl:apply-templates select="comm-ref"/>
+			</xsl:otherwise>
+		</xsl:choose>
+		
+		<!-- :secretariat: SAC -->
+		<xsl:apply-templates select="secretariat"/>
+		
+		<!-- relation bibitem -->
+		<xsl:if test="$include_iso_meta = 'true'">
+			<xsl:for-each select="ancestor::front/iso-meta">
+				<!-- https://github.com/metanorma/sts2mn/issues/31 -->
+				<!-- <xsl:call-template name="xxx-meta"/> --> <!-- process iso-meta -->
+			</xsl:for-each>
+		</xsl:if>
+		
+		<xsl:if test="$include_reg_meta = 'true'">
+			<xsl:for-each select="ancestor::front/reg-meta">
+				<!-- https://github.com/metanorma/sts2mn/issues/31 -->
+				<!-- <xsl:call-template name="xxx-meta"> --> <!-- process reg-meta -->
+			</xsl:for-each>
+		</xsl:if>
+		
+	</xsl:template>
+	
 	
 	<xsl:template match="//standard/body">
 		<xsl:if test="$split-bibdata != 'true'">
@@ -1945,6 +2010,8 @@
 				<xsl:value-of select="$ref2"/>
 			</xsl:when>
 			<xsl:otherwise>
+				<xsl:variable name="text_normalized" select="translate($text, '&#xA0;:', '__')"/>
+				<xsl:if test="$text_normalized != $text"><xsl:value-of select="$text_normalized"/>,</xsl:if>
 				<xsl:value-of select="$text"/>
 			</xsl:otherwise>
 		</xsl:choose>

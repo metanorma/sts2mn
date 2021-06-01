@@ -120,7 +120,7 @@
 					</bibdata>
 				</xsl:for-each>
 				
-				<xsl:if test="not(std-meta)">
+				<xsl:if test="not(reg-meta)">
 					<xsl:for-each select="std-meta">
 						<bibdata type="standard">
 								<xsl:call-template name="xxx-meta"/>
