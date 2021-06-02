@@ -111,7 +111,19 @@ public class sts2mnTests {
         String[] args = new String[]{"--format", "adoc", "--output", fileout.toAbsolutePath().toString(), XMLFILE_MN};
         sts2mn.main(args);
 
-        assertTrue(Files.exists(fileout));        
+        assertTrue(Files.exists(fileout));
+    }
+
+    @Test
+    public void successConvertToRelativeAdocOutputSpecified() throws ParseException {
+        System.out.println(name.getMethodName());
+        Path fileout = Paths.get(".", "target", "custom_relative.adoc");
+        fileout.toFile().delete();
+
+        String[] args = new String[]{"--format", "adoc", "--output", fileout.toString(), XMLFILE_MN};
+        sts2mn.main(args);
+
+        assertTrue(Files.exists(fileout));
     }
     
     @Test
