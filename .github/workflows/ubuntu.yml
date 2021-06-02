@@ -33,6 +33,14 @@ jobs:
         run: |
           make publish
 
+      - name: Notify mn-samples-bsi
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+          repository: metanorma/mn-samples-bsi
+          event-type: metanorma/sts2mn
+          client-payload: '{ "ref": "${{ github.ref }}" }'
+
 #      - uses: actions/upload-artifact@master
 #        with:
 #          name: published-ubuntu
