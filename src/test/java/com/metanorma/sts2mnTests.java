@@ -116,11 +116,15 @@ public class sts2mnTests {
 
     @Test
     public void successConvertToRelativeAdocOutputSpecified() throws ParseException {
+        System.setProperty("user.dir", System.getProperty("buildDirectory"));
+
+        String filename = "custom_relative.adoc";
         System.out.println(name.getMethodName());
-        Path fileout = Paths.get(".", "target", "custom_relative.adoc");
+        Path fileout = Paths.get(System.getProperty("buildDirectory"), "custom_relative.adoc");
         fileout.toFile().delete();
 
-        String[] args = new String[]{"--format", "adoc", "--output", fileout.toString(), XMLFILE_MN};
+        String[] args = new String[]{"--format", "adoc", "--output", filename,
+                Paths.get(System.getProperty("buildDirectory"), "..", XMLFILE_MN).normalize().toString()};
         sts2mn.main(args);
 
         assertTrue(Files.exists(fileout));
