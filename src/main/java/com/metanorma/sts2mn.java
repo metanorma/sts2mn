@@ -246,7 +246,8 @@ public class sts2mn {
             
             Source srcXSL = null;
             
-            String outputFolder = fileOut.getParent();
+            String outputFolder = fileOut.getParent(); // getAbsoluteFile().
+
             String bibdataFileName = fileOut.getName();
            
             // skip validating 
