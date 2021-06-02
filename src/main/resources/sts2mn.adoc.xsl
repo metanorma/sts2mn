@@ -131,17 +131,7 @@
 
 		<xsl:if test="$split-bibdata != 'true'">
 			
-			<!-- for adoption create a one adoc -->
-			<!-- <xsl:if test="not(//adoption)">
-				<xsl:text>include::</xsl:text><xsl:value-of select="$path"/>
-				<xsl:text>&#xa;</xsl:text>
-				
-				<xsl:text>///SPLIT </xsl:text><xsl:value-of select="$path"/>
-				<xsl:text>&#xa;</xsl:text>
-			</xsl:if> -->
 			<!-- if in front there are another elements, except xxx-meta -->
-			
-				
 			<xsl:for-each select="*[local-name() != 'iso-meta' and local-name() != 'nat-meta' and local-name() != 'reg-meta' and local-name() != 'std-meta']">
 				<xsl:variable name="number_"><xsl:number /></xsl:variable>
 				<xsl:variable name="number" select="format-number($number_, '00')"/>
@@ -159,15 +149,6 @@
 				<xsl:text>include::</xsl:text><xsl:value-of select="$filename"/><xsl:text>[]</xsl:text>
 				<xsl:text>&#xa;&#xa;</xsl:text>
 			</xsl:for-each>
-			
-			<!-- <xsl:if test="sec[@sec-type = 'foreword']">
-				<redirect:write file="{$outpath}/sections/00-foreword.adoc">
-					<xsl:text>&#xa;</xsl:text>
-					<xsl:apply-templates select="sec[@sec-type = 'foreword']"/>
-				</redirect:write>
-				<xsl:text>include::sections/00-foreword.adoc[]</xsl:text>
-				<xsl:text>&#xa;&#xa;</xsl:text>
-			</xsl:if> -->
 			
 			
 			<!-- <xsl:apply-templates select="/standard/body"/>			
@@ -632,14 +613,7 @@
 	<!-- =========== -->
 	<!-- end bibdata (standard/front) -->
 	
-	
-	<!-- 
-	<redirect:write file="{$outpath}/sections/99-bibliography.adoc">
-				<xsl:apply-templates select="resource" mode="bibliography"/> 
-			</redirect:write>
-			<xsl:text>include::sections/99-bibliography.adoc[]</xsl:text>
-			<xsl:text>&#xa;&#xa;</xsl:text>
-	-->
+
 	
 	<xsl:template match="front/sec[@sec-type = 'intro']" priority="2"> <!-- don't need to add [[introduction]] in annex, example <sec id="sec_A.1" sec-type="intro">  -->
 		<xsl:text>&#xa;</xsl:text>
@@ -679,15 +653,6 @@
 		<xsl:text>&#xa;&#xa;</xsl:text>
 	</xsl:template>
 	
-	<!-- <xsl:template match="sec[@sec-type = 'terms']" priority="2">
-		<redirect:write file="{$outpath}/sections/03-terms.adoc">
-			<xsl:call-template name="setIdOrType"/>
-			<xsl:text>&#xa;</xsl:text>
-			<xsl:apply-templates />
-		</redirect:write>
-		<xsl:text>include::sections/03-terms.adoc[]</xsl:text>
-		<xsl:text>&#xa;&#xa;</xsl:text>
-	</xsl:template> -->
 	
 	<xsl:template match="body/sec">
 		<xsl:variable name="sec_number" select="format-number(label, '00')" />
