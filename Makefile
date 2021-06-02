@@ -2,7 +2,7 @@
 SHELL ?= /bin/bash
 
 #JAR_VERSION := $(shell mvn -q -Dexec.executable="echo" -Dexec.args='$${project.version}' --non-recursive exec:exec -DforceStdout)
-JAR_VERSION := 1.2
+JAR_VERSION := 1.3
 JAR_FILE := sts2mn-$(JAR_VERSION).jar
 
 SRCDIR := src/test/resources
