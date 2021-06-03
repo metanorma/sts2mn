@@ -613,7 +613,22 @@
 	<!-- =========== -->
 	<!-- end bibdata (standard/front) -->
 	
-
+	<xsl:template match="front/sec[@sec-type = 'publication_info']" priority="2">
+		<!-- process only Amendments/corrigenda table, because other data implemented in metanorma gem -->
+		<xsl:if test="*[@content-type = 'ace-table']">
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:text>[.preface,type=corrigenda]</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:text>== </xsl:text><xsl:apply-templates select="*[@content-type = 'ace-table']/caption/title[1]" mode="corrigenda_title"/>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:apply-templates select="*[@content-type = 'ace-table']"/>
+		</xsl:if>
+	</xsl:template>
+	
+	<xsl:template match="*[@content-type = 'ace-table']/caption/title[1]" priority="2"/>
+	<xsl:template match="*[@content-type = 'ace-table']/caption/title[1]" mode="corrigenda_title">
+		<xsl:apply-templates />
+	</xsl:template>
 	
 	<xsl:template match="front/sec[@sec-type = 'intro']" priority="2"> <!-- don't need to add [[introduction]] in annex, example <sec id="sec_A.1" sec-type="intro">  -->
 		<xsl:text>&#xa;</xsl:text>
@@ -1271,6 +1286,9 @@
 			</xsl:if>
 			<xsl:if test="ancestor::table-wrap/table-wrap-foot[count(*[local-name() != 'fn-group']) != 0]">
 				<option>footer</option>
+			</xsl:if>
+			<xsl:if test="ancestor::table-wrap/@content-type = 'ace-table'">
+				<option>unnumbered</option>
 			</xsl:if>
 		</xsl:variable>
 		<xsl:if test="count(xalan:nodeset($options)/option) != 0">
