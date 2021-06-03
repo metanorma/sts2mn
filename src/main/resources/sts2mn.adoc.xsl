@@ -625,7 +625,7 @@
 		</xsl:if>
 	</xsl:template>
 	
-	<xsl:template match="*[@content-type = 'ace-table']/caption/title[1]" priority="2"/>
+	<xsl:template match="front/sec[@sec-type = 'publication_info']//*[@content-type = 'ace-table']/caption/title[1]" priority="2"/>
 	<xsl:template match="*[@content-type = 'ace-table']/caption/title[1]" mode="corrigenda_title">
 		<xsl:apply-templates />
 	</xsl:template>
