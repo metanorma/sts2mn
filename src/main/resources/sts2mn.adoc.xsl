@@ -1235,6 +1235,7 @@
 			</xsl:choose>
 		</xsl:variable>
 		<xsl:choose>
+			<xsl:when test="$cols-count = 1">1</xsl:when> <!-- cols="1" -->
 			<xsl:when test="colgroup/col or col">				
 				<xsl:for-each select="colgroup/col | col">
 					<xsl:variable name="width" select="translate(@width, '%cm', '')"/>
