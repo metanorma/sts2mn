@@ -652,7 +652,7 @@
 		<xsl:text>&#xa;&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="sec[@sec-type = 'scope']" priority="2">
+	<xsl:template match="body/sec[@sec-type = 'scope'] | front/sec[@sec-type = 'scope']" priority="2">
 		<redirect:write file="{$outpath}/sections/01-scope.adoc">
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:apply-templates />
@@ -661,7 +661,7 @@
 		<xsl:text>&#xa;&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template match="sec[@sec-type = 'norm-refs']" priority="2">
+	<xsl:template match="body/sec[@sec-type = 'norm-refs'] | front/sec[@sec-type = 'norm-refs']" priority="2">
 		<redirect:write file="{$outpath}/sections/02-normrefs.adoc">
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:text>[bibliography]</xsl:text>
@@ -1624,7 +1624,9 @@
 				</xsl:when>
 			</xsl:choose>
 		</xsl:if>
-		<xsl:apply-templates />
+		<xsl:if test="$copymode = 'false'">
+			<xsl:apply-templates />
+		</xsl:if>
 		<xsl:if test="not(alt-text)">[]</xsl:if>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:if test="following-sibling::node() and $copymode = 'false'">

@@ -19,7 +19,7 @@
 	</xsl:template>
 	<xsl:template match="text()[not(parent::code) and not(parent::preformat) and not(parent::mml:*)]">
 		<xsl:choose>
-			<xsl:when test="parent::body or parent::sec or parent::term-sec or parent::tbx:termEntry or parent::back or parent::app-group or parent::app or parent::ref-list or parent::fig or parent::caption or parent::table-wrap or parent::tr or parent::thead or parent::colgroup or parent::table or parent::tbody">
+			<xsl:when test="parent::standard or parent::body or parent::sec or parent::term-sec or parent::tbx:termEntry or parent::back or parent::app-group or parent::app or parent::ref-list or parent::fig or parent::caption or parent::table-wrap or parent::tr or parent::thead or parent::colgroup or parent::table or parent::tbody">
 				<xsl:value-of select="normalize-space()"/>
 			</xsl:when>
 			<xsl:when test="contains(., '&#xa;')">
