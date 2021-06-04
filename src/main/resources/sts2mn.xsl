@@ -16,6 +16,8 @@
 	
 	<xsl:param name="split-bibdata">false</xsl:param>
 
+	<xsl:param name="imagesdir" select="'images'"/>
+
 	<xsl:variable name="organization">
 		<xsl:choose>
 			<xsl:when test="/standard/front/nat-meta/@originator = 'BSI' or /standard/front/iso-meta/secretariat = 'BSI'">BSI</xsl:when>
@@ -1525,8 +1527,13 @@
 	<xsl:template match="graphic | inline-graphic">
 		<image height="auto" width="auto">
 			<xsl:if test="@xlink:href and not(processing-instruction('isoimg-id'))">
+				<xsl:variable name="image_link" select="@xlink:href"/>
 				<xsl:attribute name="src">
-					<xsl:value-of select="@xlink:href"/>
+					<xsl:value-of select="$imagesdir"/><xsl:text>/</xsl:text>
+					<xsl:value-of select="$image_link"/>
+					<xsl:if test="not(contains($image_link, '.png')) and not(contains($image_link, '.jpg')) and not(contains($image_link, '.bmp'))">
+						<xsl:text>.png</xsl:text>
+					</xsl:if>
 				</xsl:attribute>
 			</xsl:if>
 			<xsl:apply-templates />
@@ -1535,7 +1542,19 @@
 	
 	<xsl:template match="graphic/processing-instruction('isoimg-id')">
 		<xsl:attribute name="src">
-			<xsl:value-of select="."/>
+			<xsl:variable name="image_link" select="."/>
+			<xsl:value-of select="$imagesdir"/><xsl:text>/</xsl:text>
+			<xsl:choose>
+				<xsl:when test="contains($image_link, '.eps')">
+					<xsl:value-of select="substring-before($image_link, '.eps')"/><xsl:text>.png</xsl:text>
+				</xsl:when>
+				<xsl:when test="contains($image_link, '.EPS')">
+					<xsl:value-of select="substring-before($image_link, '.EPS')"/><xsl:text>.png</xsl:text>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="$image_link"/>
+				</xsl:otherwise>
+			</xsl:choose>
 		</xsl:attribute>
 	</xsl:template>
 	

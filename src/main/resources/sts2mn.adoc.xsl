@@ -22,6 +22,8 @@
 	
 	<xsl:param name="outpath"/>
 	
+	<xsl:param name="imagesdir" select="'images'"/>
+	
 	<xsl:variable name="language" select="//standard/front/*/doc-ident/language"/>
 	
 	<xsl:variable name="organization">
@@ -119,7 +121,7 @@
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>:data-uri-image:</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>:imagesdir: images</xsl:text>
+		<xsl:text>:imagesdir: </xsl:text><xsl:value-of select="$imagesdir"/>
 		<xsl:text>&#xa;</xsl:text>
 		
 		<xsl:if test="normalize-space($docfile) != ''">
@@ -1590,6 +1592,7 @@
 	
 	<xsl:template match="fig">
 		<xsl:if test="not(parent::fig-group)">
+			<xsl:if test="parent::tbx:note"><xsl:text> +&#xa;</xsl:text></xsl:if>
 			<xsl:call-template name="setId"/><!-- [[ ]] -->
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
@@ -1605,20 +1608,37 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
+	
 	<xsl:template match="graphic | inline-graphic">
 		<xsl:text>image::</xsl:text>
 		<xsl:if test="not(processing-instruction('isoimg-id'))">
-			<xsl:value-of select="@xlink:href"/>
+			<xsl:variable name="image_link" select="@xlink:href"/>
+			<xsl:value-of select="$image_link"/>
+			<xsl:if test="not(contains($image_link, '.png')) and not(contains($image_link, '.jpg')) and not(contains($image_link, '.bmp'))">
+				<xsl:text>.png</xsl:text>
+			</xsl:if>
 		</xsl:if>
 		<xsl:apply-templates />
-		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>[]&#xa;</xsl:text>
 		<xsl:if test="following-sibling::node()">
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 	</xsl:template>
 	
 	<xsl:template match="graphic/processing-instruction('isoimg-id')">
-		<xsl:value-of select="."/>
+		<xsl:variable name="image_link" select="."/>
+		<xsl:choose>
+			<xsl:when test="contains($image_link, '.eps')">
+				<xsl:value-of select="substring-before($image_link, '.eps')"/><xsl:text>.png</xsl:text>
+			</xsl:when>
+			<xsl:when test="contains($image_link, '.EPS')">
+				<xsl:value-of select="substring-before($image_link, '.EPS')"/><xsl:text>.png</xsl:text>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$image_link"/>
+			</xsl:otherwise>
+		
+		</xsl:choose>
 	</xsl:template>	
 
 	<xsl:template match="alt-text">
