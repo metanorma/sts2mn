@@ -1529,16 +1529,28 @@
 			<xsl:if test="@xlink:href and not(processing-instruction('isoimg-id'))">
 				<xsl:variable name="image_link" select="@xlink:href"/>
 				<xsl:attribute name="src">
-					<xsl:value-of select="$imagesdir"/><xsl:text>/</xsl:text>
-					<xsl:value-of select="$image_link"/>
-					<xsl:if test="not(contains($image_link, '.png')) and not(contains($image_link, '.jpg')) and not(contains($image_link, '.bmp'))">
-						<xsl:text>.png</xsl:text>
-					</xsl:if>
+					<xsl:choose>
+						<xsl:when test="contains($image_link, 'base64,')">
+							<xsl:value-of select="$image_link"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:value-of select="$imagesdir"/><xsl:text>/</xsl:text>
+							<xsl:value-of select="$image_link"/>
+							<xsl:if test="not(contains($image_link, '.png')) and not(contains($image_link, '.jpg')) and not(contains($image_link, '.bmp'))">
+								<xsl:text>.png</xsl:text>
+							</xsl:if>
+						</xsl:otherwise>
+					</xsl:choose>
 				</xsl:attribute>
+			</xsl:if>
+			<xsl:if test="alt-text">
+				<xsl:attribute  name="alt"><xsl:value-of select="alt-text"/></xsl:attribute>
 			</xsl:if>
 			<xsl:apply-templates />
 		</image>
 	</xsl:template>
+	
+	<xsl:template match="graphic/alt-text"/>
 	
 	<xsl:template match="graphic/processing-instruction('isoimg-id')">
 		<xsl:attribute name="src">

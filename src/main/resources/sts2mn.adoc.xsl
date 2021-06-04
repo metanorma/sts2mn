@@ -67,10 +67,12 @@
 	
 	<xsl:template match="adoption">
 		<xsl:apply-templates />
+		<xsl:call-template name="insertImageList"/>
 	</xsl:template>
 	
 	<xsl:template match="standard">		
 		<xsl:apply-templates />
+		<xsl:call-template name="insertImageList"/>
 	</xsl:template>
 	
 	
@@ -1609,18 +1611,23 @@
 	</xsl:template>
 	
 	
-	<xsl:template match="graphic | inline-graphic">
+	<xsl:template match="graphic | inline-graphic" name="graphic">
+		<xsl:param name="copymode">false</xsl:param>
 		<xsl:text>image::</xsl:text>
 		<xsl:if test="not(processing-instruction('isoimg-id'))">
 			<xsl:variable name="image_link" select="@xlink:href"/>
 			<xsl:value-of select="$image_link"/>
-			<xsl:if test="not(contains($image_link, '.png')) and not(contains($image_link, '.jpg')) and not(contains($image_link, '.bmp'))">
-				<xsl:text>.png</xsl:text>
-			</xsl:if>
+			<xsl:choose>
+				<xsl:when test="contains($image_link, 'base64,')"/>
+				<xsl:when test="not(contains($image_link, '.png')) and not(contains($image_link, '.jpg')) and not(contains($image_link, '.bmp'))">
+					<xsl:text>.png</xsl:text>
+				</xsl:when>
+			</xsl:choose>
 		</xsl:if>
 		<xsl:apply-templates />
-		<xsl:text>[]&#xa;</xsl:text>
-		<xsl:if test="following-sibling::node()">
+		<xsl:if test="not(alt-text)">[]</xsl:if>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:if test="following-sibling::node() and $copymode = 'false'">
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 	</xsl:template>
@@ -1637,7 +1644,6 @@
 			<xsl:otherwise>
 				<xsl:value-of select="$image_link"/>
 			</xsl:otherwise>
-		
 		</xsl:choose>
 	</xsl:template>	
 
@@ -2118,5 +2124,15 @@
 		</xsl:if>
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
+	
+	<xsl:template name="insertImageList"> <!-- this list will be omitted in java program -->
+		<xsl:for-each select="//graphic | //inline-graphic">
+			<xsl:variable name="image"><xsl:call-template name="graphic"><xsl:with-param name="copymode">true</xsl:with-param></xsl:call-template></xsl:variable>
+			<xsl:if test="not(contains($image, 'base64,'))">
+				<xsl:text>copy</xsl:text><xsl:value-of select="$image"/>
+			</xsl:if>
+		</xsl:for-each>
+	</xsl:template>
+	
 	
 </xsl:stylesheet>

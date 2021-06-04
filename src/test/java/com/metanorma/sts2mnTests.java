@@ -145,6 +145,51 @@ public class sts2mnTests {
     }
     
     @Test
+    public void successConvertToADOCWithImageLink() throws ParseException {
+        System.out.println(name.getMethodName());
+        String XMLFILE_MN_WITH_IMGLINK = XMLFILE_MN + ".img.xml";
+        if (Files.exists(Paths.get(XMLFILE_MN_WITH_IMGLINK))) {
+
+            String outFileName = Paths.get(System.getProperty("buildDirectory"), "imgtest", "document.adoc").toString();
+                    
+            Path fileout = Paths.get(outFileName);
+            fileout.toFile().delete();
+
+            Path imageout = Paths.get(System.getProperty("buildDirectory"), "imgtest", "img" ,"image.png");
+            imageout.toFile().delete();
+
+            String[] args = new String[]{"--format", "adoc", "--imagesdir", "img", "--output", outFileName, XMLFILE_MN_WITH_IMGLINK};
+            sts2mn.main(args);
+
+            assertTrue(Files.exists(fileout));
+            assertTrue(Files.exists(imageout));
+        }
+    }
+    
+    @Test
+    public void successConvertToXMLWithImageLink() throws ParseException {
+        System.out.println(name.getMethodName());
+        String XMLFILE_MN_WITH_IMGLINK = XMLFILE_MN + ".img.xml";
+        if (Files.exists(Paths.get(XMLFILE_MN_WITH_IMGLINK))) {
+
+            String outFileName = Paths.get(System.getProperty("buildDirectory"), "imgtest", "document.xml").toString();
+                    
+            Path fileout = Paths.get(outFileName);
+            fileout.toFile().delete();
+
+            Path imageout = Paths.get(System.getProperty("buildDirectory"), "imgtest", "img" ,"image.png");
+            imageout.toFile().delete();
+            
+            String[] args = new String[]{"--format", "xml", "--imagesdir", "img", "--output", outFileName, XMLFILE_MN_WITH_IMGLINK};
+            sts2mn.main(args);
+
+            
+            assertTrue(Files.exists(fileout));
+            assertTrue(Files.exists(imageout));
+        }
+    }
+    
+    @Test
     public void successSplitBibData() throws ParseException {
         System.out.println(name.getMethodName());
         String outFileName = new File(XMLFILE_MN).getAbsolutePath();

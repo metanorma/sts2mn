@@ -18,6 +18,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -33,6 +35,9 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -88,6 +93,12 @@ public class sts2mn {
                     .longOpt("split-bibdata")
                     .desc("create MN Adoc and Relaton XML")                    
                     .required(false)
+                    .build());
+            addOption(Option.builder("img")
+                    .longOpt("imagesdir")
+                    .desc("folder with images (default 'images')")
+                    .hasArg()
+                    .required(false)
                     .build());            
             addOption(Option.builder("v")
                     .longOpt("version")
@@ -104,6 +115,8 @@ public class sts2mn {
     final String SPLIT = "///SPLIT ";
     
     String outputFormat = "adoc";
+    
+    String imagesDir = "images";
     
     boolean splitBibdata = false;
     
@@ -183,23 +196,28 @@ public class sts2mn {
                 
                 outFileName = outFileName.substring(0, outFileName.lastIndexOf('.') + 1);
                 
-                String format = "adoc";
+                String paramFormat = "adoc";
                 if (cmd.hasOption("format")) {
-                    format = cmd.getOptionValue("format");
-                    if (!format.equals("adoc") && !format.equals("xml")) {
-                        System.out.println(String.format(UNKNOWN_OUTPUT_FORMAT, format));
+                    paramFormat = cmd.getOptionValue("format");
+                    if (!paramFormat.equals("adoc") && !paramFormat.equals("xml")) {
+                        System.out.println(String.format(UNKNOWN_OUTPUT_FORMAT, paramFormat));
                         System.exit(ERROR_EXIT_CODE);
                     }
                 }
                 
-                if (format.equals("xml")) {
-                    outFileName = outFileName + "mn." + format;                    
+                if (paramFormat.equals("xml")) {
+                    outFileName = outFileName + "mn." + paramFormat;                    
                 } else {
-                    outFileName = outFileName + format;
+                    outFileName = outFileName + paramFormat;
                 }
                 
                 if (cmd.hasOption("output")) {
                     outFileName = cmd.getOptionValue("output");
+                }
+                
+                String paramImagesDir = "images";
+                if (cmd.hasOption("imagesdir")) {
+                    paramImagesDir = cmd.getOptionValue("imagesdir");
                 }
                 
                 File fileOut = new File(outFileName);
@@ -207,13 +225,14 @@ public class sts2mn {
                 /*DEBUG = cmd.hasOption("debug"); */
 
                 System.out.println(String.format(INPUT_LOG, XML_INPUT, fXMLin));                
-                System.out.println(String.format(OUTPUT_LOG, format.toUpperCase(), fileOut));
+                System.out.println(String.format(OUTPUT_LOG, paramFormat.toUpperCase(), fileOut));
                 System.out.println();
 
                 try {
                     sts2mn app = new sts2mn();
-                    app.setOutputFormat(format);
+                    app.setOutputFormat(paramFormat);
                     app.setSplitBibdata(cmd.hasOption("split-bibdata"));
+                    app.setImagesDir(paramImagesDir);
                     app.convertsts2mn(fXMLin, fileOut);
                     System.out.println("End!");
                 
@@ -246,9 +265,10 @@ public class sts2mn {
             
             Source srcXSL = null;
             
+            String inputFolder = fXMLin.getAbsoluteFile().getParent();
             String outputFolder = fileOut.getAbsoluteFile().getParent();
             String bibdataFileName = fileOut.getName();
-           
+            
             // skip validating 
             //found here: https://moleshole.wordpress.com/2009/10/08/ignore-a-dtd-when-using-a-transformer/
             XMLReader rdr = XMLReaderFactory.createXMLReader();
@@ -277,6 +297,7 @@ public class sts2mn {
                 srcXSL = new StreamSource(Util.getStreamFromResources(getClass().getClassLoader(), "sts2mn.xsl"));
                 transformer = factory.newTransformer(srcXSL);
                 transformer.setParameter("split-bibdata", splitBibdata);
+                transformer.setParameter("imagesdir", imagesDir);
                 
                 transformer.setParameter("debug", DEBUG);
             
@@ -293,9 +314,34 @@ public class sts2mn {
                     relatonXML = relatonXML.substring(0, relatonXML.lastIndexOf(".")) + ".rxl";
                     xmlFileOut = new File(relatonXML);
                 }
+                
+                Files.createDirectories(Paths.get(xmlFileOut.getParent()));
                 try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(xmlFileOut.getAbsolutePath()))) {
                     writer.write(xmlSTS);
                 }
+                
+                if( !inputFolder.equals(outputFolder)) {
+                    // copy images
+                    try {
+                        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+                        DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+                        InputSource is = new InputSource(new StringReader(xmlSTS));
+                        Document document = docBuilder.parse(is);
+                        NodeList nodesImage = document.getElementsByTagName("image");
+                        for (int i = 0; i < nodesImage.getLength(); i++) {
+                            Node nodeImage = nodesImage.item(i);
+                            String imageSrc = nodeImage.getAttributes().getNamedItem("src").getTextContent();
+                            if (!imageSrc.contains("base64,")) {
+                                Path originalImagePath = Paths.get(inputFolder, imagesDir, imageSrc);
+                                Path destitanionImagePath = Paths.get(outputFolder, imagesDir, imageSrc);
+                                Util.FileCopy(originalImagePath, destitanionImagePath);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        System.out.println("Can't process image: " + ex.toString());
+                    }
+                }
+                
             }
             
             src = new SAXSource(rdr, new InputSource(new FileInputStream(fXMLin)));
@@ -319,6 +365,7 @@ public class sts2mn {
                 transformer.setParameter("docfile", bibdataFileName);
                 transformer.setParameter("pathSeparator", File.separator);
                 transformer.setParameter("outpath", outputFolder);
+                transformer.setParameter("imagesdir", imagesDir);
                 transformer.setParameter("debug", DEBUG);
             
                 StringWriter resultWriter = new StringWriter();
@@ -345,7 +392,20 @@ public class sts2mn {
                             outputFile = line.substring(line.indexOf(SPLIT) + SPLIT.length(), line.length() - 2);                        
                             outputFile = Paths.get(outputFolder, outputFile).toString();
                             new File(new File(outputFile).getParent()).mkdirs();
-                        } else {
+                        }
+                        else if (line.startsWith("copyimage::")) {
+                            if( !inputFolder.equals(outputFolder)) {
+                                try {
+                                    String imageFilename = line.split("copyimage::")[1].split("\\[")[0];
+                                    Path originalImagePath = Paths.get(inputFolder, imagesDir, imageFilename);
+                                    Path destitanionImagePath = Paths.get(outputFolder, imagesDir, imageFilename);
+                                    Util.FileCopy(originalImagePath, destitanionImagePath);
+                                } catch (Exception ex) {
+                                    System.out.println("Can't process image: " + ex.toString());
+                                }
+                            }  
+                        }
+                        else {
                             sbBuffer.append(line);
                             sbBuffer.append(System.getProperty("line.separator"));
                         }                    
@@ -391,5 +451,7 @@ public class sts2mn {
         this.splitBibdata = splitBibdata;
     }
 
-    
+    public void setImagesDir (String imagesDir) {
+        this.imagesDir = imagesDir;
+    }
 }

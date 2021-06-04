@@ -9,6 +9,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.jar.Attributes;
@@ -170,4 +171,16 @@ public class Util {
       
     return "";
   }
+  
+    public static void FileCopy (Path source, Path destination) {
+        try {
+          
+            Files.createDirectories(destination.getParent());
+            Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+          
+        } catch (IOException ex) {
+            System.out.println("Can't copy file: " + ex.toString());
+        }
+    }
+  
 }
