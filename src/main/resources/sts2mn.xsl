@@ -1370,13 +1370,21 @@
 	
 	<xsl:template match="xref">
 		<xsl:choose>
-			<xsl:when test="@ref-type = 'fn' and following-sibling::*[1][self::fn]"/>
+			<xsl:when test="@ref-type = 'fn' and following-sibling::*[1][self::fn]"/> <!-- if next element is fn, then no need to do here -->
 			<xsl:when test="@ref-type = 'fn'">
 				<fn>
 					<xsl:attribute name="reference">
 							<xsl:value-of select="normalize-space(translate(., ')',''))"/>
 						</xsl:attribute>
-						<xsl:apply-templates select="//fn-group/fn[@id = current()/@rid]/node()" />
+						<xsl:choose>
+							<xsl:when test="ancestor::table-wrap">
+								<xsl:apply-templates select="ancestor::table-wrap//fn[@id = current()/@rid]/node()" /> <!-- //fn-group -->
+							</xsl:when>
+							<xsl:otherwise>
+								<xsl:apply-templates select="//fn-group/fn[@id = current()/@rid]/node()" />
+							</xsl:otherwise>
+						</xsl:choose>
+						
 				</fn>
 			</xsl:when>
 			<xsl:when test="@ref-type = 'table-fn'">

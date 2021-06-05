@@ -825,7 +825,7 @@
 		<xsl:text>)</xsl:text>		 -->
 	</xsl:template>
 	
-	<xsl:template match="tbx:note">
+	<xsl:template match="tbx:note" name="tbx_note">
 		<xsl:text>NOTE: </xsl:text>
 		<xsl:apply-templates/>
 		<xsl:text>&#xa;</xsl:text>
@@ -1098,15 +1098,19 @@
 	<xsl:template match="xref">
 		
 		<xsl:choose>
-			<xsl:when test="@ref-type = 'fn'">
+			<xsl:when test="@ref-type = 'fn' or @ref-type = 'table-fn'">
 				<xsl:variable name="rid" select="@rid"/>
 				<!-- find <fn id="$rid" -->
 				<xsl:choose>
+					<xsl:when test="//fn[@id = current()/@rid]/ancestor::table-wrap-foot">
+						<xsl:apply-templates select="//fn[@id = current()/@rid]"/>
+					</xsl:when>
 					<!-- in fn in fn-group -->
 					<xsl:when test="//fn[@id = current()/@rid]/ancestor::fn-group">
-						<xsl:text>{</xsl:text>
+						<xsl:apply-templates select="//fn[@id = current()/@rid]"/>
+						<!-- <xsl:text>{</xsl:text>
 						<xsl:value-of select="@rid"/>
-						<xsl:text>}</xsl:text>
+						<xsl:text>}</xsl:text> -->
 					</xsl:when>
 					<xsl:otherwise>
 						<!-- fn will be processed after xref -->
@@ -1151,6 +1155,10 @@
 		</xsl:choose>
 	</xsl:template>
 	
+	<xsl:template match="sup[xref[@ref-type='fn' or @ref-type='table-fn']]">
+		<xsl:apply-templates />
+	</xsl:template>
+	
 	<xsl:template match="fn-group"/><!-- fn from fn-group  moved to after the text -->
 	
 	<xsl:template match="fn">
@@ -1161,6 +1169,11 @@
 	
 	<xsl:template match="fn/p">
 		<xsl:apply-templates />
+	</xsl:template>
+
+	<!-- process as Note -->
+	<xsl:template match="fn[not(@reference) and not(@id)]" priority="2">
+		<xsl:call-template name="tbx_note"/>
 	</xsl:template>
 
 	
@@ -1181,7 +1194,7 @@
 	<xsl:template match="array">
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:choose>
-			<xsl:when test="count(table/col) = 2">				
+			<xsl:when test="count(table/col) + count(table/colgroup/col) = 2">				
 				<xsl:apply-templates mode="dl"/>				
 			</xsl:when>
 			<xsl:otherwise>
@@ -1238,6 +1251,9 @@
 	<!-- End Definitions list (dl) -->
 	<!-- =============== -->
 	
+	<!-- =============== -->
+	<!-- Table -->
+	<!-- =============== -->
 	<xsl:template match="table-wrap">
 		<xsl:call-template name="setId"/><!-- [[ ]] -->
 		<xsl:text>&#xa;</xsl:text>
@@ -1337,6 +1353,7 @@
 		<xsl:text>|===</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
+		
 	</xsl:template>
 	
 	<xsl:template match="col"/>
@@ -1420,14 +1437,22 @@
 	</xsl:template>
 	
 	<xsl:template match="table-wrap-foot"/>
+	
 	<xsl:template match="table-wrap-foot" mode="footer">		
 		<xsl:param name="cols-count"/>
-		<xsl:if test="*[local-name() != 'fn-group']">
-			<xsl:value-of select="$cols-count"/><xsl:text>+</xsl:text>		
-			<xsl:apply-templates/>
+		
+		<xsl:variable name="table_footer">
+			<xsl:apply-templates mode="footer"/>
+		</xsl:variable>
+		
+		<xsl:if test="normalize-space($table_footer) != ''">
+			<xsl:value-of select="$cols-count"/><xsl:text>+|</xsl:text>		
+			<xsl:value-of select="$table_footer"/>
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 	</xsl:template>
+	
+	<xsl:template match="table-wrap-foot/fn[@id]" mode="footer"/>
 	
 	<xsl:template match="table-wrap-foot/fn-group"/>
 	<xsl:template match="back/fn-group"/>
@@ -1442,14 +1467,14 @@
 		<xsl:text>&#xa;</xsl:text>		
 	</xsl:template>
 	
-	<xsl:template match="fn-group/fn">
+	<!-- <xsl:template match="fn-group/fn">
 		<xsl:text>:</xsl:text>
 		<xsl:value-of select="@id"/>
 		<xsl:text>: footnote:[</xsl:text>
 		<xsl:apply-templates/>
 		<xsl:text>]</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
-	</xsl:template>
+	</xsl:template> -->
 	
 	<xsl:template match="fn-group/fn/label"/>
 	
@@ -1473,6 +1498,10 @@
 		<xsl:value-of select="."/><xsl:text>| </xsl:text>
 	</xsl:template>	
 	 -->
+	<!-- =============== -->
+	<!-- END Table -->
+	<!-- =============== -->
+	
 	
 	<xsl:template match="app">
 		<xsl:variable name="annex_label_" select="translate(label, ' &#xa0;', '--')" />
