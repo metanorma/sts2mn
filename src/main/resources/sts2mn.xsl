@@ -1282,7 +1282,7 @@
 	</xsl:template>
 	<xsl:template match="std[bold]" priority="2">
 		<strong>
-			<eref type="inline" citeas="{italic/std-ref}">
+			<eref type="inline" citeas="{bold/std-ref}">
 				<xsl:apply-templates />
 			</eref>
 		</strong>
@@ -1290,7 +1290,9 @@
 	<xsl:template match="std/italic | std/bold" priority="2">
 		<xsl:apply-templates />
 	</xsl:template>
-	<xsl:template match="std/italic/std-ref | std/bold/std-ref" priority="2"/>
+	<xsl:template match="std/italic/std-ref | std/bold/std-ref"> <!--  priority="2"/> -->
+		<xsl:apply-templates />
+	</xsl:template>
 	
 	
 	<xsl:template match="list">

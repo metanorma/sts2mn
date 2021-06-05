@@ -41,7 +41,7 @@
 	
 	<xsl:variable name="refs">
 		<xsl:for-each select="//ref">
-			<xsl:variable name="text" select="std/std-ref"/>
+			<xsl:variable name="text" select="concat(std/std-ref, std/italic/std-ref, std/bold/std-ref)"/>
 			<ref id="{@id}" std-ref="{$text}"/>
 			
 			<xsl:variable name="isDated">
@@ -869,6 +869,20 @@
 		<xsl:value-of select="$space"/>
 		<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
 		<xsl:value-of select="$space"/>
+	</xsl:template>
+	
+	<xsl:template match="std[italic]" priority="2">
+		<xsl:text>_</xsl:text>
+		<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
+		<xsl:text>_</xsl:text>
+	</xsl:template>
+	<xsl:template match="std[bold]" priority="2">
+		<xsl:text>*</xsl:text>
+		<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
+		<xsl:text>*</xsl:text>
+	</xsl:template>
+	<xsl:template match="std/italic | std/bold" priority="2">
+		<xsl:apply-templates />
 	</xsl:template>
 	
 	<xsl:template match="std-id-group"/>
