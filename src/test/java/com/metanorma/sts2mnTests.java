@@ -116,6 +116,7 @@ public class sts2mnTests {
 
     @Test
     public void successConvertToRelativeAdocOutputSpecified() throws ParseException {
+        String user_dir = System.getProperty("user.dir");
         System.setProperty("user.dir", System.getProperty("buildDirectory"));
 
         String filename = "custom_relative.adoc";
@@ -126,7 +127,7 @@ public class sts2mnTests {
         String[] args = new String[]{"--format", "adoc", "--output", filename,
                 Paths.get(System.getProperty("buildDirectory"), "..", XMLFILE_MN).normalize().toString()};
         sts2mn.main(args);
-
+        System.setProperty("user.dir", user_dir); // we should restore value for another tests
         assertTrue(Files.exists(fileout));
     }
     
