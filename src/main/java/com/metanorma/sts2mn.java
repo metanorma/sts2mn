@@ -13,13 +13,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Comparator;
 
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -35,9 +32,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -298,7 +292,7 @@ public class sts2mn {
                 transformer = factory.newTransformer(srcXSL);
                 transformer.setParameter("split-bibdata", splitBibdata);
                 transformer.setParameter("imagesdir", imagesDir);
-                
+                transformer.setParameter("outpath", outputFolder);
                 transformer.setParameter("debug", DEBUG);
             
                 StringWriter resultWriter = new StringWriter();
@@ -306,7 +300,7 @@ public class sts2mn {
             
                 transformer.transform(src, sr);
                 
-                String xmlSTS = resultWriter.toString();
+                String xmlMetanorma = resultWriter.toString();
                 
                 File xmlFileOut = fileOut;
                 if (splitBibdata) { //relaton XML
@@ -317,36 +311,13 @@ public class sts2mn {
                 
                 Files.createDirectories(Paths.get(xmlFileOut.getParent()));
                 try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(xmlFileOut.getAbsolutePath()))) {
-                    writer.write(xmlSTS);
-                }
-                
-                if( !inputFolder.equals(outputFolder)) {
-                    // copy images
-                    try {
-                        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
-                        DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-                        InputSource is = new InputSource(new StringReader(xmlSTS));
-                        Document document = docBuilder.parse(is);
-                        NodeList nodesImage = document.getElementsByTagName("image");
-                        for (int i = 0; i < nodesImage.getLength(); i++) {
-                            Node nodeImage = nodesImage.item(i);
-                            String imageSrc = nodeImage.getAttributes().getNamedItem("src").getTextContent();
-                            if (!imageSrc.contains("base64,")) {
-                                Path originalImagePath = Paths.get(inputFolder, imagesDir, imageSrc);
-                                Path destitanionImagePath = Paths.get(outputFolder, imagesDir, imageSrc);
-                                Util.FileCopy(originalImagePath, destitanionImagePath);
-                            }
-                        }
-                    } catch (Exception ex) {
-                        System.out.println("Can't process image: " + ex.toString());
-                    }
+                    writer.write(xmlMetanorma);
                 }
                 
             }
             
-            src = new SAXSource(rdr, new InputSource(new FileInputStream(fXMLin)));
-            
             if (outputFormat.equals("adoc") || splitBibdata) {
+                src = new SAXSource(rdr, new InputSource(new FileInputStream(fXMLin)));
                 
                 // linearize XML
                 Source srcXSLidentity = new StreamSource(Util.getStreamFromResources(getClass().getClassLoader(), "linearize.xsl"));
@@ -372,7 +343,7 @@ public class sts2mn {
                 StreamResult sr = new StreamResult(resultWriter);
                 
                 transformer.transform(src, sr);
-                String adocSTS = resultWriter.toString();
+                String adocMetanorma = resultWriter.toString();
                 
                 File adocFileOut = fileOut;
                 if (splitBibdata) { //relaton XML
@@ -381,7 +352,7 @@ public class sts2mn {
                     adocFileOut = new File(bibdataAdoc);
                 }
                 
-                try (Scanner scanner = new Scanner(adocSTS)) {
+                try (Scanner scanner = new Scanner(adocMetanorma)) {
                     String outputFile = adocFileOut.getAbsolutePath();
                     StringBuilder sbBuffer = new StringBuilder();
                     while (scanner.hasNextLine()) {
@@ -393,18 +364,6 @@ public class sts2mn {
                             outputFile = Paths.get(outputFolder, outputFile).toString();
                             new File(new File(outputFile).getParent()).mkdirs();
                         }
-                        else if (line.startsWith("copyimage::")) {
-                            if( !inputFolder.equals(outputFolder)) {
-                                try {
-                                    String imageFilename = line.split("copyimage::")[1].split("\\[")[0];
-                                    Path originalImagePath = Paths.get(inputFolder, imagesDir, imageFilename);
-                                    Path destitanionImagePath = Paths.get(outputFolder, imagesDir, imageFilename);
-                                    Util.FileCopy(originalImagePath, destitanionImagePath);
-                                } catch (Exception ex) {
-                                    System.out.println("Can't process image: " + ex.toString());
-                                }
-                            }  
-                        }
                         else {
                             sbBuffer.append(line);
                             sbBuffer.append(System.getProperty("line.separator"));
@@ -413,6 +372,8 @@ public class sts2mn {
                     writeBuffer(sbBuffer, outputFile);
                 }
             }
+            
+            Task.copyImages(inputFolder, imagesDir, outputFolder);
             
         } catch (SAXParseException e) {            
             throw (e);

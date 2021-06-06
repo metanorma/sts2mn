@@ -5,8 +5,10 @@
 					xmlns:xlink="http://www.w3.org/1999/xlink" 
 					xmlns:xalan="http://xml.apache.org/xalan" 
 					xmlns:java="http://xml.apache.org/xalan/java" 
+					xmlns:redirect="http://xml.apache.org/xalan/redirect"
 					xmlns:metanorma-class-util="xalan://com.metanorma.Util"
 					exclude-result-prefixes="xalan mml tbx xlink java metanorma-class-util"
+					extension-element-prefixes="redirect"
 					xmlns="https://www.metanorma.org/ns/iso"
 					version="1.0">
 
@@ -15,6 +17,8 @@
 	<xsl:param name="debug">false</xsl:param>
 	
 	<xsl:param name="split-bibdata">false</xsl:param>
+
+	<xsl:param name="outpath"/>
 
 	<xsl:param name="imagesdir" select="'images'"/>
 
@@ -85,6 +89,11 @@
 		</xsl:for-each>
 		<!-- ======================= -->
 		<!-- ======================= -->
+		
+		<!-- create task.copyImages.adoc -->
+		<xsl:call-template name="insertTaskImageList"/>
+		
+		
 	</xsl:template>
 
 	<!-- ============= -->
@@ -1534,7 +1543,8 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
-	<xsl:template match="graphic | inline-graphic">
+	<xsl:template match="graphic | inline-graphic" name="graphic">
+		<xsl:param name="copymode">false</xsl:param>
 		<image height="auto" width="auto">
 			<xsl:if test="@xlink:href and not(processing-instruction('isoimg-id'))">
 				<xsl:variable name="image_link" select="@xlink:href"/>
@@ -1544,7 +1554,7 @@
 							<xsl:value-of select="$image_link"/>
 						</xsl:when>
 						<xsl:otherwise>
-							<xsl:value-of select="$imagesdir"/><xsl:text>/</xsl:text>
+							<xsl:if test="$copymode = 'false'"><xsl:value-of select="$imagesdir"/><xsl:text>/</xsl:text></xsl:if>
 							<xsl:value-of select="$image_link"/>
 							<xsl:if test="not(contains($image_link, '.png')) and not(contains($image_link, '.jpg')) and not(contains($image_link, '.bmp'))">
 								<xsl:text>.png</xsl:text>
@@ -1556,16 +1566,19 @@
 			<xsl:if test="alt-text">
 				<xsl:attribute  name="alt"><xsl:value-of select="alt-text"/></xsl:attribute>
 			</xsl:if>
-			<xsl:apply-templates />
+			<xsl:apply-templates>
+				<xsl:with-param name="copymode" select="$copymode"/>
+			</xsl:apply-templates>
 		</image>
 	</xsl:template>
 	
 	<xsl:template match="graphic/alt-text"/>
 	
 	<xsl:template match="graphic/processing-instruction('isoimg-id')">
+		<xsl:param name="copymode">false</xsl:param>
 		<xsl:attribute name="src">
 			<xsl:variable name="image_link" select="."/>
-			<xsl:value-of select="$imagesdir"/><xsl:text>/</xsl:text>
+			<xsl:if test="$copymode = 'false'"><xsl:value-of select="$imagesdir"/><xsl:text>/</xsl:text></xsl:if>
 			<xsl:choose>
 				<xsl:when test="contains($image_link, '.eps')">
 					<xsl:value-of select="substring-before($image_link, '.eps')"/><xsl:text>.png</xsl:text>
@@ -1707,5 +1720,23 @@
 		</xsl:if>
 	</xsl:template>
 
+	<xsl:template name="insertTaskImageList"> 
+		<xsl:variable name="imageList">
+			<xsl:for-each select="//graphic | //inline-graphic">
+				<xsl:variable name="image"><xsl:call-template name="graphic"><xsl:with-param name="copymode">true</xsl:with-param></xsl:call-template></xsl:variable>
+				<xsl:if test="not(contains(xalan:nodeset($image)/*/@src, 'base64,'))">
+					<image><xsl:value-of select="xalan:nodeset($image)/*/@src"/></image>
+				</xsl:if>
+			</xsl:for-each>
+		</xsl:variable>
+		<xsl:if test="xalan:nodeset($imageList)//*[local-name() = 'image']">
+			<redirect:write file="{$outpath}/task.copyImages.adoc"> <!-- this list will be processed and deleted in java program -->
+				<xsl:text>&#xa;</xsl:text>
+				<xsl:for-each select="xalan:nodeset($imageList)//*[local-name() = 'image']">
+					<xsl:text>copyimage::</xsl:text><xsl:value-of select="."/><xsl:text>&#xa;</xsl:text>
+				</xsl:for-each>
+			</redirect:write>
+		</xsl:if>
+	</xsl:template>
 	
 </xsl:stylesheet>

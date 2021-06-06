@@ -67,12 +67,12 @@
 	
 	<xsl:template match="adoption">
 		<xsl:apply-templates />
-		<xsl:call-template name="insertImageList"/>
+		<xsl:call-template name="insertTaskImageList"/>
 	</xsl:template>
 	
 	<xsl:template match="standard">		
 		<xsl:apply-templates />
-		<xsl:call-template name="insertImageList"/>
+		<xsl:call-template name="insertTaskImageList"/>
 	</xsl:template>
 	
 	
@@ -1655,7 +1655,6 @@
 	
 	
 	<xsl:template match="graphic | inline-graphic" name="graphic">
-		<xsl:param name="copymode">false</xsl:param>
 		<xsl:text>image::</xsl:text>
 		<xsl:if test="not(processing-instruction('isoimg-id'))">
 			<xsl:variable name="image_link" select="@xlink:href"/>
@@ -1667,17 +1666,17 @@
 				</xsl:when>
 			</xsl:choose>
 		</xsl:if>
-		<xsl:if test="$copymode = 'false'">
-			<xsl:apply-templates />
-		</xsl:if>
+		<xsl:apply-templates select="processing-instruction('isoimg-id')" mode="pi_isoimg-id"/>
+		<xsl:apply-templates />
 		<xsl:if test="not(alt-text)">[]</xsl:if>
 		<xsl:text>&#xa;</xsl:text>
-		<xsl:if test="following-sibling::node() and $copymode = 'false'">
+		<xsl:if test="following-sibling::node()">
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 	</xsl:template>
 	
-	<xsl:template match="graphic/processing-instruction('isoimg-id')">
+	<xsl:template match="graphic/processing-instruction('isoimg-id')" />
+	<xsl:template match="graphic/processing-instruction('isoimg-id')" mode="pi_isoimg-id">
 		<xsl:variable name="image_link" select="."/>
 		<xsl:choose>
 			<xsl:when test="contains($image_link, '.eps')">
@@ -2170,13 +2169,22 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
-	<xsl:template name="insertImageList"> <!-- this list will be omitted in java program -->
-		<xsl:for-each select="//graphic | //inline-graphic">
-			<xsl:variable name="image"><xsl:call-template name="graphic"><xsl:with-param name="copymode">true</xsl:with-param></xsl:call-template></xsl:variable>
-			<xsl:if test="not(contains($image, 'base64,'))">
-				<xsl:text>copy</xsl:text><xsl:value-of select="$image"/>
-			</xsl:if>
-		</xsl:for-each>
+	<xsl:template name="insertTaskImageList"> 
+		<xsl:variable name="imageList">
+			<xsl:for-each select="//graphic | //inline-graphic">
+				<xsl:variable name="image"><xsl:call-template name="graphic" /></xsl:variable>
+				<xsl:if test="not(contains($image, 'base64,'))">
+					<image><xsl:value-of select="$image"/></image>
+				</xsl:if>
+			</xsl:for-each>
+		</xsl:variable>
+		<xsl:if test="xalan:nodeset($imageList)//image">
+			<redirect:write file="{$outpath}/task.copyImages.adoc"> <!-- this list will be processed and deleted in java program -->
+				<xsl:for-each select="xalan:nodeset($imageList)//image">
+					<xsl:text>copy</xsl:text><xsl:value-of select="."/>
+				</xsl:for-each>
+			</redirect:write>
+		</xsl:if>
 	</xsl:template>
 	
 	
