@@ -266,7 +266,7 @@
 		<xsl:choose>
 			<xsl:when test="$organization = 'BSI'">
 				<xsl:variable name="data">
-					<xsl:for-each select="comm-ref">
+					<xsl:for-each select="comm-ref[normalize-space() != '']">
 						<item>Committee reference <xsl:value-of select="."/></item> <!-- Example: Committee reference DEF/1 -->
 					</xsl:for-each>
 					<xsl:if test="std-xref[@type='isPublishedFormatOf']">
@@ -371,13 +371,17 @@
 	</xsl:template>
 	
 	<xsl:template match="pub-date[ancestor::front or ancestor::adoption-front]">
-		<xsl:text>:published-date: </xsl:text><xsl:value-of select="."/>
-		<xsl:text>&#xa;</xsl:text>
+		<xsl:if test="normalize-space() != ''">
+			<xsl:text>:published-date: </xsl:text><xsl:value-of select="."/>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
 	</xsl:template>
 	
 	<xsl:template match="release-date[ancestor::front or ancestor::adoption-front]">
-		<xsl:text>:date: release </xsl:text><xsl:value-of select="."/>
-		<xsl:text>&#xa;</xsl:text>
+		<xsl:if test="normalize-space() != ''">
+			<xsl:text>:date: release </xsl:text><xsl:value-of select="."/>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
 	</xsl:template>
 	
 	<xsl:template match="doc-ident[ancestor::front or ancestor::adoption-front]/language[normalize-space(.) != '']">
@@ -1597,8 +1601,11 @@
 	
 	<xsl:template match="app/annex-type"/>
 	<xsl:template match="app/annex-type" mode="annex">
-		<xsl:text>,obligation=</xsl:text>
-		<xsl:value-of select="translate(., '()','')"/>
+		<xsl:variable name="obligation" select="java:toLowerCase(java:java.lang.String.new(translate(., '()','')))"/>
+		<xsl:choose>
+			<xsl:when test="$obligation = 'normative'"></xsl:when><!-- default value in adoc -->
+			<xsl:otherwise><xsl:text>,obligation=</xsl:text><xsl:value-of select="$obligation"/></xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 	
 	<xsl:template match="ref-list[@content-type = 'bibl']" priority="2">
