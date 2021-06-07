@@ -261,7 +261,10 @@ public class sts2mn {
             
             String inputFolder = fXMLin.getAbsoluteFile().getParent();
             String outputFolder = fileOut.getAbsoluteFile().getParent();
+            
             String bibdataFileName = fileOut.getName();
+            String bibdataFileExt = Util.getFileExtension(bibdataFileName);
+            bibdataFileName = bibdataFileName.substring(0, bibdataFileName.indexOf(bibdataFileExt) - 1);
             
             // skip validating 
             //found here: https://moleshole.wordpress.com/2009/10/08/ignore-a-dtd-when-using-a-transformer/
@@ -333,7 +336,8 @@ public class sts2mn {
                 srcXSL = new StreamSource(Util.getStreamFromResources(getClass().getClassLoader(), "sts2mn.adoc.xsl"));
                 transformer = factory.newTransformer(srcXSL);
                 transformer.setParameter("split-bibdata", splitBibdata);
-                transformer.setParameter("docfile", bibdataFileName);
+                transformer.setParameter("docfile_name", bibdataFileName);
+                transformer.setParameter("docfile_ext", bibdataFileExt);
                 transformer.setParameter("pathSeparator", File.separator);
                 transformer.setParameter("outpath", outputFolder);
                 transformer.setParameter("imagesdir", imagesDir);
@@ -352,6 +356,8 @@ public class sts2mn {
                     adocFileOut = new File(bibdataAdoc);
                 }
                 
+                // no need to save resulted adoc here, because it saved via xslt xsl:redirect
+                /*
                 try (Scanner scanner = new Scanner(adocMetanorma)) {
                     String outputFile = adocFileOut.getAbsolutePath();
                     StringBuilder sbBuffer = new StringBuilder();
@@ -370,7 +376,7 @@ public class sts2mn {
                         }                    
                     }
                     writeBuffer(sbBuffer, outputFile);
-                }
+                }*/
             }
             
             Task.copyImages(inputFolder, imagesDir, outputFolder);

@@ -16,7 +16,8 @@
 	
 	<xsl:param name="debug">false</xsl:param>
 
-	<xsl:param name="docfile" /> <!-- Example: iso-tc154-8601-1-en.adoc -->
+	<xsl:param name="docfile_name">document</xsl:param> <!-- Example: iso-tc154-8601-1-en , or document -->
+	<xsl:param name="docfile_ext">adoc</xsl:param> <!-- adoc -->
 	
 	<xsl:param name="pathSeparator" select="'/'"/>
 	
@@ -65,13 +66,57 @@
 		</xsl:choose>
 	</xsl:variable>
 	
+	<xsl:template match="/">
+		<xsl:choose>
+			<xsl:when test=".//sub-part"> <!-- multiple documents in one xml -->
+				<xsl:variable name="xml">
+					<xsl:copy-of select="."/>
+				</xsl:variable>
+				
+				<!-- create separate document for each  sub-part -->
+				<xsl:variable name="documents">
+					<xsl:for-each select="standard/body/sub-part">
+						<xsl:variable name="number"><xsl:number></xsl:number></xsl:variable>
+						
+							<xsl:apply-templates select="xalan:nodeset($xml)" mode="sub-part">
+								<xsl:with-param name="doc-number" select="number($number)"/>
+							</xsl:apply-templates>
+						
+					</xsl:for-each>
+				</xsl:variable>
+				
+				<!-- process each document separately -->
+				<xsl:for-each select="xalan:nodeset($documents)/*"> 
+					<xsl:apply-templates select="."/>
+				</xsl:for-each>
+				
+				<!-- create document.yml file -->
+				<redirect:write file="{$outpath}/{$docfile_name}.yml">
+					<xsl:call-template name="insertCollectionData">
+						<xsl:with-param name="documents" select="$documents"/>
+					</xsl:call-template>
+				</redirect:write>
+				
+			</xsl:when>
+			<xsl:otherwise><!-- no sub-part elements -->
+				<xsl:apply-templates />
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+	
 	<xsl:template match="adoption">
+		<xsl:variable name="docfile"><xsl:call-template name="getDocFilename"/></xsl:variable>
+		<redirect:open file="{$outpath}/{$docfile}"/>
 		<xsl:apply-templates />
+		<redirect:close file="{$outpath}/{$docfile}"/>
 		<xsl:call-template name="insertTaskImageList"/>
 	</xsl:template>
 	
-	<xsl:template match="standard">		
+	<xsl:template match="standard">
+		<xsl:variable name="docfile"><xsl:call-template name="getDocFilename"/></xsl:variable>
+		<redirect:open file="{$outpath}/{$docfile}"/>
 		<xsl:apply-templates />
+		<redirect:close file="{$outpath}/{$docfile}"/>
 		<xsl:call-template name="insertTaskImageList"/>
 	</xsl:template>
 	
@@ -80,58 +125,62 @@
 	
 	<!-- <xsl:template match="/*"> -->
 	<xsl:template match="//standard/front | //adoption/adoption-front">
+		<xsl:variable name="docfile"><xsl:call-template name="getDocFilename"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$docfile}">
 	
-		<!-- nat-meta -> iso-meta -> reg-meta -> std-meta -->
-		<xsl:for-each select="nat-meta">
-			<xsl:call-template name="xxx-meta">
-				<xsl:with-param name="include_iso_meta">true</xsl:with-param>
-				<xsl:with-param name="include_reg_meta">true</xsl:with-param>
-				<xsl:with-param name="include_std_meta">true</xsl:with-param>
-			</xsl:call-template>
-		</xsl:for-each>
-		
-		<xsl:if test="not(nat-meta)">
-			<xsl:for-each select="iso-meta">
+			<!-- nat-meta -> iso-meta -> reg-meta -> std-meta -->
+			<xsl:for-each select="nat-meta">
 				<xsl:call-template name="xxx-meta">
+					<xsl:with-param name="include_iso_meta">true</xsl:with-param>
 					<xsl:with-param name="include_reg_meta">true</xsl:with-param>
 					<xsl:with-param name="include_std_meta">true</xsl:with-param>
 				</xsl:call-template>
 			</xsl:for-each>
-		
-			<xsl:if test="not(iso-meta)">
-				<xsl:for-each select="reg-meta">
+			
+			<xsl:if test="not(nat-meta)">
+				<xsl:for-each select="iso-meta">
 					<xsl:call-template name="xxx-meta">
+						<xsl:with-param name="include_reg_meta">true</xsl:with-param>
 						<xsl:with-param name="include_std_meta">true</xsl:with-param>
 					</xsl:call-template>
 				</xsl:for-each>
-				
-				<xsl:if test="not(reg-meta)">
-					<xsl:for-each select="std-meta">
-						<xsl:call-template name="xxx-meta"/>
+			
+				<xsl:if test="not(iso-meta)">
+					<xsl:for-each select="reg-meta">
+						<xsl:call-template name="xxx-meta">
+							<xsl:with-param name="include_std_meta">true</xsl:with-param>
+						</xsl:call-template>
 					</xsl:for-each>
+					
+					<xsl:if test="not(reg-meta)">
+						<xsl:for-each select="std-meta">
+							<xsl:call-template name="xxx-meta"/>
+						</xsl:for-each>
+					</xsl:if>
 				</xsl:if>
 			</xsl:if>
-		</xsl:if>
-		
-		
-		<xsl:text>:mn-document-class: </xsl:text><xsl:value-of select="$sdo"/>
-		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>:mn-output-extensions: xml,html</xsl:text> <!-- ,doc,html_alt -->
-		<xsl:text>&#xa;</xsl:text>
-		
-		<xsl:text>:local-cache-only:</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>:data-uri-image:</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>:imagesdir: </xsl:text><xsl:value-of select="$imagesdir"/>
-		<xsl:text>&#xa;</xsl:text>
-		
-		<xsl:if test="normalize-space($docfile) != ''">
-			<xsl:text>:docfile: </xsl:text><xsl:value-of select="$docfile"/>
+			
+			
+			<xsl:text>:mn-document-class: </xsl:text><xsl:value-of select="$sdo"/>
 			<xsl:text>&#xa;</xsl:text>
-		</xsl:if>
-		
-		<xsl:text>&#xa;</xsl:text>
+			<xsl:text>:mn-output-extensions: xml,html</xsl:text> <!-- ,doc,html_alt -->
+			<xsl:text>&#xa;</xsl:text>
+			
+			<xsl:text>:local-cache-only:</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:text>:data-uri-image:</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:text>:imagesdir: </xsl:text><xsl:value-of select="$imagesdir"/>
+			<xsl:text>&#xa;</xsl:text>
+			
+			<xsl:if test="normalize-space($docfile) != ''">
+				<xsl:text>:docfile: </xsl:text><xsl:value-of select="$docfile"/>
+				<xsl:text>&#xa;</xsl:text>
+			</xsl:if>
+			
+			<xsl:text>&#xa;</xsl:text>
+
+		</redirect:write>
 
 		<xsl:if test="$split-bibdata != 'true'">
 			
@@ -143,21 +192,25 @@
 					<xsl:value-of select="@sec-type"/>
 					<xsl:if test="not(@sec-type)"><xsl:value-of select="@id"/></xsl:if>
 				</xsl:variable>
+				<xsl:variable name="sectionsFolder"><xsl:call-template name="getSectionsFolder"/></xsl:variable>
 				<xsl:variable name="filename">
-					<xsl:text>sections/00-</xsl:text><xsl:value-of select="$number"/>-<xsl:value-of select="$section_name"/><xsl:text>.adoc</xsl:text>
+					<xsl:value-of select="$sectionsFolder"/><xsl:text>/00-</xsl:text><xsl:value-of select="$number"/>-<xsl:value-of select="$section_name"/><xsl:text>.adoc</xsl:text>
 				</xsl:variable>
 				<redirect:write file="{$outpath}/{$filename}">
 					<xsl:text>&#xa;</xsl:text>
 					<xsl:apply-templates select="."/>
 				</redirect:write>
-				<xsl:text>include::</xsl:text><xsl:value-of select="$filename"/><xsl:text>[]</xsl:text>
-				<xsl:text>&#xa;&#xa;</xsl:text>
+				<redirect:write file="{$outpath}/{$docfile}">
+					<xsl:text>include::</xsl:text><xsl:value-of select="$filename"/><xsl:text>[]</xsl:text>
+					<xsl:text>&#xa;&#xa;</xsl:text>
+				</redirect:write>
 			</xsl:for-each>
-			
 			
 			<!-- <xsl:apply-templates select="/standard/body"/>			
 			<xsl:apply-templates select="/standard/back"/> -->
 		</xsl:if>
+		
+		
 	</xsl:template>
 	
 	<xsl:template name="xxx-meta">
@@ -642,34 +695,48 @@
 	</xsl:template>
 	
 	<xsl:template match="body/sec[@sec-type = 'intro']" priority="2">
-		<redirect:write file="{$outpath}/sections/00-introduction.adoc">
+		<xsl:variable name="sectionsFolder"><xsl:call-template name="getSectionsFolder"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$sectionsFolder}/00-introduction.adoc">
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:text>[[introduction]]</xsl:text>
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:apply-templates />
 		</redirect:write>
-		<xsl:text>include::sections/00-introduction.adoc[]</xsl:text>
-		<xsl:text>&#xa;&#xa;</xsl:text>
+		<xsl:variable name="docfile"><xsl:call-template name="getDocFilename"/></xsl:variable>
+		<xsl:variable name="sectionsFolder"><xsl:call-template name="getSectionsFolder"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$docfile}">
+			<xsl:text>include::</xsl:text><xsl:value-of select="$sectionsFolder"/><xsl:text>/00-introduction.adoc[]</xsl:text>
+			<xsl:text>&#xa;&#xa;</xsl:text>
+		</redirect:write>
 	</xsl:template>
 	
 	<xsl:template match="body/sec[@sec-type = 'scope'] | front/sec[@sec-type = 'scope']" priority="2">
-		<redirect:write file="{$outpath}/sections/01-scope.adoc">
+		<xsl:variable name="sectionsFolder"><xsl:call-template name="getSectionsFolder"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$sectionsFolder}/01-scope.adoc">
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:apply-templates />
 		</redirect:write>
-		<xsl:text>include::sections/01-scope.adoc[]</xsl:text>
-		<xsl:text>&#xa;&#xa;</xsl:text>
+		<xsl:variable name="docfile"><xsl:call-template name="getDocFilename"/></xsl:variable>
+		<xsl:variable name="sectionsFolder"><xsl:call-template name="getSectionsFolder"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$docfile}">
+			<xsl:text>include::</xsl:text><xsl:value-of select="$sectionsFolder"/><xsl:text>/01-scope.adoc[]</xsl:text>
+			<xsl:text>&#xa;&#xa;</xsl:text>
+		</redirect:write>
 	</xsl:template>
 	
 	<xsl:template match="body/sec[@sec-type = 'norm-refs'] | front/sec[@sec-type = 'norm-refs']" priority="2">
-		<redirect:write file="{$outpath}/sections/02-normrefs.adoc">
+		<xsl:variable name="sectionsFolder"><xsl:call-template name="getSectionsFolder"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$sectionsFolder}/02-normrefs.adoc">
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:text>[bibliography]</xsl:text>
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:apply-templates />
 		</redirect:write>
-		<xsl:text>include::sections/02-normrefs.adoc[]</xsl:text>
-		<xsl:text>&#xa;&#xa;</xsl:text>
+		<xsl:variable name="docfile"><xsl:call-template name="getDocFilename"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$docfile}">
+			<xsl:text>include::</xsl:text><xsl:value-of select="$sectionsFolder"/><xsl:text>/02-normrefs.adoc[]</xsl:text>
+			<xsl:text>&#xa;&#xa;</xsl:text>
+		</redirect:write>
 	</xsl:template>
 	
 	
@@ -683,13 +750,17 @@
 			</xsl:choose>
 		</xsl:variable>
 		<xsl:variable name="sec_title" select="java:toLowerCase(java:java.lang.String.new($sec_title_))"/>
-		<redirect:write file="{$outpath}/sections/{$sec_number}-{$sec_title}.adoc">
+		<xsl:variable name="sectionsFolder"><xsl:call-template name="getSectionsFolder"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$sectionsFolder}/{$sec_number}-{$sec_title}.adoc">
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:call-template name="setIdOrType"/>
 			<xsl:apply-templates />
 		</redirect:write>
-		<xsl:text>include::sections/</xsl:text><xsl:value-of select="$sec_number"/>-<xsl:value-of select="$sec_title"/><xsl:text>.adoc[]</xsl:text>
-		<xsl:text>&#xa;&#xa;</xsl:text>
+		<xsl:variable name="docfile"><xsl:call-template name="getDocFilename"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$docfile}">
+			<xsl:text>include::</xsl:text><xsl:value-of select="$sectionsFolder"/><xsl:text>/</xsl:text><xsl:value-of select="$sec_number"/>-<xsl:value-of select="$sec_title"/><xsl:text>.adoc[]</xsl:text>
+			<xsl:text>&#xa;&#xa;</xsl:text>
+		</redirect:write>
 	</xsl:template>
 	
 	<xsl:template match="sec">
@@ -1506,7 +1577,8 @@
 	<xsl:template match="app">
 		<xsl:variable name="annex_label_" select="translate(label, ' &#xa0;', '--')" />
 		<xsl:variable name="annex_label" select="java:toLowerCase(java:java.lang.String.new($annex_label_))" />
-		<redirect:write file="{$outpath}/sections/{$annex_label}.adoc">
+		<xsl:variable name="sectionsFolder"><xsl:call-template name="getSectionsFolder"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$sectionsFolder}/{$annex_label}.adoc">
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:call-template name="setId"/><!-- [[ ]] -->
 			<xsl:text>&#xa;</xsl:text>
@@ -1516,8 +1588,11 @@
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:apply-templates />
 		</redirect:write>
-		<xsl:text>include::sections/</xsl:text><xsl:value-of select="$annex_label"/><xsl:text>.adoc[]</xsl:text>
-		<xsl:text>&#xa;&#xa;</xsl:text>
+		<xsl:variable name="docfile"><xsl:call-template name="getDocFilename"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$docfile}">
+			<xsl:text>include::</xsl:text><xsl:value-of select="$sectionsFolder"/><xsl:text>/</xsl:text><xsl:value-of select="$annex_label"/><xsl:text>.adoc[]</xsl:text>
+			<xsl:text>&#xa;&#xa;</xsl:text>
+		</redirect:write>
 	</xsl:template>
 	
 	<xsl:template match="app/annex-type"/>
@@ -1527,14 +1602,18 @@
 	</xsl:template>
 	
 	<xsl:template match="ref-list[@content-type = 'bibl']" priority="2">
-		<redirect:write file="{$outpath}/sections/99-bibliography.adoc">
+		<xsl:variable name="sectionsFolder"><xsl:call-template name="getSectionsFolder"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$sectionsFolder}/99-bibliography.adoc">
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:text>[bibliography]</xsl:text>
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:apply-templates />
 		</redirect:write>
-		<xsl:text>include::sections/99-bibliography.adoc[]</xsl:text>
-		<xsl:text>&#xa;&#xa;</xsl:text>
+		<xsl:variable name="docfile"><xsl:call-template name="getDocFilename"/></xsl:variable>
+		<redirect:write file="{$outpath}/{$docfile}">
+			<xsl:text>include::</xsl:text><xsl:value-of select="$sectionsFolder"/><xsl:text>/99-bibliography.adoc[]</xsl:text>
+			<xsl:text>&#xa;&#xa;</xsl:text>
+		</redirect:write>
 	</xsl:template>
 	
 	<xsl:template match="ref-list">
@@ -2187,5 +2266,146 @@
 		</xsl:if>
 	</xsl:template>
 	
+	
+	<xsl:template match="/" mode="sub-part">
+		<xsl:param name="doc-number"/>
+		<xsl:apply-templates select="@*|node()" mode="sub-part">
+			<xsl:with-param name="doc-number" select="$doc-number"/>
+		</xsl:apply-templates>
+	</xsl:template>
+	
+	<!-- add doc-number attribute, will be used in output filename -->
+	<xsl:template match="standard" mode="sub-part">
+		<xsl:param name="doc-number"/>
+		<xsl:copy>
+				<xsl:apply-templates select="@*" mode="sub-part"/>
+				<xsl:attribute name="doc-number"><xsl:value-of select="$doc-number"/></xsl:attribute>
+				<xsl:apply-templates select="node()" mode="sub-part">
+					<xsl:with-param name="doc-number" select="$doc-number"/>
+				</xsl:apply-templates>
+		</xsl:copy>
+	</xsl:template>
+	
+	<xsl:template match="@*|node()" mode="sub-part">
+		<xsl:param name="doc-number"/>
+		<xsl:copy>
+				<xsl:apply-templates select="@*|node()" mode="sub-part">
+					<xsl:with-param name="doc-number" select="$doc-number"/>
+				</xsl:apply-templates>
+		</xsl:copy>
+	</xsl:template>
+	
+	<xsl:template match="front" mode="sub-part">
+		<xsl:param name="doc-number"/>
+		<xsl:copy>
+			<xsl:apply-templates select="@*|node()" mode="sub-part">
+				<xsl:with-param name="doc-number" select="$doc-number"/>
+			</xsl:apply-templates>
+			
+			<!-- copy data from standard/body/sub-part[number][sub-part] into front-->
+			<xsl:apply-templates select="ancestor::standard/body/sub-part[$doc-number][body/sub-part]" mode="sub-part-front">
+				<xsl:with-param name="doc-number" select="$doc-number"/>
+			</xsl:apply-templates>
+		</xsl:copy>
+	</xsl:template>
+	
+	<xsl:template match="@*|node()" mode="sub-part-front">
+		<xsl:param name="doc-number"/>
+		<xsl:copy>
+				<xsl:apply-templates select="@*|node()" mode="sub-part-front">
+					<xsl:with-param name="doc-number" select="$doc-number"/>
+				</xsl:apply-templates>
+		</xsl:copy>
+	</xsl:template>
+	
+	<xsl:template match="standard/body/sub-part | standard/body/sub-part/body" mode="sub-part-front">
+		<xsl:apply-templates mode="sub-part-front" />
+	</xsl:template>
+	
+	<xsl:template match="standard/body/sub-part/body/sub-part" mode="sub-part-front"/>
+	<xsl:template match="standard/body/sub-part/label[normalize-space() = ''] | standard/body/sub-part/title[normalize-space() = '']" mode="sub-part-front"/>
+	
+	<xsl:template match="front/sec" mode="sub-part">
+		<xsl:param name="doc-number"/>
+		<!-- doc-number=<xsl:value-of select="$doc-number"/> -->
+		<xsl:if test="$doc-number = 1">
+			<xsl:copy>
+				<xsl:apply-templates select="@*|node()" mode="sub-part">
+					<xsl:with-param name="doc-number" select="$doc-number"/>
+				</xsl:apply-templates>
+			</xsl:copy>
+		</xsl:if>
+	</xsl:template>
+	
+	<!-- remove element body (but not content!), which contains sub-part inside -->
+	<xsl:template match="standard/body[sub-part] | standard/body/sub-part/body[sub-part]" mode="sub-part">
+		<xsl:param name="doc-number"/>
+		<xsl:apply-templates select="@*|node()" mode="sub-part">
+			<xsl:with-param name="doc-number" select="$doc-number"/>
+		</xsl:apply-templates>
+	</xsl:template>
+	
+	<xsl:template match="standard/body/sub-part" mode="sub-part">
+		<xsl:param name="doc-number"/>
+		<xsl:variable name="current-number"><xsl:number/></xsl:variable>
+		<!-- current-number=<xsl:value-of select="$current-number"/> -->
+		<xsl:if test="$doc-number = $current-number">
+			
+			<xsl:apply-templates select="@*|node()" mode="sub-part">
+				<xsl:with-param name="doc-number" select="$doc-number"/>
+			</xsl:apply-templates>
+			
+		</xsl:if>
+	</xsl:template>
+	
+	<!-- these elements was moved in sub-part-front templates -->
+	<xsl:template match="standard/body/sub-part/body[sub-part]/*[local-name() != 'sub-part']" mode="sub-part"/>
+	
+	<xsl:template match="standard/body/sub-part/body/sub-part" mode="sub-part">
+		<xsl:apply-templates select="@*|node()" mode="sub-part" />
+	</xsl:template>
+	
+	<xsl:template match="standard/body/sub-part/label[normalize-space() = ''] | 
+										standard/body/sub-part/title[normalize-space() = ''] |
+										standard/body/sub-part/body/sub-part/label[normalize-space() = ''] | 
+										standard/body/sub-part/body/sub-part/title[normalize-space() = '']" mode="sub-part"/>
+	
+	
+	<xsl:template name="getDocFilename">
+		<xsl:variable name="doc-number" select="ancestor-or-self::standard/@doc-number" />
+		<xsl:variable name="sfx"><xsl:if test="$doc-number != ''">.<xsl:value-of select="$doc-number"/></xsl:if></xsl:variable>
+		<xsl:value-of select="concat($docfile_name, $sfx, '.', $docfile_ext)"/> <!-- Example: iso-tc154-8601-1-en.adoc , or document.adoc -->
+	</xsl:template>
+	
+	<xsl:template name="getSectionsFolder">
+		
+		<xsl:variable name="doc-number" select="ancestor-or-self::standard/@doc-number" />
+		<xsl:variable name="sfx"><xsl:if test="$doc-number != ''">.<xsl:value-of select="$doc-number"/></xsl:if></xsl:variable>
+		<xsl:value-of select="concat('sections', $sfx)"/>
+	</xsl:template>
+	
+	<xsl:template name="insertCollectionData">
+		<xsl:param name="documents"/>
+		<xsl:text>directives:&#xa;</xsl:text>
+		<xsl:text>  - documents-inline&#xa;</xsl:text>
+		<xsl:text>bibdata:&#xa;</xsl:text>
+		<xsl:text>  type: collection&#xa;</xsl:text>
+		<xsl:text>  docid:&#xa;</xsl:text>
+		<xsl:text>    type: bsi&#xa;</xsl:text>
+		<xsl:text>    id: bsidocs&#xa;</xsl:text>
+		<xsl:text>manifest:&#xa;</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>  docref:&#xa;</xsl:text>
+		<xsl:for-each select="xalan:nodeset($documents)/*">
+			<xsl:text>    - fileref: </xsl:text><xsl:value-of select="$docfile_name"/>.<xsl:value-of select="@doc-number"/><xsl:text>.xml&#xa;</xsl:text>
+			<xsl:text>      identifier: bsidocs-</xsl:text><xsl:value-of select="@doc-number"/><xsl:text>&#xa;</xsl:text>
+		</xsl:for-each>
+		<xsl:text>prefatory-content:&#xa;</xsl:text>
+		<xsl:text>|&#xa;</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>final-content:&#xa;</xsl:text>
+		<xsl:text>|&#xa;</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+	</xsl:template>
 	
 </xsl:stylesheet>
