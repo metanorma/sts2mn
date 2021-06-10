@@ -1330,10 +1330,28 @@
 	<!-- Table -->
 	<!-- =============== -->
 	<xsl:template match="table-wrap">
+		<xsl:apply-templates select="@orientation"/>
 		<xsl:call-template name="setId"/><!-- [[ ]] -->
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates select="table-wrap-foot/fn-group" mode="footnotes"/>
 		<xsl:apply-templates />
+		<xsl:apply-templates select="@orientation" mode="after_table"/>
+	</xsl:template>
+	
+	<xsl:template match="table-wrap/@orientation">
+		<xsl:text>&#xa;&#xa;</xsl:text>
+		<xsl:text>[%</xsl:text><xsl:value-of select="."/><xsl:text>]</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>&lt;&lt;&lt;</xsl:text>
+		<xsl:text>&#xa;&#xa;&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="table-wrap/@orientation" mode="after_table">
+		<xsl:text>&#xa;&#xa;</xsl:text>
+		<xsl:text>[%portrait]</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>&lt;&lt;&lt;</xsl:text>
+		<xsl:text>&#xa;&#xa;&#xa;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="table-wrap/caption/title">
@@ -2377,6 +2395,14 @@
 										standard/body/sub-part/body/sub-part/label[normalize-space() = ''] | 
 										standard/body/sub-part/body/sub-part/title[normalize-space() = '']" mode="sub-part"/>
 	
+	
+	<xsl:template match="processing-instruction()[contains(., 'Page_Break')] | processing-instruction()[contains(., 'Page-Break')]">
+		<xsl:if test="not(ancestor::table)"> <!-- Conversion gap: <?Para Page_Break?> between table's rows https://github.com/metanorma/mn-samples-bsi/issues/47 -->
+			<xsl:text>&#xa;&#xa;</xsl:text>
+			<xsl:text>&lt;&lt;&lt;</xsl:text>
+			<xsl:text>&#xa;&#xa;&#xa;</xsl:text>
+		</xsl:if>
+	</xsl:template>
 	
 	<xsl:template name="getDocFilename">
 		<xsl:variable name="doc-number" select="ancestor-or-self::standard/@doc-number" />

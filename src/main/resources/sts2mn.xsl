@@ -1141,8 +1141,18 @@
 	</xsl:template>
 	
 	<xsl:template match="table-wrap">
+		<xsl:apply-templates select="@orientation"/>
 		<!-- <xsl:apply-templates select="@*" /> -->
 		<xsl:apply-templates/>
+		<xsl:apply-templates select="@orientation" mode="after_table"/>
+	</xsl:template>
+	
+	<xsl:template match="table-wrap/@orientation">
+		<pagebreak orientation="{.}"/>
+	</xsl:template>
+	
+	<xsl:template match="table-wrap/@orientation" mode="after_table">
+		<pagebreak orientation="portrait"/>
 	</xsl:template>
 	
 	<xsl:template match="table-wrap/caption"/>	
@@ -1703,6 +1713,9 @@
 		<xsl:text disable-output-escaping="yes">&gt;--&gt;</xsl:text>
 	</xsl:template>
 	
+	<xsl:template match="processing-instruction()[contains(., 'Page_Break')] | processing-instruction()[contains(., 'Page-Break')]">
+		<pagebreak />
+	</xsl:template>
 	
 	
 	<xsl:template name="split">
