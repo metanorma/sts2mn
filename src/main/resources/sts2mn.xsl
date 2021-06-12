@@ -1666,14 +1666,25 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
+	<xsl:template match="back/ref-list[ref-list]" priority="2" mode="bibliography">
+		<clause>
+			<xsl:copy-of select="@id"/>
+			<xsl:apply-templates />
+		</clause>
+	</xsl:template>
+	
 	<xsl:template match="back/ref-list" mode="bibliography">
-		<references id="{@id}">
+		<references normative="false">
+			<xsl:copy-of select="@id"/>
 			<xsl:apply-templates />
 		</references>
 	</xsl:template>
 	
 	<xsl:template match="back/ref-list/ref-list">
-		<xsl:apply-templates />
+		<references normative="false">
+			<xsl:copy-of select="@id"/>
+			<xsl:apply-templates />
+		</references>
 	</xsl:template>
 	
 	<!-- END Bibliography processing -->

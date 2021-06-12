@@ -1641,11 +1641,14 @@
 		</redirect:write>
 	</xsl:template>
 	
-	<xsl:template match="ref-list">
+	<xsl:template match="ref-list"> <!-- sub-section for Bibliography -->
 		<!-- <xsl:if test="@content-type = 'bibl'"> -->
 			<!-- <xsl:text>[bibliography]</xsl:text> -->
 			<!-- <xsl:text>&#xa;</xsl:text> -->
 		<!-- </xsl:if> -->
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:text>[bibliography]</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates/>
 	</xsl:template>
 	
@@ -1660,7 +1663,11 @@
 			<xsl:value-of select="@id"/>
 			<xsl:if test="not(@id)">
 				<xsl:variable name="id_normalized" select="translate(std/@std-id, ' &#xA0;:', '___')"/>
-				<xsl:value-of select="std/@std-id"/>
+				<xsl:value-of select="$id_normalized"/>
+				<xsl:if test="normalize-space($id_normalized) = ''">
+					<xsl:variable name="std_ref" select="translate(std/std-ref, ' &#xA0;:', '___')"/>
+					<xsl:value-of select="$std_ref"/>
+				</xsl:if>
 			</xsl:if>
 			<xsl:apply-templates select="std/std-ref" mode="std"/>
 			<xsl:apply-templates select="mixed-citation/std" mode="std"/>
