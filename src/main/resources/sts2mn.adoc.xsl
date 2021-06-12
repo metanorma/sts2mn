@@ -1642,13 +1642,11 @@
 	</xsl:template>
 	
 	<xsl:template match="ref-list"> <!-- sub-section for Bibliography -->
-		<!-- <xsl:if test="@content-type = 'bibl'"> -->
-			<!-- <xsl:text>[bibliography]</xsl:text> -->
-			<!-- <xsl:text>&#xa;</xsl:text> -->
-		<!-- </xsl:if> -->
-		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>[bibliography]</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
+		<xsl:if test="@content-type = 'bibl' or parent::ref-list/@content-type = 'bibl'">
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:text>[bibliography]</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
 		<xsl:apply-templates/>
 	</xsl:template>
 	
