@@ -1642,7 +1642,8 @@
 	</xsl:template>
 	
 	<xsl:template match="ref-list"> <!-- sub-section for Bibliography -->
-		<xsl:if test="@content-type = 'bibl' or parent::ref-list/@content-type = 'bibl'">
+		<!-- <xsl:if test="@content-type = 'bibl' or parent::ref-list/@content-type = 'bibl'"> -->
+		<xsl:if test="title">
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:text>[bibliography]</xsl:text>
 			<xsl:text>&#xa;</xsl:text>
