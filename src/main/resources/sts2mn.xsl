@@ -1048,7 +1048,11 @@
 	<xsl:template match="array">
 		<xsl:choose>
 			<xsl:when test="count(table/col) + count(table/colgroup/col)  = 2">
-				<dl id="{@id}">
+				<dl>
+					<xsl:copy-of select="@id"/>
+					<xsl:if test="label = 'Key'">
+						<xsl:attribute name="key">true</xsl:attribute>
+					</xsl:if>
 					<xsl:apply-templates mode="dl"/>
 				</dl>
 			</xsl:when>
@@ -1087,6 +1091,8 @@
 	<xsl:template match="td" mode="dl">
 		<xsl:apply-templates />
 	</xsl:template>
+	
+	<xsl:template match="label | colgroup" mode="dl"/>
 	
 	<xsl:template match="def-list">
 		<dl>
@@ -1553,6 +1559,29 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
+	<xsl:template match="graphic[caption]">
+		<figure>
+			<xsl:apply-templates />
+			<xsl:call-template name="graphic"/>
+		</figure>
+	</xsl:template>
+	
+	<xsl:template match="graphic/label">
+		<xsl:if test="not(../caption/title)">
+			<name><xsl:apply-templates /></name>
+		</xsl:if>
+	</xsl:template>
+	<xsl:template match="graphic/caption">
+		<name>
+			<xsl:if test="../label"><xsl:value-of select="../label"/>&#160; </xsl:if>
+			<xsl:apply-templates />
+		</name>
+	</xsl:template>
+	
+	<xsl:template match="graphic/caption/title">
+		<xsl:apply-templates />
+	</xsl:template>
+	
 	<xsl:template match="graphic | inline-graphic" name="graphic">
 		<xsl:param name="copymode">false</xsl:param>
 		<image height="auto" width="auto">
@@ -1576,7 +1605,7 @@
 			<xsl:if test="alt-text">
 				<xsl:attribute  name="alt"><xsl:value-of select="alt-text"/></xsl:attribute>
 			</xsl:if>
-			<xsl:apply-templates>
+			<xsl:apply-templates select="*[not(local-name() = 'caption') and not(local-name() = 'label')] | processing-instruction()">
 				<xsl:with-param name="copymode" select="$copymode"/>
 			</xsl:apply-templates>
 		</image>

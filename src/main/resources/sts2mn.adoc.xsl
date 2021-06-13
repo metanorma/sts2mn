@@ -1269,7 +1269,8 @@
 	<xsl:template match="array">
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:choose>
-			<xsl:when test="count(table/col) + count(table/colgroup/col) = 2">				
+			<xsl:when test="count(table/col) + count(table/colgroup/col) = 2">
+				<xsl:if test="@content-type = 'figure-index' and label">*<xsl:value-of select="label"/>*&#xa;&#xa;</xsl:if>
 				<xsl:apply-templates mode="dl"/>				
 			</xsl:when>
 			<xsl:otherwise>
@@ -1331,8 +1332,7 @@
 	<!-- =============== -->
 	<xsl:template match="table-wrap">
 		<xsl:apply-templates select="@orientation"/>
-		<xsl:call-template name="setId"/><!-- [[ ]] -->
-		<xsl:text>&#xa;</xsl:text>
+		<xsl:call-template name="setId"/>
 		<xsl:apply-templates select="table-wrap-foot/fn-group" mode="footnotes"/>
 		<xsl:apply-templates />
 		<xsl:apply-templates select="@orientation" mode="after_table"/>
@@ -1602,8 +1602,7 @@
 		<xsl:variable name="sectionsFolder"><xsl:call-template name="getSectionsFolder"/></xsl:variable>
 		<redirect:write file="{$outpath}/{$sectionsFolder}/{$annex_label}.adoc">
 			<xsl:text>&#xa;</xsl:text>
-			<xsl:call-template name="setId"/><!-- [[ ]] -->
-			<xsl:text>&#xa;</xsl:text>
+			<xsl:call-template name="setId"/>
 			<xsl:text>[appendix</xsl:text>
 			<xsl:apply-templates select="annex-type" mode="annex"/>		
 			<xsl:text>]</xsl:text>
@@ -1726,9 +1725,10 @@
 		<xsl:value-of select="translate(., '&#xA0;', ' ')"/>
 	</xsl:template>
 	
-	<xsl:template match="fig-group">
-		<xsl:call-template name="setId"/><!-- [[ ]] -->
-		<xsl:text>&#xa;</xsl:text>
+	
+	<!-- in STS XML there are two figure's group structure: fig-group/fig* and fig/graphic[title]* (in BSI documents) -->
+	<xsl:template match="fig-group | fig[graphic[caption]] | fig[count(graphic) &gt;= 2]">
+		<xsl:call-template name="setId"/>
 		<xsl:apply-templates select="caption/title" mode="fig-group-title"/>
 		<xsl:text>====</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
@@ -1738,8 +1738,9 @@
 		<xsl:text>&#xa;</xsl:text>		
 	</xsl:template>
 	
+	<xsl:template match="fig[graphic[caption] or count(graphic) &gt;= 2]/caption/title" priority="2"/>
 	<xsl:template match="fig-group/caption/title"/>
-	<xsl:template match="fig-group/caption/title" mode="fig-group-title">
+	<xsl:template match="fig-group/caption/title | fig/caption/title" mode="fig-group-title">
 		<xsl:text>.</xsl:text>
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
@@ -1748,8 +1749,7 @@
 	<xsl:template match="fig">
 		<xsl:if test="not(parent::fig-group)">
 			<xsl:if test="parent::tbx:note"><xsl:text> +&#xa;</xsl:text></xsl:if>
-			<xsl:call-template name="setId"/><!-- [[ ]] -->
-			<xsl:text>&#xa;</xsl:text>
+			<xsl:call-template name="setId"/>
 		</xsl:if>
 		<xsl:apply-templates/>
 		<xsl:if test="(parent::fig-group and position() != last()) or not(parent::fig-group)">
@@ -1765,6 +1765,7 @@
 	
 	
 	<xsl:template match="graphic | inline-graphic" name="graphic">
+		<xsl:apply-templates select="caption/title" mode="graphic-title"/>
 		<xsl:text>image::</xsl:text>
 		<xsl:if test="not(processing-instruction('isoimg-id'))">
 			<xsl:variable name="image_link" select="@xlink:href"/>
@@ -1783,6 +1784,13 @@
 		<xsl:if test="following-sibling::node()">
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
+	</xsl:template>
+	
+	<xsl:template match="graphic/caption" />
+	<xsl:template match="graphic/caption/title" mode="graphic-title">
+		<xsl:text>.</xsl:text>
+		<xsl:apply-templates />
+		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="graphic/processing-instruction('isoimg-id')" />
@@ -2258,6 +2266,7 @@
 	<xsl:template name="setId">
 		<xsl:if test="normalize-space(@id) != ''">
 			<xsl:text>[[</xsl:text><xsl:value-of select="@id"/><xsl:text>]]</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 	</xsl:template>
 	
