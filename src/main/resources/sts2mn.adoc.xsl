@@ -1922,7 +1922,9 @@
 	</xsl:template>
 	
 	<xsl:template match="def-item">
-		<xsl:call-template name="setId"/>
+		<xsl:call-template name="setId">
+			<xsl:with-param name="newline">false</xsl:with-param>
+		</xsl:call-template>
 		<xsl:apply-templates />		
 	</xsl:template>
 	
@@ -2264,9 +2266,12 @@
 	</xsl:template>
 	
 	<xsl:template name="setId">
+		<xsl:param name="newline">true</xsl:param>
 		<xsl:if test="normalize-space(@id) != ''">
 			<xsl:text>[[</xsl:text><xsl:value-of select="@id"/><xsl:text>]]</xsl:text>
-			<xsl:text>&#xa;</xsl:text>
+			<xsl:if test="$newline = 'true'">
+				<xsl:text>&#xa;</xsl:text>
+			</xsl:if>
 		</xsl:if>
 	</xsl:template>
 	
