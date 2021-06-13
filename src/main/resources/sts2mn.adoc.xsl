@@ -982,15 +982,24 @@
 				<xsl:apply-templates />
 			</xsl:when>
 			<xsl:when test="parent::std[@std-id]">
-				<xsl:variable name="std-id_normalized">
-					<xsl:call-template name="getNormalizedId">
-						<xsl:with-param name="id" select="parent::std/@std-id"/>
-					</xsl:call-template>
-				</xsl:variable>
-				<xsl:value-of select="$std-id_normalized"/>
-				
-				<xsl:variable name="text" select="."/>
-				<xsl:if test="$text != $std-id_normalized">,<xsl:value-of select="$text"/></xsl:if>
+				<xsl:variable name="std_id" select="parent::std/@std-id"/>
+				<xsl:variable name="bib_id" select="//back//ref[std/@std-id = $std_id]/@id"/>
+				<xsl:choose>
+					<xsl:when test="normalize-space($bib_id) != ''"><!-- if there is item in Bibliography, then put id instead std-id -->
+						<xsl:value-of select="$bib_id"/>
+						<xsl:text>,</xsl:text><xsl:value-of select="."/>
+					</xsl:when>
+					<xsl:otherwise> <!-- else normalize std-id -->
+						<xsl:variable name="std-id_normalized">
+							<xsl:call-template name="getNormalizedId">
+								<xsl:with-param name="id" select="$std_id"/>
+							</xsl:call-template>
+						</xsl:variable>
+						<xsl:value-of select="$std-id_normalized"/>
+						<xsl:variable name="text" select="."/>
+						<xsl:if test="$text != $std-id_normalized">,<xsl:value-of select="$text"/></xsl:if>
+					</xsl:otherwise>
+				</xsl:choose>
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:call-template name="getStdRef"/>
