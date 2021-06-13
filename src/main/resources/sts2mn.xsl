@@ -1288,6 +1288,8 @@
 			<xsl:if test="@std-id">
 				<xsl:attribute name="bibitemid">
 					<xsl:variable name="std-id_normalized" select="translate(@std-id, ' &#xA0;:', '___')"/>
+					<xsl:variable name="first_char" select="substring($std-id_normalized,1,1)"/>
+					<xsl:if test="translate($first_char, '0123456789', '') = ''">_</xsl:if>
 					<xsl:value-of select="$std-id_normalized"/>
 				</xsl:attribute>
 			</xsl:if>

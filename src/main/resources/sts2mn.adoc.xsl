@@ -981,6 +981,17 @@
 			<xsl:when test="ancestor::ref"> <!-- sec[@sec-type = 'norm-refs'] -->
 				<xsl:apply-templates />
 			</xsl:when>
+			<xsl:when test="parent::std[@std-id]">
+				<xsl:variable name="std-id_normalized">
+					<xsl:call-template name="getNormalizedId">
+						<xsl:with-param name="id" select="parent::std/@std-id"/>
+					</xsl:call-template>
+				</xsl:variable>
+				<xsl:value-of select="$std-id_normalized"/>
+				
+				<xsl:variable name="text" select="."/>
+				<xsl:if test="$text != $std-id_normalized">,<xsl:value-of select="$text"/></xsl:if>
+			</xsl:when>
 			<xsl:otherwise>
 				<xsl:call-template name="getStdRef"/>
 			</xsl:otherwise>
@@ -1660,10 +1671,21 @@
 			<xsl:text>[[[</xsl:text>
 			<xsl:value-of select="@id"/>
 			<xsl:if test="not(@id)">
-				<xsl:variable name="id_normalized" select="translate(std/@std-id, ' &#xA0;:', '___')"/>
+				<xsl:variable name="id_normalized">
+					<xsl:call-template name="getNormalizedId">
+						<xsl:with-param name="id" select="std/@std-id"/>
+					</xsl:call-template>
+				</xsl:variable>
 				<xsl:value-of select="$id_normalized"/>
+				
 				<xsl:if test="normalize-space($id_normalized) = ''">
-					<xsl:variable name="std_ref" select="translate(std/std-ref, ' &#xA0;:', '___')"/>
+					
+					<xsl:variable name="std_ref">
+						<xsl:call-template name="getNormalizedId">
+							<xsl:with-param name="id" select="std/std-ref"/>
+						</xsl:call-template>
+					</xsl:variable>
+					
 					<xsl:value-of select="$std_ref"/>
 				</xsl:if>
 			</xsl:if>
@@ -2231,7 +2253,13 @@
 				<xsl:value-of select="$ref2"/>
 			</xsl:when>
 			<xsl:otherwise>
-				<xsl:variable name="text_normalized" select="translate($text, ' &#xA0;:', '___')"/>
+				
+				<xsl:variable name="text_normalized">
+					<xsl:call-template name="getNormalizedId">
+						<xsl:with-param name="id" select="$text"/>
+					</xsl:call-template>
+				</xsl:variable>
+				
 				<xsl:if test="$text_normalized != $text"><xsl:value-of select="$text_normalized"/>,</xsl:if>
 				<xsl:value-of select="$text"/>
 			</xsl:otherwise>
@@ -2459,6 +2487,14 @@
 		<xsl:text>final-content:&#xa;</xsl:text>
 		<xsl:text>|&#xa;</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
+	</xsl:template>
+	
+	<xsl:template name="getNormalizedId">
+		<xsl:param name="id"/>
+		<xsl:variable name="id_normalized" select="translate($id, ' &#xA0;:', '___')"/> <!-- replace space, non-break space, colon to _ -->
+		<xsl:variable name="first_char" select="substring(id_normalized,1,1)"/>
+		<xsl:if test="$first_char != '' and translate($first_char, '0123456789', '') = ''">_</xsl:if>
+		<xsl:value-of select="$id_normalized"/>
 	</xsl:template>
 	
 </xsl:stylesheet>
