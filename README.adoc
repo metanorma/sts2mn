@@ -18,21 +18,25 @@ You will need the `maven` build tool and `make`.
 java -jar target/sts2mn-1.4.jar <XML-FileName>
 ----
 
+Output format - adoc:
 [source,sh]
 ----
 java -jar target/sts2mn-1.4.jar --format adoc <XML-FileName>
 ----
 
+Output format - adoc, and file name:
 [source,sh]
 ----
 java -jar target/sts2mn-1.4.jar --format adoc <XML-FileName> --output <ADOC-FileName>
 ----
 
+Output format - xml:
 [source,sh]
 ----
 java -jar target/sts2mn-1.4.jar --format xml <XML-FileName>
 ----
 
+Output format - xml, and file name:
 [source,sh]
 ----
 java -jar target/sts2mn-1.4.jar --format xml <XML-FileName> --output <XML-FileName>
@@ -41,6 +45,12 @@ java -jar target/sts2mn-1.4.jar --format xml <XML-FileName> --output <XML-FileNa
 [source,sh]
 ----
 java -jar target/sts2mn-1.4.jar --split-bibdata <XML-FileName>
+----
+
+Output format - xml, file name,  and type standard (root element's prefix, and namespace's suffix):
+[source,sh]
+----
+java -jar target/sts2mn-1.4.jar --format xml <XML-FileName> --type iso --output <XML-FileName>
 ----
 
 
