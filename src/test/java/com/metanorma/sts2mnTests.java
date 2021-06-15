@@ -16,6 +16,8 @@ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.contrib.java.lang.system.SystemOutRule;
 import org.junit.rules.TestName;
 
+import static com.metanorma.Constants.*;
+
 public class sts2mnTests {
 
     static String XMLFILE_MN;// = "test.mn.xml";
@@ -57,7 +59,7 @@ public class sts2mnTests {
         sts2mn.main(args);
 
         assertTrue(systemOutRule.getLog().contains(
-                String.format(sts2mn.INPUT_NOT_FOUND, sts2mn.XML_INPUT, args[1])));
+                String.format(INPUT_NOT_FOUND, XML_INPUT, args[1])));
     }
 
     @Test
@@ -69,7 +71,7 @@ public class sts2mnTests {
         sts2mn.main(args);
 
         assertTrue(systemOutRule.getLog().contains(
-                String.format(sts2mn.UNKNOWN_OUTPUT_FORMAT, args[1])));
+                String.format(UNKNOWN_OUTPUT_FORMAT, args[1])));
     }
     
     
