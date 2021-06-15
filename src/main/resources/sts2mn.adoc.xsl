@@ -673,6 +673,7 @@
 	
 	<!-- =========== -->
 	<!-- end bibdata (standard/front) -->
+	<!-- =========== -->
 	
 	<xsl:template match="front/sec[@sec-type = 'publication_info']" priority="2">
 		<!-- process only Amendments/corrigenda table, because other data implemented in metanorma gem -->
@@ -1615,7 +1616,9 @@
 	<!-- END Table -->
 	<!-- =============== -->
 	
-	
+	<!-- ============================ -->
+	<!-- Annex -->
+	<!-- ============================ -->
 	<xsl:template match="app">
 		<xsl:variable name="annex_label_" select="translate(label, ' &#xa0;', '--')" />
 		<xsl:variable name="annex_label" select="java:toLowerCase(java:java.lang.String.new($annex_label_))" />
@@ -1644,7 +1647,13 @@
 			<xsl:otherwise><xsl:text>,obligation=</xsl:text><xsl:value-of select="$obligation"/></xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
+	<!-- ============================ -->
+	<!-- END Annex -->
+	<!-- ============================ -->
 	
+	<!-- ============================ -->
+	<!-- References -->
+	<!-- ============================ -->
 	<xsl:template match="ref-list[@content-type = 'bibl']" priority="2">
 		<xsl:variable name="sectionsFolder"><xsl:call-template name="getSectionsFolder"/></xsl:variable>
 		<redirect:write file="{$outpath}/{$sectionsFolder}/99-bibliography.adoc">
@@ -1698,9 +1707,26 @@
 					<xsl:value-of select="$std_ref"/>
 				</xsl:if>
 			</xsl:if>
-			<xsl:apply-templates select="std/std-ref" mode="std"/>
-			<xsl:apply-templates select="mixed-citation/std" mode="std"/>
-			<xsl:apply-templates select="label" mode="std"/>
+			<xsl:text>,</xsl:text>
+			<xsl:variable name="std-ref">
+				<xsl:apply-templates select="std/std-ref" mode="references"/>
+			</xsl:variable>
+			<xsl:variable name="mixed-citation">
+				<xsl:apply-templates select="mixed-citation/std" mode="references"/>
+			</xsl:variable>
+			<xsl:variable name="label">
+				<xsl:apply-templates select="label" mode="references"/>
+			</xsl:variable>
+			
+			<xsl:if test="(normalize-space($std-ref) != '' or normalize-space($mixed-citation) != '') and normalize-space($label) != ''">
+				<xsl:text>(</xsl:text>
+			</xsl:if>
+			<xsl:value-of select="$std-ref"/>
+			<xsl:if test="(normalize-space($std-ref) != '' or normalize-space($mixed-citation) != '') and normalize-space($label) != ''">
+				<xsl:text>)</xsl:text>
+			</xsl:if>
+			<xsl:value-of select="$label"/>
+			
 			<xsl:text>]]]</xsl:text>
 		</xsl:if>
 		<xsl:apply-templates/>
@@ -1712,24 +1738,26 @@
 		<xsl:apply-templates/>
 	</xsl:template>
 	
-	<xsl:template match="ref/label" mode="std">
-		<xsl:text>, </xsl:text><xsl:value-of select="translate(., '[]', '')"/>
+	<xsl:template match="ref/label" mode="references">
+		<!-- <xsl:text>, </xsl:text> -->
+		<xsl:value-of select="translate(., '[]', '')"/>
 	</xsl:template>
 	
 	<xsl:template match="ref/std/std-ref"/>
-	<xsl:template match="ref/std/std-ref" mode="std">
-		<xsl:text>,</xsl:text>
-		<xsl:apply-templates mode="std"/>
+	<xsl:template match="ref/std/std-ref" mode="references">
+		<!-- <xsl:text>,</xsl:text> -->
+		<xsl:apply-templates mode="references"/>
 	</xsl:template>
-	<xsl:template match="ref/std/std-ref/text()" mode="std">
+	<xsl:template match="ref/std/std-ref/text()" mode="references">
 		<xsl:variable name="text" select="translate(translate(.,'[]',''), '&#xA0;', ' ')"/>
-		<xsl:variable name="isDated">
+		<!-- <xsl:variable name="isDated">
 			<xsl:choose>
 				<xsl:when test="string-length($text) - string-length(translate($text, ':', '')) = 1">true</xsl:when>
 				<xsl:otherwise>false</xsl:otherwise>
 			</xsl:choose>
-		</xsl:variable>
-		<xsl:text>(</xsl:text>
+		</xsl:variable> -->
+		<xsl:value-of select="$text"/>
+		<!-- <xsl:text>(</xsl:text>
 		<xsl:choose>
 			<xsl:when test="$isDated = 'true'">
 				<xsl:value-of select="substring-before($text, ':')"/>
@@ -1738,11 +1766,11 @@
 				<xsl:value-of select="$text"/>
 			</xsl:otherwise>
 		</xsl:choose>
-		<xsl:text>)</xsl:text><xsl:value-of select="$text"/>
+		<xsl:text>)</xsl:text> <xsl:value-of select="$text"/> -->
 	</xsl:template>
 	
-	<xsl:template match="ref/mixed-citation/std" mode="std">
-		<xsl:text>,</xsl:text>
+	<xsl:template match="ref/mixed-citation/std" mode="references">
+		<!-- <xsl:text>,</xsl:text> -->
 		<xsl:apply-templates/>
 	</xsl:template>
 	
@@ -1755,8 +1783,15 @@
 	<xsl:template match="ref/std//title/text()">
 		<xsl:value-of select="translate(., '&#xA0;', ' ')"/>
 	</xsl:template>
+	<!-- ============================ -->
+	<!-- References -->
+	<!-- ============================ -->
 	
 	
+	
+	<!-- ============================ -->
+	<!-- Figure -->
+	<!-- ============================ -->
 	<!-- in STS XML there are two figure's group structure: fig-group/fig* and fig/graphic[title]* (in BSI documents) -->
 	<xsl:template match="fig-group | fig[graphic[caption]] | fig[count(graphic) &gt;= 2]">
 		<xsl:call-template name="setId"/>
@@ -1845,6 +1880,10 @@
 		<xsl:value-of select="."/>
 		<xsl:text>]</xsl:text>
 	</xsl:template>
+	<!-- ============================ -->
+	<!-- END Figure -->
+	<!-- ============================ -->
+
 
 	<xsl:template match="object-id">
 		<xsl:choose>
