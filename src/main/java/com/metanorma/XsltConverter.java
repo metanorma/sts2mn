@@ -60,7 +60,6 @@ public class XsltConverter {
     private boolean isDebugMode = false; // default no debug
     
     private String typeStandard = ""; // default value empty - allows to determine standard via xslt
-    private String namespaceStandard = "https://www.metanorma.org/ns/" + typeStandard;
     
     final String SPLIT = "///SPLIT ";
     
