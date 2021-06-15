@@ -1,4 +1,4 @@
-package com.metanorma;
+package com.metanorma.utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,6 +6,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
@@ -13,6 +15,8 @@ import java.util.stream.Stream;
  * @author Alexander Dyuzhev
  */
 public class Task {
+    
+    private static final Logger logger = Logger.getLogger(LoggerHelper.LOGGER_NAME);
     
     public static void copyImages(String inputFolder, String imagesFolder, String outputFolder) {
         try {
@@ -31,7 +35,7 @@ public class Task {
                                         Path destitanionImagePath = Paths.get(outputFolder, imagesFolder, imageFilename);
                                         Util.FileCopy(originalImagePath, destitanionImagePath);
                                     } catch (Exception ex) {
-                                        System.out.println("Can't process image: " + ex.toString());
+                                        logger.log(Level.WARNING, "Can''t process image: {0}", ex.toString());
                                     }
                                 }
                             }
@@ -45,7 +49,7 @@ public class Task {
                 }
             }
         } catch (Exception ex) {
-            System.out.println("Error on task 'Copy Images':" + ex.toString());
+            logger.log(Level.WARNING, "Error on task ''Copy Images'':{0}", ex.toString());
         }
     }
 }
