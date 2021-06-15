@@ -9,9 +9,7 @@
 					xmlns:metanorma-class-util="xalan://com.metanorma.Util"
 					exclude-result-prefixes="xalan mml tbx xlink java metanorma-class-util"
 					extension-element-prefixes="redirect"
-					xmlns="https://www.metanorma.org/ns/iso"
 					version="1.0">
-
 	<xsl:output version="1.0" method="xml" encoding="UTF-8" indent="yes"/>
 	
 	<xsl:param name="debug">false</xsl:param>
@@ -22,6 +20,8 @@
 
 	<xsl:param name="imagesdir" select="'images'"/>
 
+	<xsl:param name="typestandard" />
+
 	<xsl:variable name="organization">
 		<xsl:choose>
 			<xsl:when test="/standard/front/nat-meta/@originator = 'BSI' or /standard/front/iso-meta/secretariat = 'BSI'">BSI</xsl:when>
@@ -31,29 +31,49 @@
 		</xsl:choose>
 	</xsl:variable> 
 
+	<xsl:variable name="_typestandard">
+		<xsl:choose>
+			<xsl:when test="$typestandard = ''">
+				<xsl:choose>
+					<xsl:when test="$organization = 'BSI'">bsi</xsl:when>
+					<xsl:otherwise>iso</xsl:otherwise>
+				</xsl:choose>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$typestandard"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:variable>
+	
+	<xsl:variable name="xml_result_namespace">https://www.metanorma.org/ns/<xsl:value-of select="$_typestandard"/></xsl:variable>
+
 	<xsl:variable name="nat_meta_only">
 		<xsl:if test="/standard/front/nat-meta and not(/standard/front/iso-meta) and not(/standard/front/reg-meta)">true</xsl:if>
 	</xsl:variable>
 
 	<xsl:template match="/*">	
-		<xsl:variable name="xml_result">
+		<xsl:variable name="xml_result_">
 			<xsl:choose>
 				<xsl:when test="$split-bibdata = 'true'">
 					<xsl:apply-templates select="front"/>
 				</xsl:when>
 				<xsl:otherwise>
-					<xsl:element name="iso-standard">
-						 <xsl:apply-templates />
-						 <xsl:if test="body/sec[@sec-type = 'norm-refs'] or back/ref-list">
+					<xsl:element name="{$_typestandard}-standard">
+						<xsl:apply-templates />
+						<xsl:if test="body/sec[@sec-type = 'norm-refs'] or back/ref-list">
 							<bibliography>
 								<xsl:apply-templates select="body/sec[@sec-type = 'norm-refs']" mode="bibliography"/>
 								<xsl:apply-templates select="back/ref-list" mode="bibliography"/>
 							</bibliography>
 						 </xsl:if>
-						 <xsl:apply-templates select="//sec[@sec-type = 'index'] | //back/sec[@id = 'ind']" mode="index"/>
+					 <xsl:apply-templates select="//sec[@sec-type = 'index'] | //back/sec[@id = 'ind']" mode="index"/>
 					</xsl:element>
 				</xsl:otherwise>
 			</xsl:choose>
+		</xsl:variable>
+		
+		<xsl:variable name="xml_result">
+			<xsl:apply-templates select="xalan:nodeset($xml_result_)" mode="setNamespace"/>
 		</xsl:variable>
 		<xsl:copy-of select="$xml_result"/>
 		
@@ -61,7 +81,7 @@
 		<!-- ======================= -->
 		<!-- non-processed element checking -->
 		<!-- ======================= -->
-		<xsl:variable name="xml_result_namespace">https://www.metanorma.org/ns/iso</xsl:variable>
+		
 		<xsl:variable name="xml_namespace">http://www.w3.org/XML/1998/namespace</xsl:variable>
 		<xsl:variable name="mathml_namespace">http://www.w3.org/1998/Math/MathML</xsl:variable>
 		<xsl:variable name="unknown_elements">
@@ -1792,6 +1812,17 @@
 				</xsl:for-each>
 			</redirect:write>
 		</xsl:if>
+	</xsl:template>
+	
+	<xsl:template match="*[namespace-uri()='']" mode="setNamespace">
+		<xsl:element name="{name()}" namespace="{$xml_result_namespace}">
+			<xsl:copy-of select="@*"/>
+			<xsl:apply-templates mode="setNamespace"/>
+		</xsl:element>
+	</xsl:template>
+	
+	<xsl:template match="processing-instruction()" mode="setNamespace">
+		<xsl:copy-of select="."/>
 	</xsl:template>
 	
 </xsl:stylesheet>

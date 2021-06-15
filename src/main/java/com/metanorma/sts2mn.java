@@ -61,7 +61,13 @@ public class sts2mn {
                     .desc("folder with images (default 'images')")
                     .hasArg()
                     .required(false)
-                    .build());            
+                    .build());
+            addOption(Option.builder("t")
+                    .longOpt("type")
+                    .desc("type of standard to generate (for xml output format)")
+                    .hasArg()
+                    .required(false)
+                    .build());
             addOption(Option.builder("v")
                     .longOpt("version")
                     .desc("display application version")
@@ -115,6 +121,7 @@ public class sts2mn {
                 converter.setImagesDir(cmd.getOptionValue("imagesdir"));
                 converter.setIsSplitBibdata(cmd.hasOption("split-bibdata"));
                 converter.setDebugMode(cmd.hasOption("debug"));
+                converter.setTypeStandard(cmd.getOptionValue("type"));
                 
                 boolean result = converter.process();
                 

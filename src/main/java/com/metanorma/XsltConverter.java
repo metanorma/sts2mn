@@ -59,6 +59,9 @@ public class XsltConverter {
     
     private boolean isDebugMode = false; // default no debug
     
+    private String typeStandard = ""; // default value empty - allows to determine standard via xslt
+    private String namespaceStandard = "https://www.metanorma.org/ns/" + typeStandard;
+    
     final String SPLIT = "///SPLIT ";
     
     public XsltConverter() {
@@ -95,6 +98,13 @@ public class XsltConverter {
     public void setDebugMode(boolean isDebugMode) {
         this.isDebugMode = isDebugMode;
     }
+
+    public void setTypeStandard(String typeStandard) {
+        if (typeStandard != null) {
+            this.typeStandard = typeStandard;
+        }
+    }
+    
     
     
     
@@ -211,6 +221,7 @@ public class XsltConverter {
             transformer.setParameter("split-bibdata", isSplitBibdata);
             transformer.setParameter("imagesdir", imagesDir);
             transformer.setParameter("outpath", outputFolder);
+            transformer.setParameter("typestandard", typeStandard);
             transformer.setParameter("debug", isDebugMode);
 
             StringWriter resultWriter = new StringWriter();
