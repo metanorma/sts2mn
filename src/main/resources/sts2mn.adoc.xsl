@@ -2313,6 +2313,10 @@
 	</xsl:template>
 	
 	<xsl:template name="setIdOrType">
+		<xsl:if test="parent::front">
+			<xsl:text>[.preface]</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
 		<xsl:text>[[</xsl:text>
 			<xsl:choose>
 				<xsl:when test="normalize-space(@id) != ''">
