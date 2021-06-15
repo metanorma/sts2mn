@@ -1722,6 +1722,7 @@
 				<xsl:text>(</xsl:text>
 			</xsl:if>
 			<xsl:value-of select="$std-ref"/>
+			<xsl:value-of select="$mixed-citation"/>
 			<xsl:if test="(normalize-space($std-ref) != '' or normalize-space($mixed-citation) != '') and normalize-space($label) != ''">
 				<xsl:text>)</xsl:text>
 			</xsl:if>
@@ -1740,7 +1741,12 @@
 	
 	<xsl:template match="ref/label" mode="references">
 		<!-- <xsl:text>, </xsl:text> -->
-		<xsl:value-of select="translate(., '[]', '')"/>
+		<xsl:variable name="label" select="translate(., '[]', '')"/>
+		<xsl:choose>
+			<xsl:when test="$label = '—'"></xsl:when>
+			<xsl:otherwise><xsl:value-of select="$label"/></xsl:otherwise>
+		</xsl:choose>
+		
 	</xsl:template>
 	
 	<xsl:template match="ref/std/std-ref"/>
@@ -1769,6 +1775,7 @@
 		<xsl:text>)</xsl:text> <xsl:value-of select="$text"/> -->
 	</xsl:template>
 	
+	<xsl:template match="ref/mixed-citation/std"/>
 	<xsl:template match="ref/mixed-citation/std" mode="references">
 		<!-- <xsl:text>,</xsl:text> -->
 		<xsl:apply-templates/>
