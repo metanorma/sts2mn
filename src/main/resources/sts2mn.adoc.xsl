@@ -173,10 +173,11 @@
 			<xsl:text>:imagesdir: </xsl:text><xsl:value-of select="$imagesdir"/>
 			<xsl:text>&#xa;</xsl:text>
 			
-			<xsl:if test="normalize-space($docfile) != ''">
+			<!-- The :docfile: attribute is no longer used -->
+			<!-- <xsl:if test="normalize-space($docfile) != ''">
 				<xsl:text>:docfile: </xsl:text><xsl:value-of select="$docfile"/>
 				<xsl:text>&#xa;</xsl:text>
-			</xsl:if>
+			</xsl:if> -->
 			
 			<xsl:text>&#xa;</xsl:text>
 
