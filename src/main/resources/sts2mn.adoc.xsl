@@ -730,6 +730,9 @@
 		</redirect:write>
 	</xsl:template>
 	
+	<!-- ======================== -->
+	<!-- Normative references -->
+	<!-- ======================== -->
 	<xsl:template match="body/sec[@sec-type = 'norm-refs'] | front/sec[@sec-type = 'norm-refs']" priority="2">
 		<xsl:variable name="sectionsFolder"><xsl:call-template name="getSectionsFolder"/></xsl:variable>
 		<redirect:write file="{$outpath}/{$sectionsFolder}/02-normrefs.adoc">
@@ -745,6 +748,23 @@
 		</redirect:write>
 	</xsl:template>
 	
+	<!-- Text before references -->
+	<xsl:template match="sec[@sec-type = 'norm-refs']/p" priority="2">
+		<xsl:if test="not(preceding-sibling::*[1][self::p])"> <!-- first p in norm-refs -->
+			<xsl:text>[NOTE,type=boilerplate]</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:text>--</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
+		<xsl:call-template name="p"/>
+		<xsl:if test="not(following-sibling::*[1][self::p])"> <!-- last p in norm-refs -->
+			<xsl:text>--</xsl:text>
+			<xsl:text>&#xa;&#xa;</xsl:text>
+		</xsl:if>
+	</xsl:template>
+	<!-- ======================== -->
+	<!-- END Normative references -->
+	<!-- ======================== -->
 	
 	<xsl:template match="body/sec">
 		<xsl:variable name="sec_number" select="format-number(label, '00')" />
@@ -859,13 +879,14 @@
 	
 	<xsl:template match="label"/>
 	
-	<xsl:template match="p">
+	<xsl:template match="p" name="p">
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:choose>
 			<xsl:when test="ancestor::list-item and not(following-sibling::p) and following-sibling::non-normative-note"></xsl:when>
 			<xsl:when test="ancestor::non-normative-note and not(following-sibling::p)"></xsl:when>
 			<xsl:when test="not(following-sibling::p) and ancestor::list/following-sibling::non-normative-note"></xsl:when>
+			<xsl:when test="ancestor::sec[@sec-type = 'norm-refs'] and not(following-sibling::*[1][self::p])"></xsl:when>
 			<xsl:otherwise><xsl:text>&#xa;</xsl:text></xsl:otherwise>
 		</xsl:choose>
 		
