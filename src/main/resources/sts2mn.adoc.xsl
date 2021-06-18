@@ -766,6 +766,39 @@
 	<!-- END Normative references -->
 	<!-- ======================== -->
 	
+	<!-- ======================== -->
+	<!-- Terms and definitions -->
+	<!-- ======================== -->
+	<!-- first element in Terms and definitions section -->
+	<xsl:template match="sec[@sec-type = 'terms']/title | sec[@sec-type = 'terms']//sec/title" priority="2">
+	
+		<xsl:call-template name="title"/>
+	
+		<xsl:text>[.boilerplate]</xsl:text>
+		<xsl:text>&#xa;</xsl:text>
+		<xsl:variable name="level">
+			<xsl:call-template name="getLevel">
+				<xsl:with-param name="addon">1</xsl:with-param>
+			</xsl:call-template>
+		</xsl:variable>
+		<xsl:value-of select="$level"/>
+		<xsl:choose>
+			<!-- if there isn't paragraph after title -->
+			<!-- https://www.metanorma.org/author/topics/document-format/section-terms/#overriding-predefined-text -->
+			<xsl:when test="following-sibling::*[1][self::term-sec] or following-sibling::*[1][self::sec]">
+				<xsl:text> {blank}</xsl:text>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:text> My predefined text</xsl:text>
+			</xsl:otherwise>
+		</xsl:choose>
+		<xsl:text>&#xa;&#xa;</xsl:text>
+	</xsl:template>
+	<!-- ======================== -->
+	<!-- END Terms and definitions -->
+	<!-- ======================== -->
+	
+	
 	<xsl:template match="body/sec">
 		<xsl:variable name="sec_number" select="format-number(label, '00')" />
 		<xsl:variable name="title" select="normalize-space(translate(title, ',&#x200b;&#xa0;‑','    '))"/> <!-- get first word -->
@@ -820,7 +853,7 @@
 		<xsl:apply-templates />
 	</xsl:template>
 	
-	<xsl:template match="title">
+	<xsl:template match="title" name="title">
 		<xsl:choose>
 			<xsl:when test="parent::sec/@sec-type = 'foreword'">
 				<xsl:text>== </xsl:text>
@@ -2097,6 +2130,7 @@
 	</xsl:template>
 	
 	<xsl:template name="getLevel">
+		<xsl:param name="addon">0</xsl:param>
 		<xsl:variable name="level_total" select="count(ancestor::*)"/>
 		
 		<xsl:variable name="level_standard" select="count(ancestor::standard/ancestor::*)"/>
@@ -2128,7 +2162,7 @@
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 		<xsl:call-template name="repeat">
-			<xsl:with-param name="count" select="$level"/>
+			<xsl:with-param name="count" select="$level + $addon"/>
 		</xsl:call-template>
 		
 	</xsl:template>
