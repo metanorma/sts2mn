@@ -1030,7 +1030,7 @@
 					</xsl:variable>
 					<!-- DEBUG <xsl:value-of select="$std_text"/> -->
 					<xsl:choose>
-						<xsl:when test="contains($std_text, 'annex')">,<xsl:value-of select="translate($std_text, ' ', '=')"/></xsl:when>
+						<xsl:when test="contains($std_text, 'annex') or contains($std_text, 'table')">,<xsl:value-of select="translate($std_text, ' ', '=')"/></xsl:when>
 						<xsl:otherwise>
 							<xsl:variable name="parts">
 								<xsl:call-template name="split">
