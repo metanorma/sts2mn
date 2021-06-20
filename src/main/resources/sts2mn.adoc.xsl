@@ -1096,6 +1096,11 @@
 		
 		<xsl:value-of select="$locality"/>
 
+		<!-- if there isn't in References, then display name -->
+		<xsl:if test="$ref_id = '' and $ref_std_id = ''">
+			<xsl:text>,</xsl:text><xsl:value-of select="std-ref/text()"/>
+		</xsl:if>
+
 		<xsl:text>&gt;&gt;</xsl:text>
 		
 		<xsl:if test="italic">_</xsl:if>
