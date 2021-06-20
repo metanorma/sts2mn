@@ -990,6 +990,16 @@
 		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
+	
+	<!-- empty 
+		<std>
+      <std-ref/>
+    </std>
+	-->
+	<xsl:template match="std[normalize-space() = '']">
+		<xsl:text> </xsl:text>
+	</xsl:template>
+	
 	<!-- Example:
 		<std std-id="ISO 12345:2011" type="dated">
 			<std-ref>ISO 12345:2011</std-ref>
@@ -998,27 +1008,103 @@
 	<xsl:template match="std">
 		<xsl:variable name="space"><xsl:if test="local-name(preceding-sibling::node()) != ''"><xsl:text> </xsl:text></xsl:if></xsl:variable>
 		<xsl:value-of select="$space"/>
-		<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
+		
+		<xsl:if test="italic">_</xsl:if>
+		<xsl:if test="bold">*</xsl:if>
+		
+		<xsl:text>&lt;&lt;</xsl:text>
+		
+		<xsl:variable name="clause" select="substring-after(@std-id, ':clause:')"/>
+		<xsl:variable name="locality">
+			<xsl:choose>
+				<xsl:when test="$clause != '' and translate(substring($clause, 1, 1), '0123456789', '') = ''">,clause=<xsl:value-of select="$clause"/></xsl:when>
+				<xsl:when test="$clause != ''">,annex=<xsl:value-of select="$clause"/></xsl:when>
+				<xsl:when test="not(@std-id)">
+					<!-- get text -->
+					<xsl:variable name="std_text" select="java:toLowerCase(java:java.lang.String.new(normalize-space(translate(text(), '&#xa0;', ' '))))"/>
+					<!-- DEBUG <xsl:value-of select="$std_text"/> -->
+					<xsl:choose>
+						<xsl:when test="contains($std_text, 'annex')">,<xsl:value-of select="translate($std_text, ' ', '=')"/></xsl:when>
+						<xsl:otherwise>
+							<xsl:variable name="parts">
+								<xsl:call-template name="split">
+									<xsl:with-param name="pText" select="$std_text"/>
+									<xsl:with-param name="sep" select="' '"/>
+								</xsl:call-template>
+							</xsl:variable>
+							<xsl:for-each select="xalan:nodeset($parts)//item">
+								<xsl:choose>
+									<xsl:when test="translate(substring(., 1, 1), '0123456789', '') = ''">,clause=<xsl:value-of select="."/></xsl:when>
+									<xsl:when test=". = 'and'"><!-- skip --></xsl:when>
+									<xsl:otherwise>,annex=<xsl:value-of select="."/></xsl:otherwise>
+								</xsl:choose>
+							</xsl:for-each>
+						</xsl:otherwise>
+						
+					</xsl:choose>
+					
+				</xsl:when>
+			</xsl:choose>
+			
+		</xsl:variable>
+		
+		<xsl:variable name="std_id">
+			<xsl:choose>
+				<xsl:when test="$clause != ''"><xsl:value-of select="substring-before(@std-id, ':clause:')"/></xsl:when>
+				<xsl:when test="@std-id"><xsl:value-of select="@std-id"/></xsl:when>
+				<xsl:otherwise><xsl:value-of select="translate(normalize-space(std-ref/text()), '&#xa0;', ' ')"/></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<!-- DEBUG std_id='<xsl:value-of select="$std_id"/>' -->
+		<!-- try to find ref in ref-list -->
+		<xsl:variable name="ref_by_id" select="//ref[std/@std-id = $std_id]"/> <!-- find ref by id -->
+		<xsl:variable name="ref_by_text" select="//ref[translate(normalize-space(std/std-ref/text()), '&#xa0;', ' ') = $std_id]"/> <!-- find ref by text (not id) -->
+		<!-- DEBUG ref_by_id='<xsl:value-of select="xalan:nodeset($ref_by_id)/@id"/>'
+		DEBUG ref_by_text='<xsl:value-of select="xalan:nodeset($ref_by_text)/@id"/>' -->
+		
+		
+		<xsl:variable name="ref">
+			<xsl:copy-of select="$ref_by_id"/>
+			<xsl:if test="not(xalan:nodeset($ref_by_id)/*)"> <!-- if ref by id is empty, then use ref by name -->
+				<xsl:copy-of select="$ref_by_text"/>
+			</xsl:if>
+		</xsl:variable>
+		<!-- DEBUG ref='<xsl:copy-of select="$ref"/>'
+		DEBUG ref='<xsl:value-of select="xalan:nodeset($ref)/ref/@id"/>' -->
+		
+		<xsl:variable name="ref_id" select="normalize-space(xalan:nodeset($ref)/ref/@id)"/>
+		<!-- DEBUG ref_id='<xsl:value-of select="$ref_id"/>' -->
+		<xsl:variable name="ref_std_id" select="normalize-space(xalan:nodeset($ref)/ref/std/@std-id)"/>
+		<!-- DEBUG ref_std_id='<xsl:value-of select="$ref_std_id"/>' -->
+		<xsl:value-of select="$ref_id"/> <!-- put ref/@id -->
+		<xsl:if test="$ref_id = ''"> <!-- put ref/std/std-id -->
+			<xsl:call-template name="getNormalizedId">
+				<xsl:with-param name="id" select="$ref_std_id"/>
+			</xsl:call-template>
+			<xsl:if test="$ref_std_id = ''">
+				<xsl:call-template name="getNormalizedId">
+				<xsl:with-param name="id" select="$std_id"/>
+			</xsl:call-template>
+			</xsl:if>
+		</xsl:if>
+		
+		<xsl:value-of select="$locality"/>
+
+		<xsl:text>&gt;&gt;</xsl:text>
+		
+		<xsl:if test="italic">_</xsl:if>
+		<xsl:if test="bold">*</xsl:if>
+		
 		<xsl:value-of select="$space"/>
 	</xsl:template>
 	
-	<xsl:template match="std[italic]" priority="2">
-		<xsl:text>_</xsl:text>
-		<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
-		<xsl:text>_</xsl:text>
-	</xsl:template>
-	<xsl:template match="std[bold]" priority="2">
-		<xsl:text>*</xsl:text>
-		<xsl:text>&lt;&lt;</xsl:text><xsl:apply-templates /><xsl:text>&gt;&gt;</xsl:text>
-		<xsl:text>*</xsl:text>
-	</xsl:template>
 	<xsl:template match="std/italic | std/bold" priority="2">
 		<xsl:apply-templates />
 	</xsl:template>
 	
 	<xsl:template match="std-id-group"/>
 	
-	<xsl:template match="std[not(ancestor::ref)]/text()">
+	<!-- <xsl:template match="std[not(ancestor::ref)]/text()">
 		<xsl:variable name="text" select="normalize-space(translate(.,'&#xA0;', ' '))"/>
 		<xsl:choose>
 			<xsl:when test="starts-with($text, ',')">
@@ -1030,9 +1116,14 @@
 				<xsl:value-of select="."/>
 			</xsl:otherwise>
 		</xsl:choose>
+	</xsl:template> -->
+	
+	<xsl:template match="ref//std-ref"> <!-- sec[@sec-type = 'norm-refs'] -->
+		<xsl:apply-templates />
 	</xsl:template>
 	
-	<xsl:template match="std-ref">
+	<!-- skip -->
+	<xsl:template match="std-ref2">
 		<xsl:choose>
 			<xsl:when test="ancestor::ref"> <!-- sec[@sec-type = 'norm-refs'] -->
 				<xsl:apply-templates />
@@ -1061,8 +1152,9 @@
 				<xsl:call-template name="getStdRef"/>
 			</xsl:otherwise>
 		</xsl:choose>
-		
 	</xsl:template>
+	
+	
 	
 	<xsl:template match="tbx:source">
 		<xsl:text>[.source]</xsl:text>
