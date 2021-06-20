@@ -1021,7 +1021,13 @@
 				<xsl:when test="$clause != ''">,annex=<xsl:value-of select="$clause"/></xsl:when>
 				<xsl:when test="not(@std-id)">
 					<!-- get text -->
-					<xsl:variable name="std_text" select="java:toLowerCase(java:java.lang.String.new(normalize-space(translate(text(), '&#xa0;', ' '))))"/>
+					<xsl:variable name="std_text_" select="java:toLowerCase(java:java.lang.String.new(normalize-space(translate(text(), '&#xa0;', ' '))))"/>
+					<xsl:variable name="std_text">
+						<xsl:choose>
+							<xsl:when test="starts-with($std_text_, ',')"><xsl:value-of select="normalize-space(substring-after($std_text_, ','))"/></xsl:when>
+							<xsl:otherwise><xsl:value-of select="$std_text_"/></xsl:otherwise>
+						</xsl:choose>
+					</xsl:variable>
 					<!-- DEBUG <xsl:value-of select="$std_text"/> -->
 					<xsl:choose>
 						<xsl:when test="contains($std_text, 'annex')">,<xsl:value-of select="translate($std_text, ' ', '=')"/></xsl:when>
@@ -1035,7 +1041,7 @@
 							<xsl:for-each select="xalan:nodeset($parts)//item">
 								<xsl:choose>
 									<xsl:when test="translate(substring(., 1, 1), '0123456789', '') = ''">,clause=<xsl:value-of select="."/></xsl:when>
-									<xsl:when test=". = 'and'"><!-- skip --></xsl:when>
+									<xsl:when test=". = 'and' or . = ','"><!-- skip --></xsl:when>
 									<xsl:otherwise>,annex=<xsl:value-of select="."/></xsl:otherwise>
 								</xsl:choose>
 							</xsl:for-each>
