@@ -1509,6 +1509,7 @@
 		<!-- <xsl:if test="thead">
 			<xsl:text>options="header"</xsl:text>
 		</xsl:if> -->
+		<xsl:apply-templates select="@width" mode="table_header"/>
 		<xsl:text>]</xsl:text>
 		<xsl:text>&#xa;</xsl:text>		
 		<xsl:text>|===</xsl:text>
@@ -1525,6 +1526,11 @@
 		
 	</xsl:template>
 	
+	<xsl:template match="table/@width" mode="table_header">
+		<xsl:text>,width=</xsl:text><xsl:value-of select="."/>
+		<xsl:if test="not(contains(., '%')) and not(contains(., 'px'))">px</xsl:if>
+	</xsl:template>
+  
 	<xsl:template match="col"/>
 	
 	<xsl:template match="thead">

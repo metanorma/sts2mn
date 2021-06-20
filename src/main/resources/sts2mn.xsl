@@ -1155,10 +1155,17 @@
 					</xsl:choose>
 				</xsl:attribute>
 			</xsl:if>
+			<xsl:apply-templates select="@width" mode="table_header"/>
 			<xsl:apply-templates select="parent::table-wrap/caption/title"/>
 			<xsl:apply-templates/>
 			<xsl:apply-templates select="parent::table-wrap/table-wrap-foot" mode="table"/>
 		</table>
+	</xsl:template>
+	
+	<xsl:template match="table/@width" mode="table_header">
+		<xsl:attribute name="width">
+			<xsl:value-of select="."/><xsl:if test="not(contains(., '%')) and not(contains(., 'px'))">px</xsl:if>
+		</xsl:attribute>
 	</xsl:template>
 	
 	<xsl:template match="table-wrap-foot"/>
