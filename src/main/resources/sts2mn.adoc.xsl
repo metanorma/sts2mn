@@ -1848,6 +1848,17 @@
 	</xsl:template>
 	
 	<xsl:template match="ref">
+		<xsl:variable name="unique"><!-- skip repeating references -->
+			<xsl:choose>
+				<xsl:when test="@id and preceding-sibling::ref[@id = current()/@id]">false</xsl:when>
+				<xsl:when test="std/@std-id and preceding-sibling::ref[std/@std-id = current()/std/@std-id]">false</xsl:when>
+				<xsl:when test="std/std-ref and preceding-sibling::ref[std/std-ref = current()/std/std-ref]">false</xsl:when>
+			</xsl:choose>
+		</xsl:variable>
+		
+		<!-- comment repeated references -->
+		<xsl:if test="normalize-space($unique) = 'false'">// </xsl:if>
+		
 		<xsl:text>* </xsl:text>
 		<xsl:if test="@id or std/@std-id or std/std-ref">
 			<xsl:text>[[[</xsl:text>
@@ -1897,6 +1908,7 @@
 		<xsl:apply-templates/>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
+		
 	</xsl:template>
 	
 	<xsl:template match="ref/std">

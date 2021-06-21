@@ -1510,6 +1510,17 @@
 		
 	
 	<xsl:template match="ref">
+		<xsl:variable name="unique"><!-- skip repeating references -->
+			<xsl:choose>
+				<xsl:when test="@id and preceding-sibling::ref[@id = current()/@id]">false</xsl:when>
+				<xsl:when test="std/@std-id and preceding-sibling::ref[std/@std-id = current()/std/@std-id]">false</xsl:when>
+				<xsl:when test="std/std-ref and preceding-sibling::ref[std/std-ref = current()/std/std-ref]">false</xsl:when>
+			</xsl:choose>
+		</xsl:variable>
+		unique='<xsl:value-of select="$unique"/>'
+		<!-- comment repeated references -->
+		<xsl:if test="normalize-space($unique) = 'false'"><xsl:text disable-output-escaping="yes">&lt;!--STS: </xsl:text></xsl:if>
+		
 		<bibitem>
 			<xsl:copy-of select="@id"/>
 			<xsl:if test="@content-type">
@@ -1517,6 +1528,9 @@
 			</xsl:if>
 			<xsl:apply-templates />
 		</bibitem>
+		
+		<xsl:if test="normalize-space($unique) = 'false'"><xsl:text disable-output-escaping="yes">--&gt;</xsl:text></xsl:if>
+		
 	</xsl:template>
 	
 	<xsl:template match="ref-list/ref/label">
