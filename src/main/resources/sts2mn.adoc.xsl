@@ -1856,58 +1856,65 @@
 			</xsl:choose>
 		</xsl:variable>
 		
-		<!-- comment repeated references -->
-		<xsl:if test="normalize-space($unique) = 'false'">// </xsl:if>
-		
-		<xsl:text>* </xsl:text>
-		<xsl:if test="@id or std/@std-id or std/std-ref">
-			<xsl:text>[[[</xsl:text>
-			<xsl:value-of select="@id"/>
-			<xsl:if test="not(@id)">
-				<xsl:variable name="id_normalized">
-					<xsl:call-template name="getNormalizedId">
-						<xsl:with-param name="id" select="std/@std-id"/>
-					</xsl:call-template>
-				</xsl:variable>
-				<xsl:value-of select="$id_normalized"/>
-				
-				<xsl:if test="normalize-space($id_normalized) = ''">
-					
-					<xsl:variable name="std_ref">
+		<xsl:variable name="reference">
+			<!-- comment repeated references -->
+			<xsl:if test="normalize-space($unique) = 'false'">// </xsl:if>
+			
+			<xsl:text>* </xsl:text>
+			<xsl:if test="@id or std/@std-id or std/std-ref">
+				<xsl:text>[[[</xsl:text>
+				<xsl:value-of select="@id"/>
+				<xsl:if test="not(@id)">
+					<xsl:variable name="id_normalized">
 						<xsl:call-template name="getNormalizedId">
-							<xsl:with-param name="id" select="std/std-ref"/>
+							<xsl:with-param name="id" select="std/@std-id"/>
 						</xsl:call-template>
 					</xsl:variable>
+					<xsl:value-of select="$id_normalized"/>
 					
-					<xsl:value-of select="$std_ref"/>
+					<xsl:if test="normalize-space($id_normalized) = ''">
+						
+						<xsl:variable name="std_ref">
+							<xsl:call-template name="getNormalizedId">
+								<xsl:with-param name="id" select="std/std-ref"/>
+							</xsl:call-template>
+						</xsl:variable>
+						
+						<xsl:value-of select="$std_ref"/>
+					</xsl:if>
 				</xsl:if>
+				<xsl:text>,</xsl:text>
+				<xsl:variable name="std-ref">
+					<xsl:apply-templates select="std/std-ref" mode="references"/>
+				</xsl:variable>
+				<xsl:variable name="mixed-citation">
+					<xsl:apply-templates select="mixed-citation/std" mode="references"/>
+				</xsl:variable>
+				<xsl:variable name="label">
+					<xsl:apply-templates select="label" mode="references"/>
+				</xsl:variable>
+				
+				<xsl:if test="(normalize-space($std-ref) != '' or normalize-space($mixed-citation) != '') and normalize-space($label) != ''">
+					<xsl:text>(</xsl:text>
+				</xsl:if>
+				<xsl:value-of select="$std-ref"/>
+				<xsl:value-of select="$mixed-citation"/>
+				<xsl:if test="(normalize-space($std-ref) != '' or normalize-space($mixed-citation) != '') and normalize-space($label) != ''">
+					<xsl:text>)</xsl:text>
+				</xsl:if>
+				<xsl:value-of select="$label"/>
+				
+				<xsl:text>]]]</xsl:text>
 			</xsl:if>
-			<xsl:text>,</xsl:text>
-			<xsl:variable name="std-ref">
-				<xsl:apply-templates select="std/std-ref" mode="references"/>
-			</xsl:variable>
-			<xsl:variable name="mixed-citation">
-				<xsl:apply-templates select="mixed-citation/std" mode="references"/>
-			</xsl:variable>
-			<xsl:variable name="label">
-				<xsl:apply-templates select="label" mode="references"/>
-			</xsl:variable>
-			
-			<xsl:if test="(normalize-space($std-ref) != '' or normalize-space($mixed-citation) != '') and normalize-space($label) != ''">
-				<xsl:text>(</xsl:text>
-			</xsl:if>
-			<xsl:value-of select="$std-ref"/>
-			<xsl:value-of select="$mixed-citation"/>
-			<xsl:if test="(normalize-space($std-ref) != '' or normalize-space($mixed-citation) != '') and normalize-space($label) != ''">
-				<xsl:text>)</xsl:text>
-			</xsl:if>
-			<xsl:value-of select="$label"/>
-			
-			<xsl:text>]]]</xsl:text>
+			<xsl:apply-templates/>
+			<xsl:text>&#xa;</xsl:text>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:variable>
+		<xsl:value-of select="$reference"/>
+		
+		<xsl:if test="normalize-space($unique) = 'false'">
+			<xsl:message>WARNING: Repeated reference - <xsl:copy-of select="."/></xsl:message>
 		</xsl:if>
-		<xsl:apply-templates/>
-		<xsl:text>&#xa;</xsl:text>
-		<xsl:text>&#xa;</xsl:text>
 		
 	</xsl:template>
 	

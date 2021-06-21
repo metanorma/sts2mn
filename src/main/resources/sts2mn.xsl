@@ -1531,6 +1531,10 @@
 		
 		<xsl:if test="normalize-space($unique) = 'false'"><xsl:text disable-output-escaping="yes">--&gt;</xsl:text></xsl:if>
 		
+		<xsl:if test="normalize-space($unique) = 'false'">
+			<xsl:message>WARNING: Repeated reference - <xsl:copy-of select="."/></xsl:message>
+		</xsl:if>
+		
 	</xsl:template>
 	
 	<xsl:template match="ref-list/ref/label">
