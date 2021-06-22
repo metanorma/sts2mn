@@ -993,8 +993,8 @@
 	
 	<!-- empty 
 		<std>
-      <std-ref/>
-    </std>
+			<std-ref/>
+		</std>
 	-->
 	<xsl:template match="std[normalize-space() = '']">
 		<xsl:text> </xsl:text>
@@ -1021,16 +1021,23 @@
 				<xsl:when test="$clause != ''">,annex=<xsl:value-of select="$clause"/></xsl:when>
 				<xsl:when test="not(@std-id)">
 					<!-- get text -->
-					<xsl:variable name="std_text_" select="java:toLowerCase(java:java.lang.String.new(normalize-space(translate(text(), '&#xa0;', ' '))))"/>
+					<xsl:variable name="std_text_" select="normalize-space(translate(text(), '&#xa0;', ' '))"/>
 					<xsl:variable name="std_text">
 						<xsl:choose>
 							<xsl:when test="starts-with($std_text_, ',')"><xsl:value-of select="normalize-space(substring-after($std_text_, ','))"/></xsl:when>
 							<xsl:otherwise><xsl:value-of select="$std_text_"/></xsl:otherwise>
 						</xsl:choose>
 					</xsl:variable>
+					<xsl:variable name="std_text_lc" select="java:toLowerCase(java:java.lang.String.new($std_text))"/>
 					<!-- DEBUG <xsl:value-of select="$std_text"/> -->
 					<xsl:choose>
-						<xsl:when test="contains($std_text, 'annex') or contains($std_text, 'table')">,<xsl:value-of select="translate($std_text, ' ', '=')"/></xsl:when>
+						<xsl:when test="contains($std_text_lc, 'annex') or contains($std_text_lc, 'table')">
+							<xsl:text>,</xsl:text>
+							<xsl:variable name="pair" select="translate($std_text, ' ', '=')"/>
+							<xsl:value-of select="java:toLowerCase(java:java.lang.String.new(substring-before($pair, '=')))"/>
+							<xsl:text>=</xsl:text>
+							<xsl:value-of select="substring-after($pair, '=')"/>
+						</xsl:when>
 						<xsl:otherwise>
 							<xsl:variable name="parts">
 								<xsl:call-template name="split">
@@ -1046,60 +1053,27 @@
 								</xsl:choose>
 							</xsl:for-each>
 						</xsl:otherwise>
-						
 					</xsl:choose>
-					
 				</xsl:when>
 			</xsl:choose>
-			
 		</xsl:variable>
 		
-		<xsl:variable name="std_id">
-			<xsl:choose>
-				<xsl:when test="$clause != ''"><xsl:value-of select="substring-before(@std-id, ':clause:')"/></xsl:when>
-				<xsl:when test="@std-id"><xsl:value-of select="@std-id"/></xsl:when>
-				<xsl:otherwise><xsl:value-of select="translate(normalize-space(std-ref/text()), '&#xa0;', ' ')"/></xsl:otherwise>
-			</xsl:choose>
-		</xsl:variable>
-		<!-- DEBUG std_id='<xsl:value-of select="$std_id"/>' -->
-		<!-- try to find ref in ref-list -->
-		<xsl:variable name="ref_by_id" select="//ref[std/@std-id = $std_id]"/> <!-- find ref by id -->
-		<xsl:variable name="ref_by_text" select="//ref[translate(normalize-space(std/std-ref/text()), '&#xa0;', ' ') = $std_id]"/> <!-- find ref by text (not id) -->
-		<!-- DEBUG ref_by_id='<xsl:value-of select="xalan:nodeset($ref_by_id)/@id"/>'
-		DEBUG ref_by_text='<xsl:value-of select="xalan:nodeset($ref_by_text)/@id"/>' -->
+		<!-- @stdid attribute was added in linearize.xsl -->
+		<xsl:variable name="ref_by_stdid" select="//ref[@stdid = current()/@stdid or @stdid_option = current()/@stdid]"/> <!-- find ref by id -->
 		
+		<xsl:choose>
+			<xsl:when test="xalan:nodeset($ref_by_stdid)/*"> <!-- if references in References found, then put id of those reference -->
+				<xsl:value-of select="xalan:nodeset($ref_by_stdid)/@id"/>
+				<xsl:value-of select="$locality"/>
+			</xsl:when>
+			<xsl:otherwise> <!-- put id of current std -->
+				<xsl:value-of select="@stdid"/>
+				<xsl:value-of select="$locality"/>
+				<!-- if there isn't in References, then display name -->
+				<xsl:text>,</xsl:text><xsl:value-of select="std-ref/text()"/>
+			</xsl:otherwise>
+		</xsl:choose>
 		
-		<xsl:variable name="ref">
-			<xsl:copy-of select="$ref_by_id"/>
-			<xsl:if test="not(xalan:nodeset($ref_by_id)/*)"> <!-- if ref by id is empty, then use ref by name -->
-				<xsl:copy-of select="$ref_by_text"/>
-			</xsl:if>
-		</xsl:variable>
-		<!-- DEBUG ref='<xsl:copy-of select="$ref"/>'
-		DEBUG ref='<xsl:value-of select="xalan:nodeset($ref)/ref/@id"/>' -->
-		
-		<xsl:variable name="ref_id" select="normalize-space(xalan:nodeset($ref)/ref/@id)"/>
-		<!-- DEBUG ref_id='<xsl:value-of select="$ref_id"/>' -->
-		<xsl:variable name="ref_std_id" select="normalize-space(xalan:nodeset($ref)/ref/std/@std-id)"/>
-		<!-- DEBUG ref_std_id='<xsl:value-of select="$ref_std_id"/>' -->
-		<xsl:value-of select="$ref_id"/> <!-- put ref/@id -->
-		<xsl:if test="$ref_id = ''"> <!-- put ref/std/std-id -->
-			<xsl:call-template name="getNormalizedId">
-				<xsl:with-param name="id" select="$ref_std_id"/>
-			</xsl:call-template>
-			<xsl:if test="$ref_std_id = ''">
-				<xsl:call-template name="getNormalizedId">
-				<xsl:with-param name="id" select="$std_id"/>
-			</xsl:call-template>
-			</xsl:if>
-		</xsl:if>
-		
-		<xsl:value-of select="$locality"/>
-
-		<!-- if there isn't in References, then display name -->
-		<xsl:if test="$ref_id = '' and $ref_std_id = ''">
-			<xsl:text>,</xsl:text><xsl:value-of select="std-ref/text()"/>
-		</xsl:if>
 
 		<xsl:text>&gt;&gt;</xsl:text>
 		
