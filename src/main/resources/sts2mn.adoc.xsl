@@ -1070,7 +1070,7 @@
 				<xsl:value-of select="@stdid"/>
 				<xsl:value-of select="$locality"/>
 				<!-- if there isn't in References, then display name -->
-				<xsl:text>,</xsl:text><xsl:value-of select="std-ref/text()"/>
+				<xsl:text>,</xsl:text><xsl:value-of select=".//std-ref/text()"/>
 			</xsl:otherwise>
 		</xsl:choose>
 		

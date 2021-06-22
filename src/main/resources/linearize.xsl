@@ -76,9 +76,12 @@
 					</xsl:when>
 				</xsl:choose>
 			</xsl:variable>
-			<xsl:attribute name="stdid"><xsl:value-of select="$stdid"/></xsl:attribute>
-			<xsl:if test="not(@id)"><!-- create attribute id for ref, if not exists -->
-				<xsl:attribute name="id"><xsl:value-of select="$stdid"/></xsl:attribute>
+			
+			<xsl:if test="normalize-space($stdid) != ''">
+				<xsl:attribute name="stdid"><xsl:value-of select="$stdid"/></xsl:attribute>
+				<xsl:if test="not(@id)"><!-- create attribute id for ref, if not exists -->
+					<xsl:attribute name="id"><xsl:value-of select="$stdid"/></xsl:attribute>
+				</xsl:if>
 			</xsl:if>
 			
 			<xsl:if test="normalize-space($std-ref) != ''">
@@ -108,9 +111,9 @@
 							<xsl:with-param name="id" select="$std_id"/>
 						</xsl:call-template>
 					</xsl:when>
-					<xsl:when test="normalize-space(std-ref) != ''">
+					<xsl:when test="normalize-space(.//std-ref) != ''">
 						<xsl:call-template name="getNormalizedId">
-							<xsl:with-param name="id" select="normalize-space(std-ref)"/>
+							<xsl:with-param name="id" select="normalize-space(.//std-ref)"/>
 						</xsl:call-template>
 					</xsl:when>
 				</xsl:choose>
