@@ -66,6 +66,8 @@
 		</xsl:choose>
 	</xsl:variable>
 	
+	<xsl:variable name="taskCopyImagesFilename" select="concat($outpath, '/task.copyImages.adoc')"/>
+	
 	<xsl:template match="/">
 		<xsl:choose>
 			<xsl:when test=".//sub-part"> <!-- multiple documents in one xml -->
@@ -76,11 +78,12 @@
 				<!-- create separate document for each  sub-part -->
 				<xsl:variable name="documents">
 					<xsl:for-each select="standard/body/sub-part">
-						<xsl:variable name="number"><xsl:number></xsl:number></xsl:variable>
+					
+						<xsl:variable name="number"><xsl:number/></xsl:variable>
 						
-							<xsl:apply-templates select="xalan:nodeset($xml)" mode="sub-part">
-								<xsl:with-param name="doc-number" select="number($number)"/>
-							</xsl:apply-templates>
+						<xsl:apply-templates select="xalan:nodeset($xml)" mode="sub-part">
+							<xsl:with-param name="doc-number" select="number($number)"/>
+						</xsl:apply-templates>
 						
 					</xsl:for-each>
 				</xsl:variable>
@@ -97,9 +100,26 @@
 					</xsl:call-template>
 				</redirect:write>
 				
+				<redirect:open file="{$taskCopyImagesFilename}"/>
+				<xsl:call-template name="insertTaskImageList"/>
+				
+				<xsl:for-each select="xalan:nodeset($documents)/*">
+					<xsl:variable name="doctype">
+						<xsl:apply-templates select=".//nat-meta/std-ident/doc-type | .//iso-meta/std-ident/doc-type | .//std-meta/std-ident/doc-type"/>
+					</xsl:variable>
+					<xsl:if test="contains($doctype,'publicly-available-specification')"> <!-- PAS -->
+						<redirect:write file="{$taskCopyImagesFilename}">
+							<xsl:text>copyimage::</xsl:text><xsl:call-template name="getCoverPageImage"/><xsl:text>&#xa;</xsl:text>
+						</redirect:write>
+					</xsl:if>
+					
+				</xsl:for-each>
+				<redirect:close file="{$taskCopyImagesFilename}"/>
+				
 			</xsl:when>
 			<xsl:otherwise><!-- no sub-part elements -->
 				<xsl:apply-templates />
+				<xsl:call-template name="insertTaskImageList"/>
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
@@ -109,7 +129,6 @@
 		<redirect:open file="{$outpath}/{$docfile}"/>
 		<xsl:apply-templates />
 		<redirect:close file="{$outpath}/{$docfile}"/>
-		<xsl:call-template name="insertTaskImageList"/>
 	</xsl:template>
 	
 	<xsl:template match="standard">
@@ -117,7 +136,6 @@
 		<redirect:open file="{$outpath}/{$docfile}"/>
 		<xsl:apply-templates />
 		<redirect:close file="{$outpath}/{$docfile}"/>
-		<xsl:call-template name="insertTaskImageList"/>
 	</xsl:template>
 	
 	
@@ -170,6 +188,7 @@
 			<xsl:text>&#xa;</xsl:text>
 			<xsl:text>:data-uri-image:</xsl:text>
 			<xsl:text>&#xa;</xsl:text>
+			
 			<xsl:text>:imagesdir: </xsl:text><xsl:value-of select="$imagesdir"/>
 			<xsl:text>&#xa;</xsl:text>
 			
@@ -249,7 +268,12 @@
 		:title-part-fr: Règles de base -->
 		<xsl:apply-templates select="title-wrap"/>		
 		<!-- :doctype: international-standard -->
-		<xsl:apply-templates select="std-ident/doc-type"/>		
+		<xsl:variable name="doctype">
+			<xsl:apply-templates select="std-ident/doc-type"/>		
+		</xsl:variable>
+		<xsl:text>:doctype: </xsl:text><xsl:value-of select="$doctype"/>
+		<xsl:text>&#xa;</xsl:text>
+		
 		<!-- :docstage: 60
 		:docsubstage: 60 -->		
 		<xsl:apply-templates select="doc-ident/release-version"/>
@@ -320,8 +344,22 @@
 			</xsl:for-each>
 		</xsl:if>
 		
+		<xsl:if test="$doctype = 'publicly-available-specification'"> <!-- PAS -->
+			<xsl:text>:coverpage-image: </xsl:text>
+			<xsl:value-of select="$imagesdir"/>
+			<xsl:text>/</xsl:text>
+			<xsl:call-template name="getCoverPageImage"/>
+			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
+
 	</xsl:template>
 	
+	<xsl:template name="getCoverPageImage">
+		<xsl:variable name="doc-number" select="ancestor-or-self::standard/@doc-number" />
+		<xsl:text>coverpage</xsl:text>
+		<xsl:if test="$doc-number != ''">.<xsl:value-of select="$doc-number"/></xsl:if>
+		<xsl:text>.png</xsl:text>
+	</xsl:template>
 	
 	<xsl:template match="//standard/body">
 		<xsl:if test="$split-bibdata != 'true'">
@@ -533,10 +571,8 @@
 		<xsl:text></xsl:text>
 	</xsl:template>
 	
-	
 	<xsl:template match="std-ident[ancestor::front or ancestor::adoption-front]/doc-type[normalize-space(.) != '']">
 		<xsl:variable name="value" select="java:toLowerCase(java:java.lang.String.new(.))"/>
-		<xsl:text>:doctype: </xsl:text>
 		<!-- https://www.niso-sts.org/TagLibrary/niso-sts-TL-1-0-html/element/doc-type.html -->
 		<xsl:choose>
 			<xsl:when test="$organization = 'BSI'">
@@ -555,7 +591,6 @@
 				<xsl:value-of select="$value"/>
 			 </xsl:otherwise>
 		</xsl:choose>
-		<xsl:text>&#xa;</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="doc-ident[ancestor::front or ancestor::adoption-front]/release-version[normalize-space(.) != '']">
@@ -2547,8 +2582,9 @@
 				</xsl:if>
 			</xsl:for-each>
 		</xsl:variable>
+		
 		<xsl:if test="xalan:nodeset($imageList)//image">
-			<redirect:write file="{$outpath}/task.copyImages.adoc"> <!-- this list will be processed and deleted in java program -->
+			<redirect:write file="{$taskCopyImagesFilename}"> <!-- this list will be processed and deleted in java program -->
 				<xsl:for-each select="xalan:nodeset($imageList)//image">
 					<xsl:text>copy</xsl:text><xsl:value-of select="."/>
 				</xsl:for-each>
