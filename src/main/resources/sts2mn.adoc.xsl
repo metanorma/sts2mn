@@ -1041,8 +1041,9 @@
 		</std>
 	-->
 	<xsl:template match="std">
-		<xsl:variable name="space"><xsl:if test="local-name(preceding-sibling::node()) != ''"><xsl:text> </xsl:text></xsl:if></xsl:variable>
-		<xsl:value-of select="$space"/>
+		<xsl:variable name="space_before"><xsl:if test="local-name(preceding-sibling::node()[1]) != ''"><xsl:text> </xsl:text></xsl:if></xsl:variable>
+		<xsl:variable name="space_after"><xsl:if test="local-name(following-sibling::node()[1]) != ''"><xsl:text> </xsl:text></xsl:if></xsl:variable>
+		<xsl:value-of select="$space_before"/>
 		
 		<xsl:if test="italic">_</xsl:if>
 		<xsl:if test="bold">*</xsl:if>
@@ -1115,7 +1116,7 @@
 		<xsl:if test="italic">_</xsl:if>
 		<xsl:if test="bold">*</xsl:if>
 		
-		<xsl:value-of select="$space"/>
+		<xsl:value-of select="$space_after"/>
 	</xsl:template>
 	
 	<xsl:template match="std/italic | std/bold" priority="2">
