@@ -1522,6 +1522,7 @@
 	<xsl:template match="table-wrap">
 		<xsl:apply-templates select="@orientation"/>
 		<xsl:call-template name="setId"/>
+		<xsl:if test="not(label)">[%unnumbered]&#xa;</xsl:if>
 		<xsl:apply-templates select="table-wrap-foot/fn-group" mode="footnotes"/>
 		<xsl:apply-templates />
 		<xsl:apply-templates select="@orientation" mode="after_table"/>
@@ -2020,6 +2021,13 @@
 		<xsl:apply-templates/>
 		<xsl:if test="(parent::fig-group and position() != last()) or not(parent::fig-group)">
 			<xsl:text>&#xa;</xsl:text>
+		</xsl:if>
+	</xsl:template>
+	
+	<xsl:template match="fig/label" priority="2">
+		<xsl:variable name="number" select="normalize-space(substring-after(., '&#xa0;'))"/>
+		<xsl:if test="substring($number, 1, 1) = '0'"> <!-- example: Figure 0.1 -->
+			<xsl:text>[number=</xsl:text><xsl:value-of select="$number"/><xsl:text>]&#xa;</xsl:text>
 		</xsl:if>
 	</xsl:template>
 	
