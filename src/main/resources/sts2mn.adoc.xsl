@@ -2562,7 +2562,11 @@
 	
 	<xsl:template name="setIdOrType">
 		<xsl:if test="parent::front">
-			<xsl:text>[.preface]</xsl:text>
+			<xsl:text>[.preface</xsl:text>
+			<xsl:if test="@sec-type = 'amendment'">
+			<xsl:text>,type=corrigenda</xsl:text>
+			</xsl:if>
+			<xsl:text>]</xsl:text>
 			<xsl:text>&#xa;</xsl:text>
 		</xsl:if>
 		<xsl:text>[[</xsl:text>
