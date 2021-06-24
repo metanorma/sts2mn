@@ -1041,6 +1041,7 @@
 		</std>
 	-->
 	<xsl:template match="std">
+	
 		<xsl:variable name="space_before"><xsl:if test="local-name(preceding-sibling::node()[1]) != ''"><xsl:text> </xsl:text></xsl:if></xsl:variable>
 		<xsl:variable name="space_after"><xsl:if test="local-name(following-sibling::node()[1]) != ''"><xsl:text> </xsl:text></xsl:if></xsl:variable>
 		<xsl:value-of select="$space_before"/>
@@ -2220,7 +2221,14 @@
 	<!-- End Definitions list (dl) -->
 	<!-- =============== -->
 	
-	<xsl:template match="named-content[@content-type = 'ace-tag']" priority="2"/><!-- start end tag for corrections -->
+	<xsl:template match="named-content[@content-type = 'ace-tag'][contains(@specific-use, '_start') or contains(@specific-use, '_end')]" priority="2"><!-- start/end tag for corrections -->
+	
+		<xsl:variable name="space_before"><xsl:if test="local-name(preceding-sibling::node()[1]) != ''"><xsl:text> </xsl:text></xsl:if></xsl:variable>
+		<xsl:variable name="space_after"><xsl:if test="local-name(following-sibling::node()[1]) != ''"><xsl:text> </xsl:text></xsl:if></xsl:variable>
+		<xsl:value-of select="$space_before"/>
+		<xsl:text>add:[]</xsl:text>
+		<xsl:value-of select="$space_after"/>
+	</xsl:template>
 	
 	<xsl:template match="named-content">
 		<!-- <xsl:text>&lt;&lt;</xsl:text> -->
