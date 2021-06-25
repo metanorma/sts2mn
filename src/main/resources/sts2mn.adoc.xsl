@@ -1673,6 +1673,7 @@
 	
 	<xsl:template match="th">
 		<xsl:call-template name="spanProcessing"/>
+		<xsl:call-template name="alignmentProcessing"/>
 		<xsl:text>|</xsl:text>
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
@@ -1680,6 +1681,7 @@
 	
 	<xsl:template match="td">
 		<xsl:call-template name="spanProcessing"/>		
+		<xsl:call-template name="alignmentProcessing"/>
 		<xsl:text>|</xsl:text>
 		<xsl:choose>
 			<xsl:when test="position() = last() and normalize-space() = '' and not(*)"></xsl:when>
@@ -1717,6 +1719,38 @@
 			<xsl:text>+</xsl:text>
 		</xsl:if>
 		<xsl:if test="list or def-list">a</xsl:if>
+	</xsl:template>
+	
+	<xsl:template name="alignmentProcessing">
+		<xsl:if test="(@align and @align != 'left') or (@valign and @valign != 'top')">
+			
+			<xsl:variable name="align">
+				<xsl:call-template name="getAlignFormat"/>
+			</xsl:variable>
+			
+			<xsl:variable name="valign">
+				<xsl:call-template name="getVAlignFormat"/>
+			</xsl:variable>
+			
+			<xsl:value-of select="$align"/>
+			<xsl:value-of select="$valign"/>
+			
+		</xsl:if>
+	</xsl:template>
+	
+	<xsl:template name="getAlignFormat">
+		<xsl:choose>
+			<xsl:when test="@align = 'center'">^</xsl:when>
+			<xsl:when test="@align = 'right'">&gt;</xsl:when>
+			<!-- <xsl:otherwise>&lt;</xsl:otherwise> --><!-- left -->
+		</xsl:choose>
+	</xsl:template>
+	<xsl:template name="getVAlignFormat">
+		<xsl:choose>
+			<xsl:when test="@valign = 'middle'">.^</xsl:when>
+			<xsl:when test="@valign = 'bottom'">.&gt;</xsl:when>
+			<!-- <xsl:otherwise>&lt;</xsl:otherwise> --> <!-- top -->
+		</xsl:choose>
 	</xsl:template>
 	
 	<xsl:template match="td/p">
