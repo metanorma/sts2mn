@@ -1286,22 +1286,27 @@
 	</xsl:template>
 	
 	<xsl:template match="list/list-item">
-		<xsl:choose>
-			<xsl:when test="ancestor::list/@list-type = 'bullet' or 
-							ancestor::list/@list-type = 'dash' or
-							ancestor::list/@list-type = 'simple'">				
-				<xsl:call-template name="getLevelListItem">
-					<xsl:with-param name="list-label">*</xsl:with-param>
-				</xsl:call-template>
-			</xsl:when>
-			<xsl:otherwise>				
-				<xsl:call-template name="getLevelListItem">
-					<xsl:with-param name="list-label">.</xsl:with-param>
-				</xsl:call-template>				
-			</xsl:otherwise>
-		</xsl:choose>
-		<xsl:text> </xsl:text>
-		<xsl:apply-templates/>
+		<xsl:variable name="list_item_label">
+			<xsl:choose>
+				<xsl:when test="ancestor::list/@list-type = 'bullet' or 
+								ancestor::list/@list-type = 'dash' or
+								ancestor::list/@list-type = 'simple'">				
+					<xsl:call-template name="getLevelListItem">
+						<xsl:with-param name="list-label">*</xsl:with-param>
+					</xsl:call-template>
+				</xsl:when>
+				<xsl:otherwise>				
+					<xsl:call-template name="getLevelListItem">
+						<xsl:with-param name="list-label">.</xsl:with-param>
+					</xsl:call-template>				
+				</xsl:otherwise>
+			</xsl:choose>
+			<xsl:text> </xsl:text>
+		</xsl:variable>
+		<xsl:variable name="list_item_content"><xsl:apply-templates/></xsl:variable>
+		<xsl:if test="normalize-space($list_item_content) != ''">
+			<xsl:value-of select="$list_item_label"/><xsl:value-of select="$list_item_content"/>
+		</xsl:if>
 	</xsl:template>
 	
 	<xsl:template match="tbx:example | non-normative-example">
