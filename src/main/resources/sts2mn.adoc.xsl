@@ -1370,10 +1370,14 @@
 	</xsl:template> -->
 	
 	<xsl:template match="xref">
-		
+		<xsl:variable name="rid_" select="@rid"/>
+		<xsl:variable name="rid_tmp">
+			<xsl:if test="//array[@id = $rid_]">array_</xsl:if>
+			<xsl:value-of select="$rid_"/>
+		</xsl:variable>
+		<xsl:variable name="rid" select="normalize-space($rid_tmp)"/>
 		<xsl:choose>
 			<xsl:when test="@ref-type = 'fn' or @ref-type = 'table-fn'">
-				<xsl:variable name="rid" select="@rid"/>
 				<!-- find <fn id="$rid" -->
 				<xsl:choose>
 					<xsl:when test="//fn[@id = current()/@rid]/ancestor::table-wrap-foot">
@@ -1424,7 +1428,7 @@
 				<xsl:text>term:[</xsl:text><xsl:value-of select="$term_name"/><xsl:text>]</xsl:text>
 			</xsl:when>
 			<xsl:otherwise> <!-- example: ref-type="sec" "table" "app" -->
-				<xsl:text>&lt;&lt;</xsl:text><xsl:value-of select="@rid"/><xsl:text>&gt;&gt;</xsl:text>
+				<xsl:text>&lt;&lt;</xsl:text><xsl:value-of select="$rid"/><xsl:text>&gt;&gt;</xsl:text>
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
@@ -1468,7 +1472,7 @@
 	<xsl:template match="array">
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:choose>
-			<xsl:when test="count(table/col) + count(table/colgroup/col) = 2">
+			<xsl:when test="count(table/col) + count(table/colgroup/col) = 2 and $organization != 'BSI'">
 				<xsl:if test="@content-type = 'figure-index' and label">*<xsl:value-of select="label"/>*&#xa;&#xa;</xsl:if>
 				<xsl:apply-templates mode="dl"/>				
 			</xsl:when>
@@ -1561,6 +1565,10 @@
 	</xsl:template>
 	
 	<xsl:template match="table">
+		<xsl:if test="parent::array/@id">
+			<xsl:text>[[array_</xsl:text><xsl:value-of select="parent::array/@id"/><xsl:text>]]&#xa;</xsl:text>
+			<xsl:text>[%unnumbered]&#xa;</xsl:text>
+		</xsl:if>
 		<xsl:text>[</xsl:text>
 		<xsl:text>cols="</xsl:text>
 		<xsl:variable name="cols-count">
