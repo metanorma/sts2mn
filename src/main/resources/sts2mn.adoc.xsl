@@ -29,7 +29,7 @@
 	
 	<xsl:variable name="organization">
 	<xsl:choose>
-			<xsl:when test="/standard/front/nat-meta/@originator = 'BSI' or /standard/front/iso-meta/secretariat = 'BSI'">BSI</xsl:when>
+			<xsl:when test="/standard/front/nat-meta/@originator = 'BSI' or /standard/front/nat-meta/@originator = 'PAS' or /standard/front/iso-meta/secretariat = 'BSI'">BSI</xsl:when>
 			<xsl:otherwise>
 				<xsl:value-of select="/standard/front/*/doc-ident/sdo"/>
 			</xsl:otherwise>
@@ -1352,7 +1352,16 @@
 	</xsl:template>
 	
 	<xsl:template match="ext-link">
-		<xsl:value-of select="@xlink:href"/>
+		
+		<xsl:choose>
+			<xsl:when test="$organization = 'BSI'">
+				<xsl:value-of select="translate(@xlink:href, '&#x2011;', '-')"/> <!-- non-breaking hyphen minus -->
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="@xlink:href"/>
+			</xsl:otherwise>
+		</xsl:choose>
+		
 		<xsl:text>[</xsl:text><xsl:apply-templates /><xsl:text>]</xsl:text>
 	</xsl:template>
 	
@@ -1929,26 +1938,33 @@
 						<xsl:value-of select="$std_ref"/>
 					</xsl:if>
 				</xsl:if>
+				
 				<xsl:text>,</xsl:text>
-				<xsl:variable name="std-ref">
-					<xsl:apply-templates select="std/std-ref" mode="references"/>
-				</xsl:variable>
-				<xsl:variable name="mixed-citation">
-					<xsl:apply-templates select="mixed-citation/std" mode="references"/>
-				</xsl:variable>
-				<xsl:variable name="label">
-					<xsl:apply-templates select="label" mode="references"/>
+				
+				<xsl:variable name="referenceTitle">
+				
+					<xsl:variable name="std-ref">
+						<xsl:apply-templates select="std/std-ref" mode="references"/>
+					</xsl:variable>
+					<xsl:variable name="mixed-citation">
+						<xsl:apply-templates select="mixed-citation/std" mode="references"/>
+					</xsl:variable>
+					<xsl:variable name="label">
+						<xsl:apply-templates select="label" mode="references"/>
+					</xsl:variable>
+					
+					<xsl:if test="(normalize-space($std-ref) != '' or normalize-space($mixed-citation) != '') and normalize-space($label) != ''">
+						<xsl:text>(</xsl:text>
+					</xsl:if>
+					<xsl:value-of select="$std-ref"/>
+					<xsl:value-of select="$mixed-citation"/>
+					<xsl:if test="(normalize-space($std-ref) != '' or normalize-space($mixed-citation) != '') and normalize-space($label) != ''">
+						<xsl:text>)</xsl:text>
+					</xsl:if>
+					<xsl:value-of select="$label"/>
 				</xsl:variable>
 				
-				<xsl:if test="(normalize-space($std-ref) != '' or normalize-space($mixed-citation) != '') and normalize-space($label) != ''">
-					<xsl:text>(</xsl:text>
-				</xsl:if>
-				<xsl:value-of select="$std-ref"/>
-				<xsl:value-of select="$mixed-citation"/>
-				<xsl:if test="(normalize-space($std-ref) != '' or normalize-space($mixed-citation) != '') and normalize-space($label) != ''">
-					<xsl:text>)</xsl:text>
-				</xsl:if>
-				<xsl:value-of select="$label"/>
+				<xsl:value-of select="translate($referenceTitle, '&#x2011;', '-')"/> <!-- non-breaking hyphen minus -->
 				
 				<xsl:text>]]]</xsl:text>
 			</xsl:if>

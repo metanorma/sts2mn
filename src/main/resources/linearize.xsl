@@ -124,10 +124,11 @@
 
 	<xsl:template name="getNormalizedId">
 		<xsl:param name="id"/>
-		<xsl:variable name="id_normalized" select="translate($id, ' &#xA0;:', '___')"/> <!-- replace space, non-break space, colon to _ -->
-		<xsl:variable name="first_char" select="substring(id_normalized,1,1)"/>
+		<xsl:variable name="id_normalized1" select="translate($id, ' &#xA0;:', '___')"/> <!-- replace space, non-break space, colon to _ -->
+		<xsl:variable name="id_normalized2" select="translate($id_normalized1, '&#x2011;', '-')"/> <!-- non-breaking hyphen minus -->
+		<xsl:variable name="first_char" select="substring(id_normalized2,1,1)"/>
 		<xsl:if test="$first_char != '' and translate($first_char, '0123456789', '') = ''">_</xsl:if>
-		<xsl:value-of select="$id_normalized"/>
+		<xsl:value-of select="$id_normalized2"/>
 	</xsl:template>
 
 </xsl:stylesheet>
