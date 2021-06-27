@@ -1721,6 +1721,7 @@
 	<xsl:template match="th">
 		<xsl:call-template name="spanProcessing"/>
 		<xsl:call-template name="alignmentProcessing"/>
+		<xsl:call-template name="complexFormatProcessing"/>
 		<xsl:text>|</xsl:text>
 		<xsl:apply-templates />
 		<xsl:text>&#xa;</xsl:text>
@@ -1729,6 +1730,7 @@
 	<xsl:template match="td">
 		<xsl:call-template name="spanProcessing"/>		
 		<xsl:call-template name="alignmentProcessing"/>
+		<xsl:call-template name="complexFormatProcessing"/>
 		<xsl:text>|</xsl:text>
 		<xsl:choose>
 			<xsl:when test="position() = last() and normalize-space() = '' and not(*)"></xsl:when>
@@ -1783,6 +1785,10 @@
 			<xsl:value-of select="$valign"/>
 			
 		</xsl:if>
+	</xsl:template>
+	
+	<xsl:template name="complexFormatProcessing">
+		<xsl:if test=".//graphic">a</xsl:if> <!-- AsciiDoc prefix before table cell -->
 	</xsl:template>
 	
 	<xsl:template name="getAlignFormat">
