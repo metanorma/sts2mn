@@ -42,7 +42,7 @@
 	
 	<xsl:variable name="refs">
 		<xsl:for-each select="//ref">
-			<xsl:variable name="text" select="concat(std/std-ref, std/italic/std-ref, std/bold/std-ref)"/>
+			<xsl:variable name="text" select="concat(std/std-ref, std/italic/std-ref, std/bold/std-ref, std/italic2/std-ref, std/bold2/std-ref)"/>
 			<ref id="{@id}" std-ref="{$text}"/>
 			
 			<xsl:variable name="isDated">
@@ -1047,7 +1047,9 @@
 		<xsl:value-of select="$space_before"/>
 		
 		<xsl:if test="italic">_</xsl:if>
+		<xsl:if test="italic2">__</xsl:if>
 		<xsl:if test="bold">*</xsl:if>
+		<xsl:if test="bold2">**</xsl:if>
 		
 		<xsl:text>&lt;&lt;</xsl:text>
 		
@@ -1115,12 +1117,14 @@
 		<xsl:text>&gt;&gt;</xsl:text>
 		
 		<xsl:if test="italic">_</xsl:if>
+		<xsl:if test="italic2">__</xsl:if>
 		<xsl:if test="bold">*</xsl:if>
+		<xsl:if test="bold2">**</xsl:if>
 		
 		<xsl:value-of select="$space_after"/>
 	</xsl:template>
 	
-	<xsl:template match="std/italic | std/bold" priority="2">
+	<xsl:template match="std/italic | std/bold | std/italic2 | std/bold2" priority="2">
 		<xsl:apply-templates />
 	</xsl:template>
 	
@@ -1330,8 +1334,17 @@
 		<xsl:text>*</xsl:text><xsl:apply-templates /><xsl:text>*</xsl:text>
 	</xsl:template>
 	
+	<xsl:template match="bold2">
+		<xsl:if test="parent::*[local-name() = 'td' or local-name() = 'th'] and not(preceding-sibling::node())"><xsl:text> </xsl:text></xsl:if>
+		<xsl:text>**</xsl:text><xsl:apply-templates /><xsl:text>**</xsl:text>
+	</xsl:template>
+	
 	<xsl:template match="italic">
 		<xsl:text>_</xsl:text><xsl:apply-templates /><xsl:text>_</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="italic2">
+		<xsl:text>__</xsl:text><xsl:apply-templates /><xsl:text>__</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="underline">
@@ -1342,12 +1355,24 @@
 		<xsl:text>~</xsl:text><xsl:apply-templates /><xsl:text>~</xsl:text>
 	</xsl:template>
 	
+	<xsl:template match="sub2">
+		<xsl:text>~~</xsl:text><xsl:apply-templates /><xsl:text>~~</xsl:text>
+	</xsl:template>
+	
 	<xsl:template match="sup">
 		<xsl:text>^</xsl:text><xsl:apply-templates /><xsl:text>^</xsl:text>
 	</xsl:template>
 	
+	<xsl:template match="sup">
+		<xsl:text>^^</xsl:text><xsl:apply-templates /><xsl:text>^^</xsl:text>
+	</xsl:template>
+	
 	<xsl:template match="monospace">
 		<xsl:text>`</xsl:text><xsl:apply-templates /><xsl:text>`</xsl:text>
+	</xsl:template>
+	
+	<xsl:template match="monospace">
+		<xsl:text>``</xsl:text><xsl:apply-templates /><xsl:text>``</xsl:text>
 	</xsl:template>
 	
 	<xsl:template match="sc">
@@ -1775,7 +1800,7 @@
 		</xsl:choose>
 	</xsl:template>
 	
-	<xsl:template match="td/p">
+	<xsl:template match="td/p | th/p">
 		<xsl:text> +</xsl:text>
 		<xsl:text>&#xa;</xsl:text>
 		<xsl:apply-templates/>
@@ -1911,7 +1936,7 @@
 		<xsl:apply-templates/>
 	</xsl:template>
 	
-	<xsl:template match="ref-list/title/bold">
+	<xsl:template match="ref-list/title/bold | ref-list/title/bold2">
 		<xsl:apply-templates/>
 	</xsl:template>
 	
