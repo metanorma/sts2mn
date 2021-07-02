@@ -1,7 +1,7 @@
-package com.metanorma.utils;
+package org.metanorma.utils;
 
-import com.metanorma.sts2mn;
-import static com.metanorma.Constants.*;
+import org.metanorma.sts2mn;
+import static org.metanorma.Constants.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +38,7 @@ public class Util {
                 // check that this is your manifest and do what you need or get the next one
                 Attributes attr = manifest.getMainAttributes();
                 String mainClass = attr.getValue("Main-Class");
-                if(mainClass != null && mainClass.contains("com.metanorma.sts2mn")) {
+                if(mainClass != null && mainClass.contains("org.metanorma.sts2mn")) {
                     version = manifest.getMainAttributes().getValue("Implementation-Version");
                 }
             }

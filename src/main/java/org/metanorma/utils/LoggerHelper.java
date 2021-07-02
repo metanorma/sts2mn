@@ -1,6 +1,6 @@
-package com.metanorma.utils;
+package org.metanorma.utils;
 
-import com.metanorma.sts2mn;
+import org.metanorma.sts2mn;
 
 /**
  *

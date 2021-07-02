@@ -1,5 +1,6 @@
-package com.metanorma;
+package org.metanorma;
 
+import org.metanorma.sts2mn;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,7 +17,7 @@ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.contrib.java.lang.system.SystemOutRule;
 import org.junit.rules.TestName;
 
-import static com.metanorma.Constants.*;
+import static org.metanorma.Constants.*;
 
 public class sts2mnTests {
 
