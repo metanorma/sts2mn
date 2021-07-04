@@ -1,4 +1,4 @@
-= Metanorma sts2mn
+= Metanorma sts2mn (DEPRECATED: Superseded by https://github.com/metanorma/mnconvert[mnconvert])
 
 image:https://github.com/metanorma/sts2mn/workflows/ubuntu/badge.svg["Build Status", link="https://github.com/metanorma/sts2mn/actions?workflow=ubuntu"]
 image:https://github.com/metanorma/sts2mn/workflows/macos/badge.svg["Build Status", link="https://github.com/metanorma/sts2mn/actions?workflow=macos"]
